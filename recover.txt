@@ -1,0 +1,832 @@
+Created At: 2026-06-20T14:29:23Z
+Completed At: 2026-06-20T14:29:36Z
+The following changes were made by the multi_replace_file_content tool to: c:\Users\aldmc\Files\novintech-call-manager\src\components\Calls\CallListWorkspace.tsx. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -154,6 +154,7 @@
+   const [notesModalCall, setNotesModalCall] = useState<CallRecord | null>(null);
+   const [advisoryModalCall, setAdvisoryModalCall] = useState<CallRecord | null>(null);
+   const [isManualAddOpen, setIsManualAddOpen] = useState(false);
++  const [confirmModalConfig, setConfirmModalConfig] = useState<{isOpen: boolean; title: string; message: string; onConfirm: () => void}>({ isOpen: false, title: '', message: '', onConfirm: () => {} });
+   const fileInputRef = React.useRef<HTMLInputElement>(null);
+ 
+   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+@@ -389,10 +389,15 @@
+ 
+           <button 
+             onClick={() => {
+-              if (window.confirm(tr('آیا مطمئن هستید که می‌خواهید همه شماره‌های این لیست را حذف کنید؟', 'Are you sure you want to delete all?'))) {
+-                 calls.filter(c => filteredList.some(f => f.id === c.id)).forEach(c => deleteCall(c.id));
+-                 toast.success(tr('لیست پاک شد.', 'List cleared.'));
+-              }
++              setConfirmModalConfig({
++                isOpen: true,
++                title: tr('حذف تمامی شماره‌ها', 'Delete all numbers'),
++                message: tr('آیا مطمئن هستید که می‌خواهید همه شماره‌های این لیست را حذف کنید؟ این عمل غیرقابل بازگشت است.', 'Are you sure you want to delete all?'),
++                onConfirm: () => {
++                  calls.filter(c => filteredList.some(f => f.id === c.id)).forEach(c => deleteCall(c.id));
++                  toast.success(tr('لیست پاک شد.', 'List
+<truncated 1288 bytes>
+ite/10 hover:bg-rose-500/20 hover:text-rose-300 hover:border-rose-400/50 tooltip-trigger"
+-                            title={tr('ریست کردن فیلدهای این شماره', 'Reset fields')}
+-                          >
++                             onClick={() => {
++                                setConfirmModalConfig({
++                                  isOpen: true,
++                                  title: tr('حذف شماره', 'Delete number'),
++                                  message: tr('آیا مطمئن هستید که می‌خواهید این شماره را برای همیشه حذف کنید؟', 'Are you sure you want to delete this number?'),
++                                  onConfirm: () => {
++                                     deleteCall(c.id);
++                                     toast.success(tr('شماره حذف شد.', 'Number deleted.'));
++                                  }
++                                });
++                             }}
++                             className="w-9 h-9 rounded-xl flex items-center justify-center transition-all bg-black/40 text-rose-400/70 border border-white/10 hover:bg-rose-500/20 hover:text-rose-300 hover:border-rose-400/50 tooltip-trigger"
++                             title={tr('حذف شماره', 'Delete number')}
++                           >
+                              <Eraser size={16} />
+                           </button>
+                        </div>
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+
+There were some inaccuracies with your replacement chunks, specified by chunk index. We were unable to apply the following changes:
+chunk 0: target content not found in the specified range and not unique in the file
+
+We did our best to apply changes despite some inaccuracies. Double check if the edit applied is what you intended.
+
+=====
+
+Created At: 2026-06-20T14:30:08Z
+Completed At: 2026-06-20T14:30:09Z
+The following changes were made by the multi_replace_file_content tool to: c:\Users\aldmc\Files\novintech-call-manager\src\components\Calls\CallListWorkspace.tsx. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -580,26 +580,43 @@
+                                onClick={() => setAdvisoryModalCall(c)}
+                                className="text-[13px] font-bold text-[#5c4fff] bg-[#5c4fff]/10 hover:bg-[#5c4fff]/20 px-4 py-2 rounded-xl transition-colors border border-transparent hover:border-[#5c4fff]/30 min-w-[120px]"
+                              >
+-                               {c.advisoryDate && c.advisoryTime ? `${c.advisoryDate} ${c.advisoryTime}` : tr('انتخاب تاریخ...', 'Select date...')}
+-                             </button>
+-                          ) : (
+-                            <span className="text-slate-300">-</span>
+-                          )}
+-                       </div>
+-                    </td>
+-
+-                    {/* Actions */}
+-                    <td className="p-4 relative">
+-                       <div className="flex items-center justify-center gap-2">
+-                          <button 
+-                            onClick={() => setNotesModalCall(c)}
+-                            className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
+-                              c.notes 
+-                                ? 'bg-cyan-500 text-white shadow-[0_0_15px_rgba(34,211,238,0.4)] border border-cyan-400' 
+-                                : 'bg-black/40 text-white/60 border border-white/10 hover:bg-cyan-500/20 hover:text-cyan-300 hover:border-cyan-400/50'
+-                            }`} 
+-                            title={c.notes || tr('یادداشت', 'Notes')}
+-                          >
++                               {c.                          <button 
++                             onClick=
+<truncated 1206 bytes>
++                             onClick={() => {
++                                setConfirmModalConfig({
++                                  isOpen: true,
++                                  title: tr('حذف شماره', 'Delete number'),
++                                  message: tr('آیا مطمئن هستید که می‌خواهید این شماره را برای همیشه حذف کنید؟', 'Are you sure you want to delete this number?'),
++                                  onConfirm: () => {
++                                     deleteCall(c.id);
++                                     toast.success(tr('شماره حذف شد.', 'Number deleted.'));
++                                  }
++                                });
++                             }}
++                             className="w-9 h-9 rounded-xl flex items-center justify-center transition-all bg-black/40 text-rose-400/70 border border-white/10 hover:bg-rose-500/20 hover:text-rose-300 hover:border-rose-400/50 tooltip-trigger"
++                             title={tr('حذف شماره', 'Delete number')}
++                           >
++                             <Trash2 size={16} />
++                           </button>                         >
+                              <FileText size={16} />
+                           </button>
+                           <button 
+@@ -659,6 +659,13 @@
+         onClose={() => setIsManualAddOpen(false)}
+         onAdd={handleManualAdd}
+       />
++      <ConfirmModal 
++        isOpen={confirmModalConfig.isOpen}
++        onClose={() => setConfirmModalConfig({ ...confirmModalConfig, isOpen: false })}
++        onConfirm={confirmModalConfig.onConfirm}
++        title={confirmModalConfig.title}
++        message={confirmModalConfig.message}
++      />
+     </div>
+   );
+ };
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+
+=====
+
+Created At: 2026-06-20T14:30:27Z
+Completed At: 2026-06-20T14:30:27Z
+File Path: `file:///c:/Users/aldmc/Files/novintech-call-manager/src/components/Calls/CallListWorkspace.tsx`
+Total Lines: 690
+Total Bytes: 38417
+Showing lines 570 to 640
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+570:                              {['ثبت نام کرد', 'ثبت نام نکرد', 'نامشخص', 'قصد دارد', 'در آینده', 'احتمالا', 'قصد ندارد'].map(s => <option key={s} value={s} className="text-slate-900">{valueLabel(s)}</option>)}
+571:                           </select>
+572:                        </div>
+573:                     </td>
+574: 
+575:                     {/* Date & Time */}
+576:                     <td className="p-4 relative whitespace-nowrap">
+577:                        <div className="flex items-center justify-center">
+578:                           {c.advisory === 'بله' ? (
+579:                              <button 
+580:                                onClick={() => setAdvisoryModalCall(c)}
+581:                                className="text-[13px] font-bold text-[#5c4fff] bg-[#5c4fff]/10 hover:bg-[#5c4fff]/20 px-4 py-2 rounded-xl transition-colors border border-transparent hover:border-[#5c4fff]/30 min-w-[120px]"
+582:                              >
+583:                                {c.                          <button 
+584:                              onClick={() => {
+585:                                 updateCall({ 
+586:                                    ...c, 
+587:                                    callStatus: '', 
+588:                                    linkSent: '', 
+589:                                    courses: [], 
+590:                                    advisory: '', 
+591:                                    advisoryDate: '', 
+592:                                    advis
+<truncated 1769 bytes>
+ion-all bg-black/40 text-rose-400/70 border border-white/10 hover:bg-rose-500/20 hover:text-rose-300 hover:border-rose-400/50 tooltip-trigger"
+616:                              title={tr('حذف شماره', 'Delete number')}
+617:                            >
+618:                              <Trash2 size={16} />
+619:                            </button>                         >
+620:                              <FileText size={16} />
+621:                           </button>
+622:                           <button 
+623:                              onClick={() => {
+624:                                 setConfirmModalConfig({
+625:                                   isOpen: true,
+626:                                   title: tr('حذف شماره', 'Delete number'),
+627:                                   message: tr('آیا مطمئن هستید که می‌خواهید این شماره را برای همیشه حذف کنید؟', 'Are you sure you want to delete this number?'),
+628:                                   onConfirm: () => {
+629:                                      deleteCall(c.id);
+630:                                      toast.success(tr('شماره حذف شد.', 'Number deleted.'));
+631:                                   }
+632:                                 });
+633:                              }}
+634:                              className="w-9 h-9 rounded-xl flex items-center justify-center transition-all bg-black/40 text-rose-400/70 border border-white/10 hover:bg-rose-500/20 hover:text-rose-300 hover:border-rose-400/50 tooltip-trigger"
+635:                              title={tr('حذف شماره', 'Delete number')}
+636:                            >
+637:                              <Eraser size={16} />
+638:                           </button>
+639:                        </div>
+640:                     </td>
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+
+=====
+
+Created At: 2026-06-20T14:30:46Z
+Completed At: 2026-06-20T14:30:48Z
+The following changes were made by the replace_file_content tool to: c:\Users\aldmc\Files\novintech-call-manager\src\components\Calls\CallListWorkspace.tsx. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -580,7 +580,29 @@
+                                onClick={() => setAdvisoryModalCall(c)}
+                                className="text-[13px] font-bold text-[#5c4fff] bg-[#5c4fff]/10 hover:bg-[#5c4fff]/20 px-4 py-2 rounded-xl transition-colors border border-transparent hover:border-[#5c4fff]/30 min-w-[120px]"
+                              >
+-                               {c.                          <button 
++                               {c.advisoryDate && c.advisoryTime ? `${c.advisoryDate} ${c.advisoryTime}` : tr('انتخاب تاریخ...', 'Select date...')}
++                             </button>
++                          ) : (
++                            <span className="text-slate-300">-</span>
++                          )}
++                       </div>
++                    </td>
++
++                    {/* Actions */}
++                    <td className="p-4 relative">
++                       <div className="flex items-center justify-center gap-2">
++                          <button 
++                            onClick={() => setNotesModalCall(c)}
++                            className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
++                              c.notes 
++                                ? 'bg-cyan-500 text-white shadow-[0_0_15px_rgba(34,211,238,0.4)] border border-cyan-400' 
++                                : 'bg-black/40 text-white/60 border border-white/10 hover:bg-cyan-500/20 hover:text-cyan-300 hover:border-cyan-400/50'
++                            }`} 
++                            title={c.notes || tr('یادداشت', 'Notes')}
++                          >
++                             <FileText size=
+<truncated 117 bytes>
+k={() => {
+                                 updateCall({ 
+                                    ...c, 
+@@ -615,26 +615,7 @@
+                              title={tr('حذف شماره', 'Delete number')}
+                            >
+                              <Trash2 size={16} />
+-                           </button>                         >
+-                             <FileText size={16} />
+-                          </button>
+-                          <button 
+-                             onClick={() => {
+-                                setConfirmModalConfig({
+-                                  isOpen: true,
+-                                  title: tr('حذف شماره', 'Delete number'),
+-                                  message: tr('آیا مطمئن هستید که می‌خواهید این شماره را برای همیشه حذف کنید؟', 'Are you sure you want to delete this number?'),
+-                                  onConfirm: () => {
+-                                     deleteCall(c.id);
+-                                     toast.success(tr('شماره حذف شد.', 'Number deleted.'));
+-                                  }
+-                                });
+-                             }}
+-                             className="w-9 h-9 rounded-xl flex items-center justify-center transition-all bg-black/40 text-rose-400/70 border border-white/10 hover:bg-rose-500/20 hover:text-rose-300 hover:border-rose-400/50 tooltip-trigger"
+-                             title={tr('حذف شماره', 'Delete number')}
+-                           >
+-                             <Eraser size={16} />
+-                          </button>
++                           </button>
+                        </div>
+                     </td>
+                   </tr>
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+
+=====
+
+Created At: 2026-06-20T14:34:15Z
+Completed At: 2026-06-20T14:34:15Z
+File Path: `file:///c:/Users/aldmc/Files/novintech-call-manager/src/components/Calls/CallListWorkspace.tsx`
+Total Lines: 693
+Total Bytes: 38339
+Showing lines 120 to 180
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+120:                <div>
+121:                   <label className="text-[12px] font-bold text-white/50 mb-1 block">{tr('نام و نام خانوادگی', 'Full Name')}</label>
+122:                   <input
+123:                     type="text"
+124:                     value={fullName}
+125:                     onChange={e => setFullName(e.target.value)}
+126:                     className="w-full h-10 px-3 text-[13px] font-medium border border-white/10 rounded-xl outline-none focus:border-brand-500"
+127:                     placeholder={tr('اختیاری...', 'Optional...')}
+128:                   />
+129:                </div>
+130:                <button onClick={() => { 
+131:                   if (!phone.trim()) return toast.error(tr('لطفا شماره را وارد کنید.', 'Please enter a phone number.'));
+132:                   if (phone.length < 10) return toast.error(tr('شماره معتبر نیست.', 'Invalid phone number.'));
+133:                   onAdd(phone, fullName); 
+134:                   onClose(); 
+135:                }} className="w-full mt-2 h-10 bg-brand-500 hover:bg-brand-600 text-white rounded-xl font-bold text-[13px] transition-colors flex items-center justify-center gap-2">
+136:                  <Plus size={16} />
+137:                  <span>{tr('افزودن به لیست', 'Add to list')}</span>
+138:                </button>
+139:             </div>
+140:           </motion.div>
+141:         </div>
+142:       )}
+143:     </AnimatePresence>
+144:   );
+145: };
+146: 
+147: 
+148: 
+149: export const CallListWorkspace = () => {
+150:   const { calls, addCall, updateCall, recordAttempt, activeCallTab: activeTab, setActiveCallTab: setActiveTab, setCurrentView } = useAppContext();
+151:   const { tr, valueLabel, direction } = useLocale();
+152:   const [searchQuery, setSearchQuery] = useState('');
+153:   
+154:   const [notesModalCall, setNotesModalCall] = useState<CallRecord | null>(null);
+155:   const [advisoryModalCall, setAdvisoryModalCall] = useState<CallRecord | null>(null);
+156:   const [isManualAddOpen, setIsManualAddOpen] = useState(false);
+157:   const [confirmModalConfig, setConfirmModalConfig] = useState<{isOpen: boolean; title: string; message: string; onConfirm: () => void}>({ isOpen: false, title: '', message: '', onConfirm: () => {} });
+158:   const fileInputRef = React.useRef<HTMLInputElement>(null);
+159: 
+160:   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+161:     const file = e.target.files?.[0];
+162:     if (!file) return;
+163: 
+164:     const reader = new FileReader();
+165:     reader.onload = (evt) => {
+166:       try {
+167:         const bstr = evt.target?.result;
+168:         const wb = xlsx.read(bstr, { type: 'binary' });
+169:         const wsname = wb.SheetNames[0];
+170:         const ws = wb.Sheets[wsname];
+171:         const data = xlsx.utils.sheet_to_json(ws, { header: 1 }) as any[][];
+172:         
+173:         let count = 0;
+174:         data.forEach((row: any[]) => {
+175:           if (!row || row.length === 0) return;
+176:           // Find anything that looks like a phone number in the row
+177:           const phoneRegex = /(09\d{9})|(\+989\d{9})|(9\d{9})/;
+178:           let phoneStr = '';
+179:           let nameStr = '';
+180: 
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+
+=====
+
+Created At: 2026-06-20T14:36:18Z
+Completed At: 2026-06-20T14:36:18Z
+File Path: `file:///c:/Users/aldmc/Files/novintech-call-manager/src/components/Calls/CallListWorkspace.tsx`
+Total Lines: 693
+Total Bytes: 38339
+Showing lines 80 to 160
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+80:     </AnimatePresence>
+81:   );
+82: };
+83: 
+84: const ManualAddModal = ({ isOpen, onClose, onAdd }: { isOpen: boolean; onClose: () => void; onAdd: (phone: string, fullName: string) => void }) => {
+85:   const { tr, direction } = useLocale();
+86:   const [phone, setPhone] = useState('');
+87:   const [fullName, setFullName] = useState('');
+88: 
+89:   React.useEffect(() => {
+90:     if (isOpen) {
+91:       setPhone('');
+92:       setFullName('');
+93:     }
+94:   }, [isOpen]);
+95: 
+96:   if (!isOpen) return null;
+97: 
+98:   return (
+99:     <AnimatePresence>
+100:       {isOpen && (
+101:         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" dir={direction}>
+102:           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" />
+103:           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-black/20 backdrop-blur-lg rounded-3xl shadow-2xl w-full max-w-sm relative z-10 overflow-hidden">
+104:             <div className="flex items-center justify-between p-4 border-b border-white/10 bg-white/5">
+105:                <span className="font-bold text-white/80">{tr('افزودن دستی شماره', 'Add Number Manually')}</span>
+106:                <button onClick={onClose} className="text-white/50 hover:text-white/70"><X size={18} /></button>
+107:             </div>
+108:             <div className="p-4 flex flex-col gap-4">
+109:    
+<truncated 1229 bytes>
+       />
+129:                </div>
+130:                <button onClick={() => { 
+131:                   if (!phone.trim()) return toast.error(tr('لطفا شماره را وارد کنید.', 'Please enter a phone number.'));
+132:                   if (phone.length < 10) return toast.error(tr('شماره معتبر نیست.', 'Invalid phone number.'));
+133:                   onAdd(phone, fullName); 
+134:                   onClose(); 
+135:                }} className="w-full mt-2 h-10 bg-brand-500 hover:bg-brand-600 text-white rounded-xl font-bold text-[13px] transition-colors flex items-center justify-center gap-2">
+136:                  <Plus size={16} />
+137:                  <span>{tr('افزودن به لیست', 'Add to list')}</span>
+138:                </button>
+139:             </div>
+140:           </motion.div>
+141:         </div>
+142:       )}
+143:     </AnimatePresence>
+144:   );
+145: };
+146: 
+147: 
+148: 
+149: export const CallListWorkspace = () => {
+150:   const { calls, addCall, updateCall, recordAttempt, activeCallTab: activeTab, setActiveCallTab: setActiveTab, setCurrentView } = useAppContext();
+151:   const { tr, valueLabel, direction } = useLocale();
+152:   const [searchQuery, setSearchQuery] = useState('');
+153:   
+154:   const [notesModalCall, setNotesModalCall] = useState<CallRecord | null>(null);
+155:   const [advisoryModalCall, setAdvisoryModalCall] = useState<CallRecord | null>(null);
+156:   const [isManualAddOpen, setIsManualAddOpen] = useState(false);
+157:   const [confirmModalConfig, setConfirmModalConfig] = useState<{isOpen: boolean; title: string; message: string; onConfirm: () => void}>({ isOpen: false, title: '', message: '', onConfirm: () => {} });
+158:   const fileInputRef = React.useRef<HTMLInputElement>(null);
+159: 
+160:   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+
+=====
+
+The USER performed the following action:
+Show the contents of file c:\Users\aldmc\Files\novintech-call-manager\src\components\Calls\CallListWorkspace.tsx from lines 668 to 715
+File Path: `file:///c:/Users/aldmc/Files/novintech-call-manager/src/components/Calls/CallListWorkspace.tsx`
+Total Lines: 723
+Total Bytes: 40188
+Showing lines 668 to 715
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+668:         call={advisoryModalCall}
+669:         isOpen={!!advisoryModalCall}
+670:         onClose={() => setAdvisoryModalCall(null)}
+671:         onSave={(date, time) => {
+672:           if (advisoryModalCall) {
+673:              handleFieldChange(advisoryModalCall, 'advisoryDate', date);
+674:              handleFieldChange(advisoryModalCall, 'advisoryTime', time);
+675:           }
+676:         }}
+677:       />
+678:       <ManualAddModal 
+679:         isOpen={isManualAddOpen}
+680:         onClose={() => setIsManualAddOpen(false)}
+681:         onAdd={handleManualAdd}
+682:       />
+683:       <ConfirmModal 
+684:         isOpen={confirmModalConfig.isOpen}
+685:         onClose={() => setConfirmModalConfig({ ...confirmModalConfig, isOpen: false })}
+686:         onConfirm={confirmModalConfig.onConfirm}
+687:         title={confirmModalConfig.title}
+688:         message={confirmModalConfig.message}
+689:       />
+690:     </div>
+691:   );
+692: };
+693: 
+694: const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message }: { isOpen: boolean; onClose: () => void; onConfirm: () => void; title: string; message: string; }) => {
+695:   const { tr, direction } = useLocale();
+696:   if (!isOpen) return null;
+697: 
+698:   return (
+699:     <AnimatePresence>
+700:       {isOpen && (
+701:         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" dir={direction}>
+702:           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
+703:           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl w-full max-w-sm relative z-10 overflow-hidden p-6 text-center">
+704:             <div className="mx-auto w-12 h-12 bg-rose-500/20 text-rose-400 rounded-full flex items-center justify-center mb-4">
+705:                <Trash2 size={24} />
+706:             </div>
+707:             <h3 className="text-lg font-bold text-white/90 mb-2">{title}</h3>
+708:             <p className="text-[13px] text-white/60 mb-6 leading-relaxed">{message}</p>
+709:             <div className="flex gap-3">
+710:                <button onClick={onClose} className="flex-1 h-10 rounded-xl bg-white/5 hover:bg-white/10 text-white/70 font-bold transition-colors">
+711:                   {tr('انصراف', 'Cancel')}
+712:                </button>
+713:                <button onClick={() => { onConfirm(); onClose(); }} className="flex-1 h-10 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold transition-colors shadow-lg shadow-rose-500/20">
+714:                   {tr('بله، حذف کن', 'Yes, delete')}
+715:                </button>
+
+
+
+=====
+
+Created At: 2026-06-20T14:45:53Z
+Completed At: 2026-06-20T14:45:53Z
+File Path: `file:///c:/Users/aldmc/Files/novintech-call-manager/src/components/Calls/CallListWorkspace.tsx`
+Total Lines: 723
+Total Bytes: 40200
+Showing lines 380 to 450
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+380:             onChange={handleFileUpload} 
+381:             accept=".xlsx, .xls, .csv" 
+382:             className="hidden" 
+383:           />
+384:           <button 
+385:             onClick={() => fileInputRef.current?.click()}
+386:             className="h-10 px-4 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 font-bold text-[13px] rounded-xl transition-all flex items-center gap-2 shrink-0 border border-emerald-400/30"
+387:           >
+388:             <Upload size={16} />
+389:             <span className="hidden sm:inline">{tr('اکسل', 'Excel')}</span>
+390:           </button>
+391: 
+392:           <button 
+393:             onClick={() => {
+394:               setConfirmModalConfig({
+395:                 isOpen: true,
+396:                 title: tr('حذف تمامی شماره‌ها', 'Delete all numbers'),
+397:                 message: tr('آیا مطمئن هستید که می‌خواهید همه شماره‌های این لیست را حذف کنید؟ این عمل غیرقابل بازگشت است.', 'Are you sure you want to delete all?'),
+398:                 onConfirm: () => {
+399:                   calls.filter(c => filteredList.some(f => f.id === c.id)).forEach(c => deleteCall(c.id));
+400:                   toast.success(tr('لیست پاک شد.', 'List cleared.'));
+401:                 }
+402:               });
+403:             }}
+404:             className="h-10 px-4 bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 font-bold text-[13px] rounded-xl transition-all flex items-center gap-2 shrink-0 border bor
+<truncated 1987 bytes>
+nt via-cyan-400/40 to-transparent"></div>
+437:           <div className="absolute inset-y-0 left-0 w-[1px] bg-gradient-to-b from-transparent via-cyan-400/20 to-transparent"></div>
+438:           <div className="absolute inset-y-0 right-0 w-[1px] bg-gradient-to-b from-transparent via-cyan-400/20 to-transparent"></div>
+439:           
+440:           <div className="flex-1 overflow-auto custom-select-scroll relative z-10">
+441:             <table className="w-full text-center border-collapse min-w-[1200px]">
+442:               <thead className="sticky top-0 bg-black/60 backdrop-blur-3xl border-b border-cyan-500/30 shadow-[0_4px_30px_-10px_rgba(34,211,238,0.2)] z-20">
+443:                 <tr>
+444:                   <th className="py-5 px-4 text-[12px] font-bold text-cyan-200/90 tracking-wide whitespace-nowrap">{tr('شماره تماس', 'Phone')}</th>
+445:                   <th className="py-5 px-4 text-[12px] font-bold text-cyan-200/90 tracking-wide whitespace-nowrap">{tr('وضعیت تماس', 'Call Status')}</th>
+446:                   <th className="py-5 px-4 text-[12px] font-bold text-cyan-200/90 tracking-wide whitespace-nowrap">{tr('لینک سایت', 'Site Link')}</th>
+447:                   <th className="py-5 px-4 text-[12px] font-bold text-cyan-200/90 tracking-wide whitespace-nowrap">{tr('دوره‌ها', 'Courses')}</th>
+448:                   <th className="py-5 px-4 text-[12px] font-bold text-cyan-200/90 tracking-wide whitespace-nowrap">{tr('مشاوره حضوری', 'Consultation')}</th>
+449:                   <th className="py-5 px-4 text-[12px] font-bold text-cyan-200/90 tracking-wide whitespace-nowrap">{tr('ثبت‌نام', 'Registration')}</th>
+450:                   <th className="py-5 px-4 text-[12px] font-bold text-cyan-200/90 tracking-wide whitespace-nowrap">{tr('تاریخ و ساعت', 'Date & Time')}</th>
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+
+=====
+
+Created At: 2026-06-20T15:10:35Z
+Completed At: 2026-06-20T15:10:35Z
+File Path: `file:///c:/Users/aldmc/Files/novintech-call-manager/src/components/Calls/CallListWorkspace.tsx`
+Total Lines: 816
+Total Bytes: 43170
+Showing lines 750 to 816
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+750:       </div>
+751: 
+752:       <NotesModal 
+753:         call={notesModalCall}
+754:         isOpen={!!notesModalCall}
+755:         onClose={() => setNotesModalCall(null)}
+756:         onSave={(notes) => {
+757:           if (notesModalCall) handleFieldChange(notesModalCall, 'notes', notes);
+758:         }}
+759:       />
+760:       <AdvisoryModal
+761:         call={advisoryModalCall}
+762:         isOpen={!!advisoryModalCall}
+763:         onClose={() => setAdvisoryModalCall(null)}
+764:         onSave={(date, time) => {
+765:           if (advisoryModalCall) {
+766:              handleFieldChange(advisoryModalCall, 'advisoryDate', date);
+767:              handleFieldChange(advisoryModalCall, 'advisoryTime', time);
+768:           }
+769:         }}
+770:       />
+771:       <ManualAddModal 
+772:         isOpen={isManualAddOpen}
+773:         onClose={() => setIsManualAddOpen(false)}
+774:         onAdd={handleManualAdd}
+775:       />
+776:       <ConfirmModal 
+777:         isOpen={confirmModalConfig.isOpen}
+778:         onClose={() => setConfirmModalConfig({ ...confirmModalConfig, isOpen: false })}
+779:         onConfirm={confirmModalConfig.onConfirm}
+780:         title={confirmModalConfig.title}
+781:         message={confirmModalConfig.message}
+782:       />
+783:     </div>
+784:   );
+785: };
+786: 
+787: const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message }: { isOpen: boolean; onClose: () => void; onConfirm: () => void; title: string; message: string; }) => {
+788:   const { tr, direction } = useLocale();
+789:   if (!isOpen) return null;
+790: 
+791:   return (
+792:     <AnimatePresence>
+793:       {isOpen && (
+794:         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" dir={direction}>
+795:           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
+796:           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl w-full max-w-sm relative z-10 overflow-hidden p-6 text-center">
+797:             <div className="mx-auto w-12 h-12 bg-rose-500/20 text-rose-400 rounded-full flex items-center justify-center mb-4">
+798:                <Trash2 size={24} />
+799:             </div>
+800:             <h3 className="text-lg font-bold text-white/90 mb-2">{title}</h3>
+801:             <p className="text-[13px] text-white/60 mb-6 leading-relaxed">{message}</p>
+802:             <div className="flex gap-3">
+803:                <button onClick={onClose} className="flex-1 h-10 rounded-xl bg-white/5 hover:bg-white/10 text-white/70 font-bold transition-colors">
+804:                   {tr('انصراف', 'Cancel')}
+805:                </button>
+806:                <button onClick={() => { onConfirm(); onClose(); }} className="flex-1 h-10 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold transition-colors shadow-lg shadow-rose-500/20">
+807:                   {tr('بله، حذف کن', 'Yes, delete')}
+808:                </button>
+809:             </div>
+810:           </motion.div>
+811:         </div>
+812:       )}
+813:     </AnimatePresence>
+814:   );
+815: };
+816: 
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+
+=====
+
+Created At: 2026-06-20T15:11:45Z
+Completed At: 2026-06-20T15:11:47Z
+The following changes were made by the multi_replace_file_content tool to: c:\Users\aldmc\Files\novintech-call-manager\src\components\Calls\CallListWorkspace.tsx. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -11,6 +11,7 @@
+ import persian from "react-date-object/calendars/persian";
+ import persian_fa from "react-date-object/locales/persian_fa";
+ import { AdvisoryModal } from './AdvisoryModal';
++import { ConfirmDialog } from '../Shared/ConfirmDialog';
+ import ReactQuill from 'react-quill';
+ import 'react-quill/dist/quill.snow.css';
+ 
+@@ -772,9 +772,9 @@
+         onClose={() => setIsManualAddOpen(false)}
+         onAdd={handleManualAdd}
+       />
+-      <ConfirmModal 
++      <ConfirmDialog 
+         isOpen={confirmModalConfig.isOpen}
+-        onClose={() => setConfirmModalConfig({ ...confirmModalConfig, isOpen: false })}
++        onCancel={() => setConfirmModalConfig({ ...confirmModalConfig, isOpen: false })}
+         onConfirm={confirmModalConfig.onConfirm}
+         title={confirmModalConfig.title}
+         message={confirmModalConfig.message}
+@@ -782,33 +782,5 @@
+   );
+ };
+ 
+-const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message }: { isOpen: boolean; onClose: () => void; onConfirm: () => void; title: string; message: string; }) => {
+-  const { tr, direction } = useLocale();
+-  if (!isOpen) return null;
+-
+-  return (
+-    <AnimatePresence>
+-      {isOpen && (
+-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" dir={direction}>
+-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
+-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl w-full max-w-sm relative z-10 overflow-hidden p-6 text-center">
+-            <div className="mx-auto w-12 h-12 bg-rose-500/20 text-rose-400 rounded-full flex items-center justify-center mb-4">
+-               <Trash2 size={24} />
+-            </div>
+-            <h3 className="text-lg font-bold text-white/90 mb-2">{title}</h3>
+-            <p className="text-[13px] text-white/60 mb-6 leading-relaxed">{message}</p>
+-            <div className="flex gap-3">
+-               <button onClick={onClose} className="flex-1 h-10 rounded-xl bg-white/5 hover:bg-white/10 text-white/70 font-bold transition-colors">
+-                  {tr('انصراف', 'Cancel')}
+-               </button>
+-               <button onClick={() => { onConfirm(); onClose(); }} className="flex-1 h-10 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold transition-colors shadow-lg shadow-rose-500/20">
+-                  {tr('بله، حذف کن', 'Yes, delete')}
+-               </button>
+-            </div>
+-          </motion.div>
+-        </div>
+-      )}
+-    </AnimatePresence>
+-  );
+-};
++
+ 
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+
+=====
+
+Created At: 2026-06-20T15:13:26Z
+Completed At: 2026-06-20T15:13:26Z
+File Path: `file:///c:/Users/aldmc/Files/novintech-call-manager/src/components/Calls/CallListWorkspace.tsx`
+Total Lines: 789
+Total Bytes: 41382
+Showing lines 240 to 280
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+240:           )}
+241:         </AnimatePresence>,
+242:         document.body
+243:       )}
+244:     </>
+245:   );
+246: };
+247: 
+248: export const CallListWorkspace = () => {
+249:   const { calls, addCall, updateCall, deleteCall, recordAttempt, activeCallTab: activeTab, setActiveCallTab: setActiveTab, setCurrentView } = useAppContext();
+250:   const { tr, valueLabel, direction } = useLocale();
+251:   const [searchQuery, setSearchQuery] = useState('');
+252:   
+253:   const [notesModalCall, setNotesModalCall] = useState<CallRecord | null>(null);
+254:   const [advisoryModalCall, setAdvisoryModalCall] = useState<CallRecord | null>(null);
+255:   const [isManualAddOpen, setIsManualAddOpen] = useState(false);
+256:   const [confirmModalConfig, setConfirmModalConfig] = useState<{isOpen: boolean; title: string; message: string; onConfirm: () => void}>({ isOpen: false, title: '', message: '', onConfirm: () => {} });
+257:   const fileInputRef = React.useRef<HTMLInputElement>(null);
+258: 
+259:   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+260:     const file = e.target.files?.[0];
+261:     if (!file) return;
+262: 
+263:     const reader = new FileReader();
+264:     reader.onload = (evt) => {
+265:       try {
+266:         const bstr = evt.target?.result;
+267:         const wb = xlsx.read(bstr, { type: 'binary' });
+268:         const wsname = wb.SheetNames[0];
+269:         const ws = wb.Sheets[wsname];
+270:         const data = xlsx.utils.sheet_to_json(ws, { header: 1 }) as any[][];
+271:         
+272:         let count = 0;
+273:         data.forEach((row: any[]) => {
+274:           if (!row || row.length === 0) return;
+275:           // Find anything that looks like a phone number in the row
+276:           const phoneRegex = /(09\d{9})|(\+989\d{9})|(9\d{9})/;
+277:           let phoneStr = '';
+278:           let nameStr = '';
+279: 
+280:           for (let i = 0; i < row.length; i++) {
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+
+=====
+
+The USER performed the following action:
+Show the contents of file c:\Users\aldmc\Files\novintech-call-manager\src\components\Calls\CallListWorkspace.tsx from lines 740 to 782
+File Path: `file:///c:/Users/aldmc/Files/novintech-call-manager/src/components/Calls/CallListWorkspace.tsx`
+Total Lines: 782
+Total Bytes: 40732
+Showing lines 740 to 782
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+740:                </div>
+741:             )}
+742:           </div>
+743:         </div>
+744:       </div>
+745: 
+746:       <NotesModal 
+747:         call={notesModalCall}
+748:         isOpen={!!notesModalCall}
+749:         onClose={() => setNotesModalCall(null)}
+750:         onSave={(notes) => {
+751:           if (notesModalCall) handleFieldChange(notesModalCall, 'notes', notes);
+752:         }}
+753:       />
+754:       <AdvisoryModal
+755:         call={advisoryModalCall}
+756:         isOpen={!!advisoryModalCall}
+757:         onClose={() => setAdvisoryModalCall(null)}
+758:         onSave={(date, time) => {
+759:           if (advisoryModalCall) {
+760:              handleFieldChange(advisoryModalCall, 'advisoryDate', date);
+761:              handleFieldChange(advisoryModalCall, 'advisoryTime', time);
+762:           }
+763:         }}
+764:       />
+765:       <ManualAddModal 
+766:         isOpen={isManualAddOpen}
+767:         onClose={() => setIsManualAddOpen(false)}
+768:         onAdd={handleManualAdd}
+769:       />
+770:       <ConfirmDialog 
+771:         isOpen={confirmModalConfig.isOpen}
+772:         onCancel={() => setConfirmModalConfig({ ...confirmModalConfig, isOpen: false })}
+773:         onConfirm={confirmModalConfig.onConfirm}
+774:         title={confirmModalConfig.title}
+775:         message={confirmModalConfig.message}
+776:       />
+777:     </div>
+778:   );
+779: };
+780: 
+781: 
+782: 
+
+
+
+=====
+
+Created At: 2026-06-20T15:28:25Z
+Completed At: 2026-06-20T15:28:25Z
+File Path: `file:///c:/Users/aldmc/Files/novintech-call-manager/src/components/Calls/CallListWorkspace.tsx`
+Total Lines: 380
+Total Bytes: 22798
+Showing lines 90 to 140
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+90:           <button 
+91:             onClick={() => {
+92:               setConfirmModalConfig({
+93:                 isOpen: true,
+94:                 title: tr('حذف تمامی شماره‌ها', 'Delete all numbers'),
+95:                 message: tr('آیا مطمئن هستید که می‌خواهید همه شماره‌های این لیست را حذف کنید؟ این عمل غیرقابل بازگشت است.', 'Are you sure you want to delete all?'),
+96:                 onConfirm: () => {
+97:                   calls.filter(c => filteredList.some(f => f.id === c.id)).forEach(c => deleteCall(c.id));
+98:                   toast.success(tr('لیست پاک شد.', 'List cleared.'));
+99:                 }
+100:               });
+101:             }}
+102:             className="h-10 px-4 bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 font-bold text-[13px] rounded-xl transition-all flex items-center gap-2 shrink-0 border border-rose-400/30"
+103:           >
+104:             <Trash2 size={16} />
+105:             <span className="hidden sm:inline">{tr('حذف همه', 'Delete All')}</span>
+106:           </button>
+107: 
+108:           <button 
+109:             onClick={() => {
+110:               const randPhone = '09' + Math.floor(100000000 + Math.random() * 900000000).toString();
+111:               handleManualAdd(randPhone, 'تست تصادفی');
+112:             }}
+113:             className="h-10 px-4 bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 font-bold text-[13px] rounded-xl transition-all flex items-center gap-2 shrink-0 bo
+<truncated 175 bytes>
+}</span>
+116:           </button>
+117:           <div className="relative w-full md:w-64">
+118:             <Search size={16} className="absolute start-3 top-1/2 -translate-y-1/2 text-white/50" />
+119:             <input 
+120:               type="text" 
+121:               placeholder={tr('جستجوی شماره...', 'Search number...')}
+122:               value={searchQuery}
+123:               onChange={e => setSearchQuery(e.target.value)}
+124:               className="w-full h-10 pl-4 pr-10 rounded-xl border border-white/10 bg-white/5 text-[13px] font-medium outline-none focus:border-brand-500 focus:bg-black/20 backdrop-blur-lg transition-all text-right"
+125:             />
+126:           </div>
+127:         </div>
+128:       </div>
+129: 
+130:       {/* Main Grid View */}
+131:       <div className="flex-1 overflow-hidden p-4 md:p-8 bg-transparent">
+132:         <div className="relative h-full bg-black/40 backdrop-blur-3xl rounded-2xl shadow-[0_8px_30px_-12px_rgba(0,0,0,0.5)] border border-white/10 flex flex-col overflow-hidden">
+133:           {/* Glass Strokes for depth */}
+134:           <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent"></div>
+135:           <div className="absolute inset-y-0 left-0 w-[1px] bg-gradient-to-b from-transparent via-cyan-400/20 to-transparent"></div>
+136:           <div className="absolute inset-y-0 right-0 w-[1px] bg-gradient-to-b from-transparent via-cyan-400/20 to-transparent"></div>
+137:           
+138:           <div className="flex-1 overflow-auto custom-select-scroll relative z-10">
+139:             <table className="w-full text-center border-collapse min-w-[1200px]">
+140:               <thead className="sticky top-0 bg-black/60 backdrop-blur-3xl border-b border-cyan-500/30 shadow-[0_4px_30px_-10px_rgba(34,211,238,0.2)] z-20">
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

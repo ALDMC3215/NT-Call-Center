@@ -1,0 +1,305 @@
+import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
+import { Settings, Trash2, Bell, AlertTriangle, RefreshCw, Calendar, PhoneOff, LogOut, Palette, LayoutTemplate, MousePointerClick } from 'lucide-react';
+import { COURSE_CATEGORIES } from '../../data/courses';
+import { fetchCourseDataDynamic } from '../../utils/scraper';
+import { useAppContext } from '../../hooks/useAppContext';
+import { customToast as toast } from '../UI/toast';
+import { useLocale } from '../../hooks/useLocale';
+import { BackButton } from '../UI/BackButton';
+import { AnimatePresence } from 'motion/react';
+
+const SettingCard = ({ title, icon, onClick, bgClass, desc, isDanger, iconBg, iconColor }: any) => {
+  return (
+    <div
+      onClick={onClick}
+      className={`relative overflow-hidden cursor-pointer rounded-3xl p-6 bg-white border ${isDanger ? 'border-red-100' : 'border-slate-200'} shadow-sm hover:shadow-md transition-all duration-300 flex flex-col group`}
+    >
+      <div className={`w-12 h-12 rounded-2xl ${iconBg || 'bg-slate-50'} flex items-center justify-center mb-5 relative z-10 ${iconColor || 'text-slate-600'} transition-transform group-hover:scale-110`}>
+        {icon}
+      </div>
+      <h3 className={`text-[17px] font-bold mb-1.5 relative z-10 ${isDanger ? 'text-red-600' : 'text-slate-800'}`}>{title}</h3>
+      <p className={`text-sm font-medium leading-relaxed relative z-10 ${isDanger ? 'text-red-400' : 'text-slate-500'}`}>{desc}</p>
+    </div>
+  );
+};
+
+export const SettingsView: React.FC = () => {
+  const { wipeAllData, enableFluid, setEnableFluid, setCurrentView, setActiveCallTab, logout, accentColor, setAccentColor, sparkColor, setSparkColor, layoutMargin, setLayoutMargin } = useAppContext();
+  const { tr, direction } = useLocale();
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncProgress, setSyncProgress] = useState(0);
+
+  const handleSyncData = async () => {
+    setIsSyncing(true);
+    setSyncProgress(0);
+    
+    const allUrls = new Set<string>();
+    COURSE_CATEGORIES.forEach(c => {
+      c.subcategories.forEach(sub => {
+        sub.courses.forEach(course => {
+          if (course.url) allUrls.add(course.url);
+        });
+      });
+    });
+
+    const urlList = Array.from(allUrls);
+    
+    let existingData = {};
+    try {
+      const cached = localStorage.getItem('NOVINTECH_COURSE_DYNAMIC_DATA');
+      if (cached) existingData = JSON.parse(cached);
+    } catch (e) {}
+
+    const newData: Record<string, any> = { ...existingData };
+
+    let completed = 0;
+    await Promise.all(
+      urlList.map(async (url) => {
+        try {
+          const data = await fetchCourseDataDynamic(url);
+          if (data) {
+            newData[url] = data;
+          }
+        } catch (e) {
+          console.error("Error fetching", url, e);
+        } finally {
+          completed++;
+          setSyncProgress(Math.round((completed / urlList.length) * 100));
+        }
+      })
+    );
+
+    localStorage.setItem('NOVINTECH_COURSE_DYNAMIC_DATA', JSON.stringify(newData));
+    setIsSyncing(false);
+    toast.success(tr('به‌روزرسانی قیمت دوره‌ها با موفقیت انجام شد.', 'Course prices updated successfully.'));
+  };
+
+  const handleClearData = () => {
+    wipeAllData();
+    localStorage.removeItem('app-appearance');
+    window.dispatchEvent(new Event('storage'));
+    toast.success(tr('تمامی داده‌ها و تنظیمات سیستم با موفقیت حذف شدند.', 'All application data and settings were deleted.'));
+    setShowConfirm(false);
+  };
+
+  const SETTING_CARDS = [
+    { id: 'today', title: tr('فعالیت امروز', "Today's Activity"), desc: tr('مشاهده فعالیت‌ها و تماس‌های امروز', 'View today activity and calls'), icon: <Calendar size={24} />, iconBg: 'bg-indigo-50', iconColor: 'text-indigo-600' },
+    { id: 'blacklist', title: tr('لیست سیاه', 'Blacklist'), desc: tr('مدیریت شماره‌های مسدود شده', 'Manage blocked numbers'), icon: <PhoneOff size={24} />, iconBg: 'bg-slate-100', iconColor: 'text-slate-700' },
+    { id: 'notifications', title: tr('اطلاعیه‌ها', 'Notifications'), desc: tr('مدیریت پیام‌ها، صداها و هشدارها', 'Manage messages, sounds and alerts'), icon: <Bell size={24} />, iconBg: 'bg-amber-50', iconColor: 'text-amber-500' },
+    { id: 'sync-courses', title: tr('به‌روزرسانی دوره‌ها', 'Sync Courses'), desc: isSyncing ? `${tr('در حال به‌روزرسانی...', 'Updating...')} ${syncProgress}%` : tr('دریافت جدیدترین قیمت و اطلاعات دوره‌ها', 'Get latest prices and course info'), icon: <RefreshCw size={24} className={isSyncing ? 'animate-spin text-brand-500' : ''} />, iconBg: 'bg-emerald-50', iconColor: 'text-emerald-600' },
+    { id: 'clear', title: tr('پاک کردن داده‌ها', 'Clear application data'), desc: tr('حذف غیرقابل بازگشت تمامی داده‌های سیستم', 'Permanently delete all application data'), icon: <Trash2 size={24} />, iconBg: 'bg-red-50', iconColor: 'text-red-500', isDanger: true },
+    { id: 'logout', title: tr('خروج از حساب', 'Logout'), desc: tr('پایان نشست فعلی', 'End current session'), icon: <LogOut size={24} />, iconBg: 'bg-rose-50', iconColor: 'text-rose-500', isDanger: true },
+  ];
+
+  const handleCardClick = (id: string) => {
+    if (id === 'blacklist') {
+      setCurrentView('blacklist');
+    } else if (id === 'logout') {
+      setShowLogoutConfirm(true);
+    } else if (id === 'today') {
+      setActiveCallTab('today');
+      setCurrentView('dashboard');
+    } else if (id === 'clear') {
+      setShowConfirm(true);
+    } else if (id === 'sync-courses') {
+      if (!isSyncing) handleSyncData();
+    } else {
+      toast(tr('این بخش در حال توسعه است', 'This section is under development'), { icon: '🚧' });
+    }
+  };
+
+  return (
+    <div className="w-full h-full pt-4 pb-32 overflow-y-auto hide-scrollbar bg-slate-50" style={{ paddingLeft: `${layoutMargin}px`, paddingRight: `${layoutMargin}px` }}>
+      <div className="w-full flex flex-col items-center" dir={direction}>
+        
+        <div className="w-full flex flex-col items-center mb-12 text-center mt-6">
+          <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center text-slate-800 mb-6 shadow-sm border border-slate-200">
+             <Settings size={40} />
+          </div>
+          <h2 className="text-4xl font-extrabold text-slate-900 mb-3 tracking-tight">{tr('تنظیمات سیستم', 'Application settings')}</h2>
+          <p className="text-base text-slate-600 max-w-2xl leading-relaxed">{tr('پیکربندی و شخصی‌سازی تنظیمات برنامه. تغییرات شما به صورت خودکار ذخیره می‌شوند.', 'Configure and personalize the application. Your changes are saved automatically.')}</p>
+        </div>
+
+        <div className="w-full max-w-5xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {SETTING_CARDS.map((card) => (
+               <SettingCard 
+                 key={card.id}
+                 title={card.title}
+                 desc={card.desc}
+                 icon={card.icon}
+                 iconBg={card.iconBg}
+                 iconColor={card.iconColor}
+                 isDanger={card.isDanger}
+                 onClick={() => handleCardClick(card.id)}
+               />
+           ))}
+        </div>
+
+        {/* Customization Section */}
+        <div className="w-full max-w-5xl mt-8">
+          <div className="flex items-center gap-3 mb-6 px-2 mt-4">
+            <Palette className="text-brand-500" size={24} />
+            <h3 className="text-2xl font-bold text-slate-800">{tr('شخصی‌سازی ظاهر', 'Appearance Customization')}</h3>
+          </div>
+          
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <div className="flex flex-col gap-4 p-6 bg-slate-50 rounded-[1.5rem] border border-slate-100 hover:border-slate-200 transition-colors">
+              <label className="flex items-center justify-between text-slate-800 font-bold">
+                <div className="flex items-center gap-2 text-lg">
+                  <Palette size={20} className="text-brand-500" />
+                  {tr('رنگ اصلی سیستم', 'System Accent Color')}
+                </div>
+                <span className="text-xs font-mono bg-white px-2.5 py-1 rounded-md border border-slate-200 shadow-sm text-slate-600" dir="ltr">{accentColor}</span>
+              </label>
+              
+              <div className="flex items-center gap-3 mt-2 flex-wrap">
+                {['#005082', '#005938', '#8b1c2b', '#7a4b00', '#5b3b8c', '#4f5b66', '#0f0f0f'].map(c => (
+                  <button 
+                    key={c}
+                    onClick={() => setAccentColor(c)}
+                    className={`w-9 h-9 rounded-full shadow-sm transition-transform hover:scale-110 ${accentColor === c ? 'ring-2 ring-offset-2 ring-brand-500 scale-110' : ''}`}
+                    style={{ backgroundColor: c }}
+                  />
+                ))}
+                <div className="w-px h-8 bg-slate-200 mx-2"></div>
+                <div className="relative w-9 h-9 rounded-full overflow-hidden border border-slate-200 cursor-pointer shadow-sm hover:scale-110 transition-transform flex items-center justify-center">
+                   <div className="absolute inset-0 bg-[conic-gradient(red,yellow,lime,aqua,blue,fuchsia,red)] opacity-40 pointer-events-none" />
+                   <div className="w-4 h-4 rounded-full bg-white shadow-sm pointer-events-none z-10" />
+                   <input 
+                     type="color" 
+                     value={accentColor} 
+                     onChange={(e) => setAccentColor(e.target.value)}
+                     className="absolute -inset-4 w-[200%] h-[200%] cursor-pointer opacity-0 z-20"
+                   />
+                </div>
+              </div>
+              <p className="text-sm font-medium text-slate-500 mt-1">{tr('رنگ دکمه‌ها و عناصر اصلی', 'Main elements and buttons color')}</p>
+            </div>
+
+            <div className="flex flex-col gap-4 p-6 bg-slate-50 rounded-[1.5rem] border border-slate-100 hover:border-slate-200 transition-colors">
+              <label className="flex items-center justify-between text-slate-800 font-bold">
+                <div className="flex items-center gap-2 text-lg">
+                  <MousePointerClick size={20} className="text-brand-500" />
+                  {tr('رنگ افکت کلیک', 'Click Effect Color')}
+                </div>
+                <span className="text-xs font-mono bg-white px-2.5 py-1 rounded-md border border-slate-200 shadow-sm text-slate-600" dir="ltr">{sparkColor}</span>
+              </label>
+              
+              <div className="flex items-center gap-3 mt-2 flex-wrap">
+                {['#005082', '#005938', '#8b1c2b', '#7a4b00', '#5b3b8c', '#4f5b66', '#0f0f0f'].map(c => (
+                  <button 
+                    key={c}
+                    onClick={() => setSparkColor(c)}
+                    className={`w-9 h-9 rounded-full shadow-sm transition-transform hover:scale-110 ${sparkColor === c ? 'ring-2 ring-offset-2 ring-brand-500 scale-110' : ''}`}
+                    style={{ backgroundColor: c }}
+                  />
+                ))}
+                <div className="w-px h-8 bg-slate-200 mx-2"></div>
+                <div className="relative w-9 h-9 rounded-full overflow-hidden border border-slate-200 cursor-pointer shadow-sm hover:scale-110 transition-transform flex items-center justify-center">
+                   <div className="absolute inset-0 bg-[conic-gradient(red,yellow,lime,aqua,blue,fuchsia,red)] opacity-40 pointer-events-none" />
+                   <div className="w-4 h-4 rounded-full bg-white shadow-sm pointer-events-none z-10" />
+                   <input 
+                     type="color" 
+                     value={sparkColor} 
+                     onChange={(e) => setSparkColor(e.target.value)}
+                     className="absolute -inset-4 w-[200%] h-[200%] cursor-pointer opacity-0 z-20"
+                   />
+                </div>
+              </div>
+              <p className="text-sm font-medium text-slate-500 mt-1">{tr('رنگ انیمیشن جرقه‌های هنگام کلیک', 'Color of sparks animation on click')}</p>
+            </div>
+
+
+            
+          </div>
+        </div>
+      </div>
+      
+      <div className="flex justify-center mt-auto pt-20 pb-4 text-secondary">
+          <span className="text-secondary font-medium text-sm tracking-widest " dir="ltr">V 6.5.0</span>
+      </div>
+
+      {/* Confirmation Dialog */}
+        {showConfirm && createPortal(
+          <div className="fixed inset-0 z-[200] flex items-center justify-center px-4 pointer-events-auto">
+            <div 
+              className="absolute inset-0 bg-surface  "
+              onClick={() => setShowConfirm(false)}
+            />
+            
+            <div 
+              className="relative w-full max-w-sm bg-surface  border border-border rounded-3xl  overflow-hidden p-8 text-center"
+            >
+              <div className="w-16 h-16 bg-red-500/10 text-red-500 border border-red-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <AlertTriangle size={32} />
+              </div>
+              
+              <h3 className="text-xl font-bold text-secondary mb-3 tracking-tight">{tr('تأیید حذف داده‌ها', 'Confirm data deletion')}</h3>
+              <p className="text-sm font-normal text-secondary mb-8 leading-relaxed">
+                {tr('آیا مطمئن هستید که می‌خواهید تمام داده‌های تماس سیستم را حذف کنید؟ این عملیات برای همه اپراتورها اعمال شده و داده‌ها بازگردانده نخواهند شد.', 'Are you sure you want to delete all call data? This affects every operator and cannot be undone.')}
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={handleClearData}
+                  className="flex-1 py-3 px-4 bg-red-600/90 text-white font-bold rounded-xl hover:bg-red-500 transition-all "
+                >
+                  {tr('بله، پاک شود', 'Delete all data')}
+                </button>
+                <button
+                  onClick={() => setShowConfirm(false)}
+                  className="flex-1 py-3 px-4 bg-surface-hover border border-border text-secondary font-medium rounded-xl hover:bg-slate-200 transition-all"
+                >
+                  {tr('لغو', 'Cancel')}
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+
+      {/* Logout Confirmation Dialog */}
+        {showLogoutConfirm && createPortal(
+          <div className="fixed inset-0 z-[200] flex items-center justify-center px-4 pointer-events-auto">
+            <div 
+              className="absolute inset-0 bg-surface  "
+              onClick={() => setShowLogoutConfirm(false)}
+            />
+            
+            <div 
+              className="relative w-full max-w-sm bg-surface  border border-border rounded-3xl  overflow-hidden p-8 text-center"
+            >
+              <div className="w-16 h-16 bg-red-500/10 text-red-500 border border-red-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <LogOut size={32} />
+              </div>
+              
+              <h3 className="text-xl font-bold text-secondary mb-3 tracking-tight">{tr('خروج از حساب', 'Logout')}</h3>
+              <p className="text-sm font-normal text-secondary mb-8 leading-relaxed">
+                {tr('آیا مطمئن هستید که می‌خواهید از حساب کاربری خود خارج شوید؟', 'Are you sure you want to logout?')}
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => { logout(); setShowLogoutConfirm(false); }}
+                  className="flex-1 py-3 px-4 bg-red-600/90 text-white font-bold rounded-xl hover:bg-red-500 transition-all "
+                >
+                  {tr('بله، خروج', 'Yes, logout')}
+                </button>
+                <button
+                  onClick={() => setShowLogoutConfirm(false)}
+                  className="flex-1 py-3 px-4 bg-surface-hover border border-border text-secondary font-medium rounded-xl hover:bg-slate-200 transition-all"
+                >
+                  {tr('لغو', 'Cancel')}
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+    </div>
+  );
+};

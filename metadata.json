@@ -1,0 +1,6 @@
+{
+  "name": "نوین فناوری خبره بنیان",
+  "description": "سیستم مدیریت تماس‌های تلفنی تیم فروش آموزشگاه نوین فناوری خبره بنیان",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

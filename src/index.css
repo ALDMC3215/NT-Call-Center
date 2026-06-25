@@ -1,0 +1,409 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: 'NovinQuicksand';
+  src: url('../Quicksand font/Quicksand-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'NovinQuicksand';
+  src: url('../Quicksand font/Quicksand-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'NovinQuicksand';
+  src: url('../Quicksand font/Quicksand-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'NovinQuicksand';
+  src: url('../Quicksand font/Quicksand-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'NovinQuicksand';
+  src: url('../Quicksand font/Quicksand-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'NovinQuicksand';
+  src: url('../Quicksand font/Quicksand-Bold.ttf') format('truetype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'NovinQuicksand';
+  src: url('../Quicksand font/Quicksand-Bold.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'NovinYekanBakh';
+  src: url('../Yekanbakh/YekanBakhFaNum-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'NovinYekanBakh';
+  src: url('../Yekanbakh/YekanBakhFaNum-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'NovinYekanBakh';
+  src: url('../Yekanbakh/YekanBakhFaNum-Regular.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'NovinYekanBakh';
+  src: url('../Yekanbakh/YekanBakhFaNum-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'NovinYekanBakh';
+  src: url('../Yekanbakh/YekanBakhFaNum-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'NovinYekanBakh';
+  src: url('../Yekanbakh/YekanBakhFaNum-ExtraBold.ttf') format('truetype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'NovinYekanBakh';
+  src: url('../Yekanbakh/YekanBakhFaNum-Black.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@theme {
+  --font-sans: var(--app-font), sans-serif;
+  
+  --radius-sm: 0.75rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 0.75rem;
+
+  /* Theming using explicit colors instead of variables for Tailwind v4 compatibility */
+  --color-bg-base: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-hover: #f7f7f8;
+  --color-border: #8e8e8e;
+
+  /* Typography Colors */
+  --color-text-primary: #0f0f0f;
+  --color-text-secondary: #3f3f3f;
+  --color-text-muted: #595959;
+
+  /* Brand Palette */
+  --color-brand-100: var(--theme-brand-100);
+  --color-brand-200: var(--theme-brand-200);
+  --color-brand-300: var(--theme-brand-300);
+  --color-brand-400: var(--theme-brand-400);
+  --color-brand-500: var(--theme-brand-500);
+  --color-brand-600: var(--theme-brand-600);
+  --color-brand-700: var(--theme-brand-700);
+  --color-brand-800: var(--theme-brand-800);
+  --color-brand-900: var(--theme-brand-900);
+
+  /* Status colors - distinct for sketch UX */
+  --color-success: #3b5638;
+  --color-success-soft: rgba(59, 86, 56, 0.15);
+  --color-danger: #822a23;
+  --color-danger-soft: rgba(130, 42, 35, 0.15);
+  --color-warning: #6b5200;
+  --color-warning-soft: rgba(107, 82, 0, 0.15);
+  --color-neutral: #54594c;
+}
+
+@layer base {
+  :root {
+    --app-font: 'NovinYekanBakh', system-ui, -apple-system, sans-serif;
+    
+    /* Flat Light Theme (ChatGPT style) */
+    --theme-bg-base: #ffffff;
+    --theme-surface: #ffffff;
+    --theme-surface-hover: #f7f7f8;
+    --theme-border: #e5e5e5;
+    
+    --theme-text-primary: #0f0f0f;
+    --theme-text-secondary: #555555;
+    --theme-text-muted: #888888;
+
+    /* Base brand color will be overridden dynamically by React, but here is a default blue */
+    --theme-brand-100: #e0f2fe;
+    --theme-brand-200: #bae6fd;
+    --theme-brand-300: #7dd3fc;
+    --theme-brand-400: #38bdf8;
+    --theme-brand-500: #0ea5e9;
+    --theme-brand-600: #0284c7;
+    --theme-brand-700: #0369a1;
+    --theme-brand-800: #075985;
+    --theme-brand-900: #0c4a6e;
+  }
+
+  /* Global Overrides to aggressively disable all shadows and gradients */
+  [class*="shadow"] {
+    box-shadow: none !important;
+  }
+  [class*="bg-gradient"], [class*="from-"], [class*="to-"], [class*="via-"] {
+    background-image: none !important;
+  }
+}
+  body {
+    font-family: var(--app-font);
+    background-color: var(--color-bg-base);
+  }
+
+  html, body, #root {
+    direction: inherit;
+    font-family: var(--font-sans);
+    color: var(--color-text-primary);
+    background-color: var(--color-bg-base);
+    font-feature-settings: normal;
+    min-height: 100%;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  input, button, textarea, select {
+    font-family: var(--app-font), sans-serif;
+    font-weight: inherit;
+    font-feature-settings: inherit;
+  }
+
+  body, button, input, textarea, select, option {
+    font-family: var(--app-font), sans-serif !important;
+    font-synthesis: none;
+  }
+
+  html.lang-en body {
+    letter-spacing: normal;
+  }
+
+  button, select {
+    cursor: pointer;
+  }
+
+  button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+    outline: 2px solid var(--color-brand-400);
+    outline-offset: 2px;
+  }
+/* Base custom styles */
+.gradient-bg {
+  min-height: 100vh;
+  width: 100%;
+  background-color: transparent;
+}
+
+/* Semantic surface remapping */
+.bg-surface {
+  background-color: var(--color-surface);
+}
+
+.bg-surface-hover:hover {
+  background-color: var(--color-surface-hover);
+}
+
+.bento-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-2xl);
+  box-: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bento-card:hover {
+  background: var(--color-surface-hover);
+  border-color: #cbd5e1;
+  box-: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+}
+
+.glass-pill {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* Custom Tooltip Styling */
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #8b5cf6;
+}
+
+::selection {
+  color: #ffffff;
+  background: #10b981; /* Emerald Green */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.custom-select-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #34d399 transparent; /* Emerald 400 */
+  overscroll-behavior: contain;
+}
+
+.custom-select-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+
+.custom-select-scroll::-webkit-scrollbar-thumb {
+  background: #34d399; /* Emerald 400 */
+  border-radius: 999px;
+}
+
+[data-tooltip] {
+  position: relative;
+}
+
+[data-tooltip]:hover::before {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 10px;
+  background-color: rgba(29, 29, 31, 0.9);
+  color: #fff;
+  border-radius: 6px;
+  font-family: var(--font-sans) !important;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  z-index: 99999;
+  pointer-events: none;
+  opacity: 0;
+  animation: tooltipFadeIn 0.1s ease forwards;
+}
+
+[data-tooltip-bottom] {
+  position: relative;
+}
+
+[data-tooltip-bottom]:hover::before {
+  content: attr(data-tooltip-bottom);
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 10px;
+  background-color: rgba(29, 29, 31, 0.9);
+  color: #fff;
+  border-radius: 6px;
+  font-family: var(--font-sans) !important;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  z-index: 99999;
+  pointer-events: none;
+  opacity: 0;
+  animation: tooltipFadeInBottom 0.1s ease forwards;
+}
+
+@keyframes tooltipFadeInBottom {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.tooltip-left-edge[data-tooltip]:hover::before,
+.tooltip-left-edge[data-tooltip-bottom]:hover::before {
+  left: 0;
+  transform: none;
+  animation: tooltipFadeInLeftEdge 0.1s ease forwards;
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes tooltipFadeInLeftEdge {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}

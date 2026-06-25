@@ -1,0 +1,3 @@
+@echo off
+echo Starting Novintech Call Manager...
+npm run dev

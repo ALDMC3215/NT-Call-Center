@@ -1,0 +1,32 @@
+[li] class='['menu-item', 'menu-item-type-custom', 'menu-item-object-custom', 'menu-item-7191']' => آموزش اسکرچ(دو زبانه)
+[li] class='['menu-item', 'menu-item-type-post_type', 'menu-item-object-product', 'menu-item-2790']' => پایتون نوجوانان(دو زبانه)
+[li] class='['menu-item', 'menu-item-type-post_type', 'menu-item-object-product', 'menu-item-2830']' => بازی سازی با پایتون ویژه نوجوانان(دو زبانه)
+[li] class='['menu-item', 'menu-item-type-custom', 'menu-item-object-custom', 'menu-item-6327']' => شئ گرایی در پایتون ویژه نوجوانان(دو زبانه)
+[li] class='['menu-item', 'menu-item-type-custom', 'menu-item-object-custom', 'menu-item-has-children', 'menu-item-5650']' => زبانزبان مهارتی نوجوانزبان تخصصی کامپیوتر ویژه نوجوانانزبان تخصصی کامپیوتر ویژه بزرگسالان
+[ul] class='['sub-menu']' => زبان مهارتی نوجوانزبان تخصصی کامپیوتر ویژه نوجوانانزبان تخصصی کامپیوتر ویژه بزرگسالان
+[li] class='['menu-item', 'menu-item-type-custom', 'menu-item-object-custom', 'menu-item-5942']' => زبان مهارتی نوجوان
+[li] class='['menu-item', 'menu-item-type-custom', 'menu-item-object-custom', 'menu-item-10447']' => زبان تخصصی کامپیوتر ویژه نوجوانان
+[li] class='['menu-item', 'menu-item-type-custom', 'menu-item-object-custom', 'menu-item-10377']' => زبان تخصصی کامپیوتر ویژه بزرگسالان
+[li] class='['menu-item', 'menu-item-type-custom', 'menu-item-object-custom', 'menu-item-7191']' => آموزش اسکرچ(دو زبانه)
+[li] class='['menu-item', 'menu-item-type-post_type', 'menu-item-object-product', 'menu-item-2790']' => پایتون نوجوانان(دو زبانه)
+[li] class='['menu-item', 'menu-item-type-post_type', 'menu-item-object-product', 'menu-item-2830']' => بازی سازی با پایتون ویژه نوجوانان(دو زبانه)
+[li] class='['menu-item', 'menu-item-type-custom', 'menu-item-object-custom', 'menu-item-6327']' => شئ گرایی در پایتون ویژه نوجوانان(دو زبانه)
+[li] class='['menu-item', 'menu-item-type-custom', 'menu-item-object-custom', 'menu-item-has-children', 'menu-item-5650', 'emallshop-dropdown-menu']' => زبانزبان مهارتی نوجوانزبان تخصصی کامپیوتر ویژه نوجوانانزبان تخصصی کامپیوتر ویژه بزرگسالان
+[ul] class='['sub-menu']' => زبان مهارتی نوجوانزبان تخصصی کامپیوتر ویژه نوجوانانزبان تخصصی کامپیوتر ویژه بزرگسالان
+[li] class='['menu-item', 'menu-item-type-custom', 'menu-item-object-custom', 'menu-item-5942', 'emallshop-dropdown-submenu']' => زبان مهارتی نوجوان
+[li] class='['menu-item', 'menu-item-type-custom', 'menu-item-object-custom', 'menu-item-10447', 'emallshop-dropdown-submenu']' => زبان تخصصی کامپیوتر ویژه نوجوانان
+[li] class='['menu-item', 'menu-item-type-custom', 'menu-item-object-custom', 'menu-item-10377', 'emallshop-dropdown-submenu']' => زبان تخصصی کامپیوتر ویژه بزرگسالان
+[div] class='['wapf-field-label', 'wapf--above']' => گواهینامه پایان دوره
+[span] class='[]' => گواهینامه پایان دوره
+[div] class='['meta-info-unit']' => نوع دوره: حضوری
+[div] class='['value']' => نوع دوره: حضوری
+[div] class='['meta-info-unit']' => پیش نیاز: ندارد
+[div] class='['value']' => پیش نیاز: ندارد
+[div] class='['meta-info-unit']' => تاریخ شروع: به محض تکمیل ظرفیت
+[div] class='['value']' => تاریخ شروع: به محض تکمیل ظرفیت
+[div] class='['meta-info-unit']' => زبان: فارسی
+[div] class='['value']' => زبان: فارسی
+[div] class='['meta-info-unit']' => 70 ساعت
+[div] class='['value']' => 70 ساعت
+[div] class='['meta-info-unit']' => گواهی نامه بین المللی معتبر قابل ترجمه
+[div] class='['value']' => گواهی نامه بین المللی معتبر قابل ترجمه
