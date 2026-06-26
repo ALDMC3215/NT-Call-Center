@@ -107,7 +107,7 @@ const PresenceSection = () => {
          <div className="flex flex-col gap-3">
            {presenceList.map(p => (
              <div key={p.expert_id} className={`p-4 rounded-2xl border flex flex-col lg:flex-row lg:items-center justify-between gap-4 lg:gap-6 ${p.status === 'online' ? 'bg-emerald-50 border-emerald-100' : p.status === 'idle' ? 'bg-amber-50 border-amber-100' : 'bg-slate-50 border-slate-200'}`}>
-                
+
                 {/* Right side: Identity & Status */}
                 <div className="flex items-center gap-3 lg:w-1/4 shrink-0">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center font-extrabold text-sm shrink-0 ${p.status === 'online' ? 'bg-emerald-100 text-emerald-700' : p.status === 'idle' ? 'bg-amber-100 text-amber-700' : 'bg-slate-200 text-slate-500'}`}>
@@ -151,6 +151,155 @@ const PresenceSection = () => {
              </div>
            ))}
          </div>
+      )}
+    </div>
+  );
+};
+
+// ---------------------------------------------------------------------------
+// Daily Stats Section
+// ---------------------------------------------------------------------------
+const DailyStatsSection = ({ profiles }: { profiles: SupabaseProfile[] }) => {
+  const [stats, setStats] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  const fetchStats = async () => {
+    setLoading(true);
+    const { data, err } = await supabase
+      .from('call_attempts')
+      .select('expert_id, contact_id, created_at, jalali_date_time');
+
+    if (err) {
+      setError(true);
+    } else if (data) {
+      setError(false);
+
+      const grouped = new Map<string, {
+        expertId: string,
+        dateStr: string,
+        contactIds: Set<string>,
+        attemptsCount: number,
+        minTime: Date,
+        maxTime: Date
+      }>();
+
+      for (const row of data) {
+        const rowDate = new Date(row.created_at);
+        const dayStr = rowDate.toLocaleDateString('fa-IR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+
+        const key = `${row.expert_id}_${dayStr}`;
+        let group = grouped.get(key);
+        if (!group) {
+          group = {
+            expertId: row.expert_id,
+            dateStr: dayStr,
+            contactIds: new Set<string>(),
+            attemptsCount: 0,
+            minTime: rowDate,
+            maxTime: rowDate
+          };
+          grouped.set(key, group);
+        }
+
+        group.contactIds.add(row.contact_id);
+        group.attemptsCount++;
+        if (rowDate < group.minTime) group.minTime = rowDate;
+        if (rowDate > group.maxTime) group.maxTime = rowDate;
+      }
+
+      const statsArr = Array.from(grouped.values()).map(g => {
+        const profile = profiles.find(p => p.id === g.expertId);
+        return {
+          ...g,
+          expertName: profile ? profile.full_name : 'کارشناس نامشخص',
+          workedCount: g.contactIds.size,
+          minTimeStr: g.minTime.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' }),
+          maxTimeStr: g.maxTime.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' }),
+          sortTime: g.maxTime.getTime()
+        };
+      });
+
+      statsArr.sort((a, b) => b.sortTime - a.sortTime);
+
+      setStats(statsArr);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    if (profiles.length > 0) {
+      fetchStats();
+      const interval = setInterval(fetchStats, 60000);
+      return () => clearInterval(interval);
+    }
+  }, [profiles]);
+
+  if (loading && stats.length === 0) return null;
+
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 mb-8">
+      <div className="flex items-center justify-between mb-4">
+         <h2 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
+           <Activity size={20} className="text-indigo-600" />
+           کارکرد روزانه کارشناسان
+         </h2>
+         <div className="flex items-center gap-3">
+           <span className="text-xs font-medium text-slate-400">به‌روزرسانی خودکار</span>
+           <button onClick={fetchStats} className="flex items-center gap-1 bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-700 px-2 py-1 rounded-md text-xs font-bold transition-colors">
+             <RefreshCw size={12} className={loading ? "animate-spin" : ""} />
+           </button>
+         </div>
+      </div>
+
+      {error && stats.length === 0 ? (
+         <div className="text-center py-6">
+           <p className="text-sm font-bold text-red-600">دریافت آمار با مشکل مواجه شد.</p>
+         </div>
+      ) : stats.length === 0 ? (
+         <div className="text-center py-6">
+           <p className="text-sm font-bold text-slate-500">هیچ فعالیتی ثبت نشده است.</p>
+         </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-right text-sm">
+            <thead className="bg-slate-50 text-slate-500 font-bold border-b border-slate-200">
+              <tr>
+                <th className="py-3 px-4">نام کارشناس</th>
+                <th className="py-3 px-4">تاریخ</th>
+                <th className="py-3 px-4">تعداد شماره‌های کارشده</th>
+                <th className="py-3 px-4">تعداد کل تلاش‌های تماس</th>
+                <th className="py-3 px-4">اولین فعالیت</th>
+                <th className="py-3 px-4">آخرین فعالیت</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+              {stats.map((row, idx) => (
+                <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
+                  <td className="py-3 px-4 flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs shrink-0">
+                      {row.expertName.charAt(0)}
+                    </div>
+                    {row.expertName}
+                  </td>
+                  <td className="py-3 px-4" dir="ltr">{row.dateStr}</td>
+                  <td className="py-3 px-4">
+                    <span className="bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-lg font-bold text-xs border border-emerald-100">
+                      {row.workedCount}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4">
+                    <span className="bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg font-bold text-xs border border-slate-200">
+                      {row.attemptsCount}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4" dir="ltr">{row.minTimeStr}</td>
+                  <td className="py-3 px-4" dir="ltr">{row.maxTimeStr}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );
@@ -270,6 +419,8 @@ export const ManagerDashboard: React.FC = () => {
           </div>
 
           <PresenceSection />
+
+          <DailyStatsSection profiles={profiles} />
 
           {/* Stats cards */}
           <div className="grid grid-cols-3 gap-4 mb-8">

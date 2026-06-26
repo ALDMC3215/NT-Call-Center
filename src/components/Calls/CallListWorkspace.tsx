@@ -89,9 +89,9 @@ const CustomSelect = ({ value, onChange, options, placeholder, className }: any)
             exit={{ opacity: 0, y: -5 }}
             transition={{ duration: 0.15 }}
             className="absolute bg-white border border-slate-200 rounded-xl  p-1 z-[101] max-h-60 overflow-y-auto custom-select-scroll flex flex-col gap-0.5"
-            style={{ 
-              top: coords.top, 
-              left: coords.left, 
+            style={{
+              top: coords.top,
+              left: coords.left,
               minWidth: coords.width + 40,
               transform: coords.top < window.innerHeight / 2 ? 'none' : 'translateY(-100%)'
             }}
@@ -221,11 +221,11 @@ const ManualAddModal = ({ isOpen, onClose, onAdd }: { isOpen: boolean; onClose: 
                     placeholder={tr('اختیاری...', 'Optional...')}
                   />
                </div>
-               <button onClick={() => { 
+               <button onClick={() => {
                   if (!phone.trim()) return toast.error(tr('لطفا شماره را وارد کنید.', 'Please enter a phone number.'));
                   if (phone.length < 10) return toast.error(tr('شماره معتبر نیست.', 'Invalid phone number.'));
-                  onAdd(phone, fullName); 
-                  onClose(); 
+                  onAdd(phone, fullName);
+                  onClose();
                }} className="w-full mt-2 h-10 bg-brand-500 hover:bg-brand-600 text-white rounded-xl font-medium text-[13px] transition-colors flex items-center justify-center gap-2">
                  <Plus size={16} />
                  <span>{tr('افزودن به لیست', 'Add to list')}</span>
@@ -241,17 +241,17 @@ const ManualAddModal = ({ isOpen, onClose, onAdd }: { isOpen: boolean; onClose: 
 
 
 export const CallListWorkspace = () => {
-  const { calls, activeCallTab: activeTab, setActiveCallTab: setActiveTab, updateCall, deleteCall, addCall, bulkAddCalls, recordAttempt, profile, blacklist, addToBlacklist, layoutMargin } = useAppContext();
+  const { calls, activeCallTab: activeTab, setActiveCallTab: setActiveTab, updateCall, deleteCall, addCall, bulkAddCalls, recordAttempt, profile, blacklist, addToBlacklist, layoutMargin, isLoadingCalls, callsError } = useAppContext();
   const { tr, valueLabel, direction } = useLocale();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  
+
 
   const hasAnyFieldSelected = (c: CallRecord) => {
     return !!(c.callStatus || (c.courses && c.courses.length > 0) || c.advisory || c.registered);
   };
-  
+
   const [notesModalCall, setNotesModalCall] = useState<CallRecord | null>(null);
   const [advisoryModalCall, setAdvisoryModalCall] = useState<CallRecord | null>(null);
   const [isManualAddOpen, setIsManualAddOpen] = useState(false);
@@ -270,11 +270,11 @@ export const CallListWorkspace = () => {
         const wsname = wb.SheetNames[0];
         const ws = wb.Sheets[wsname];
         const data = xlsx.utils.sheet_to_json(ws, { header: 1 }) as any[][];
-        
+
         let count = 0;
         let skippedPhones: string[] = [];
         const toAdd: any[] = [];
-        
+
         data.forEach((row: any[]) => {
           if (!row || row.length === 0) return;
           const phoneRegex = /(09\d{9})|(\+989\d{9})|(9\d{9})/;
@@ -284,10 +284,10 @@ export const CallListWorkspace = () => {
           for (let i = 0; i < row.length; i++) {
              const rawValue = row[i];
              if (rawValue === undefined || rawValue === null) continue;
-             
+
              const cellValue = String(rawValue);
              const noSpaceStr = cellValue.replace(/\s+/g, '');
-             
+
              if (!phoneStr && phoneRegex.test(noSpaceStr)) {
                 const match = noSpaceStr.match(phoneRegex);
                 if (match) {
@@ -309,15 +309,15 @@ export const CallListWorkspace = () => {
              }
           }
         });
-        
+
         if (toAdd.length > 0) {
           bulkAddCalls(toAdd);
         }
-        
+
         if (skippedPhones.length > 0) {
           toast.error(tr(`تعداد ${skippedPhones.length} شماره به دلیل قرار داشتن در لیست سیاه حذف شدند:\n${skippedPhones.join(' ، ')}`, `${skippedPhones.length} numbers skipped due to blacklist:\n${skippedPhones.join(', ')}`), { duration: 8000 });
         }
-        
+
         if (count > 0) {
           toast.success(tr(`تعداد ${count} شماره با موفقیت از اکسل اضافه شد.`, `${count} numbers added from Excel.`));
         } else if (skippedPhones.length > 0) {
@@ -366,26 +366,16 @@ export const CallListWorkspace = () => {
   };
 
   const handleRowSubmit = (call: CallRecord) => {
-    const limits = getDayLimits();
-    const hasAttemptToday = call.attempts?.some(a => (a.createdAt || " ").split('T')[0] === limits.today);
-
-    if (hasAttemptToday) {
-      const updatedAttempts = call.attempts?.filter(a => (a.createdAt || " ").split('T')[0] !== limits.today) || [];
-      updateCall({ ...call, attempts: updatedAttempts });
-      toast.success(tr('از فعالیت امروز خارج شد.', 'Removed from today.'));
-    } else {
-      recordAttempt(call.id, {
-        fullName: call.fullName || '',
-        callStatus: call.callStatus || '',
-        courses: call.courses || [],
-        advisory: call.advisory || '',
-        advisoryDate: call.advisoryDate || '',
-        advisoryTime: call.advisoryTime || '',
-        registered: call.registered || '',
-        notes: call.notes || ''
-      });
-      toast.success(tr('به فعالیت امروز اضافه شد.', 'Added to today.'));
-    }
+    recordAttempt(call.id, {
+      fullName: call.fullName || '',
+      callStatus: call.callStatus || '',
+      courses: call.courses || [],
+      advisory: call.advisory || '',
+      advisoryDate: call.advisoryDate || '',
+      advisoryTime: call.advisoryTime || '',
+      registered: call.registered || '',
+      notes: call.notes || ''
+    });
   };
 
   const filteredList = useMemo(() => {
@@ -398,7 +388,7 @@ export const CallListWorkspace = () => {
       list = list.filter(c => {
          const hasAttemptToday = c.attempts?.some(a => (a.createdAt || " ").split('T')[0] === limits.today);
          if (hasAttemptToday) return false;
-         
+
          const hasAnyAttempt = c.attempts && c.attempts.length > 0;
          return !hasAnyAttempt;
       });
@@ -406,14 +396,20 @@ export const CallListWorkspace = () => {
       list = list.filter(c => {
          if (!c.attempts || c.attempts.length === 0) return false;
          const lastAttempt = c.attempts[c.attempts.length - 1];
+
+         const reg = lastAttempt.registered;
+         if (reg === 'ثبت نام کرد' || reg === 'ثبت نام نکرد' || reg === 'قصد ندارد') {
+           return false;
+         }
+
          const s = lastAttempt.callStatus;
          const adv = lastAttempt.advisory;
-         return s === 'عدم تمایل' || 
-                s === 'پاسخ نداد' || 
-                s === 'نامشخص' || 
+         return s === 'عدم تمایل' ||
+                s === 'پاسخ نداد' ||
+                s === 'نامشخص' ||
                 s === 'پیگیری مجدد در هفته آینده' ||
-                adv === 'بله' || 
-                adv === 'خیر' || 
+                adv === 'بله' ||
+                adv === 'خیر' ||
                 adv === 'قصد دارد' ||
                 adv === 'در آینده' ||
                 adv === 'احتمالا';
@@ -425,6 +421,22 @@ export const CallListWorkspace = () => {
     }
     return list.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
   }, [calls, activeTab, searchQuery]);
+
+  if (isLoadingCalls) {
+    return (
+      <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50" dir={direction}>
+        <div className="text-slate-500 font-medium">{tr('در حال بارگذاری اطلاعات تماس‌ها از سرور ابری...', 'Loading call data from cloud server...')}</div>
+      </div>
+    );
+  }
+
+  if (callsError) {
+    return (
+      <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50" dir={direction}>
+        <div className="text-rose-500 font-medium">{callsError}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-full flex flex-col pb-4 hide-scrollbar relative bg-slate-50" dir={direction}>
@@ -457,17 +469,17 @@ export const CallListWorkspace = () => {
       <div className="flex-1 w-full min-h-0 flex items-stretch gap-4 pt-4 pb-4" style={{ paddingLeft: `${layoutMargin}px`, paddingRight: `${layoutMargin}px` }}>
         {/* Center Grid */}
         <div className="flex-1 flex flex-col overflow-hidden relative">
-        
+
         {/* Contextual Toolbar (Moved from Right Sidebar) */}
         {activeTab === 'queue' && (
           <div className="flex items-center gap-2 mb-3 px-2">
-             <button 
+             <button
                 onClick={() => setIsManualAddOpen(true)}
                 className="h-9 px-3 rounded-xl bg-brand-500/10 text-brand-500 flex items-center justify-center hover:bg-brand-500/20 border border-brand-500/20 transition-all font-medium text-[12px] gap-2"
               >
                 <Plus size={16} /> {tr('افزودن دستی', 'Add')}
               </button>
-              <button 
+              <button
                 onClick={() => {
                   setConfirmModalConfig({
                     isOpen: true,
@@ -493,7 +505,7 @@ export const CallListWorkspace = () => {
           <CoursesView externalSearchQuery={searchQuery} />
         ) : (
           <div className="relative h-full bg-white rounded-2xl border border-slate-200 flex flex-col overflow-hidden shadow-sm">
-          
+
           <div className="flex-1 overflow-auto custom-select-scroll relative z-10">
             <table className="w-full text-center border-collapse min-w-[1200px]">
               <thead className="sticky top-0 bg-slate-50 border-b border-slate-200 z-20">
@@ -510,31 +522,31 @@ export const CallListWorkspace = () => {
               <tbody className="text-[13px] font-medium text-slate-700 relative z-0">
                 {filteredList.map((c, i) => (
                   <React.Fragment key={c.id}>
-                  <tr 
+                  <tr
                     className="border-b border-slate-100 hover:bg-slate-50 transition-colors duration-300 group"
                   >
                     {/* Phone */}
                     <td className="p-5 relative whitespace-nowrap min-w-[200px]">
-                       <div className="absolute right-4 top-1/2 -translate-y-1/2 z-10" title={tr('ثبت وضعیت / لغو ثبت', 'Submit / Unsubmit')}>
-                          <Checkbox 
-                            checked={c.attempts?.some(a => (a.createdAt || " ").split('T')[0] === getDayLimits().today)} 
-                            onCheckedChange={() => handleRowSubmit(c)} 
+                       <div className="absolute right-4 top-1/2 -translate-y-1/2 z-10" title={tr('ثبت وضعیت (ثبت نهایی به عنوان کارشده)', 'Submit (Final check as worked)')}>
+                          <Checkbox
+                            checked={c.attempts?.some(a => (a.createdAt || " ").split('T')[0] === getDayLimits().today)}
+                            onCheckedChange={() => handleRowSubmit(c)}
                             variant="default"
                             disabled={!hasAnyFieldSelected(c)}
                           />
                        </div>
                        <div className="flex flex-col items-center justify-center w-full px-8">
                           <span dir="ltr" className="font-extrabold text-[17px] tracking-wider text-slate-900 group-hover:text-cyan-600 transition-colors">{c.phone}</span>
-                          <input 
-                            type="text" 
-                            value={c.fullName || ''} 
+                          <input
+                            type="text"
+                            value={c.fullName || ''}
                             onChange={e => handleFieldChange(c, 'fullName', e.target.value)}
-                            placeholder={tr('نام شخص...', 'Name...')} 
-                            className="text-[13px] text-slate-500 group-hover:text-slate-900 font-normal text-center bg-transparent border-b border-transparent hover:border-slate-200 focus:border-cyan-500 outline-none w-28 transition-colors" 
+                            placeholder={tr('نام شخص...', 'Name...')}
+                            className="text-[13px] text-slate-500 group-hover:text-slate-900 font-normal text-center bg-transparent border-b border-transparent hover:border-slate-200 focus:border-cyan-500 outline-none w-28 transition-colors"
                           />
                        </div>
                     </td>
-                    
+
                     {/* Call Status */}
                     <td className="p-5 relative whitespace-nowrap">
                        <div className="flex items-center justify-center gap-2">
@@ -599,7 +611,7 @@ export const CallListWorkspace = () => {
                     <td className="p-5 relative whitespace-nowrap">
                        <div className="flex items-center justify-center">
                           {c.advisory === 'بله' ? (
-                             <button 
+                             <button
                                onClick={() => setAdvisoryModalCall(c)}
                                className="text-[14px] font-medium text-brand-600 bg-brand-50 hover:bg-brand-100 px-4 py-2 rounded-xl transition-colors border border-transparent hover:border-brand-200 min-w-[120px]"
                              >
@@ -614,28 +626,28 @@ export const CallListWorkspace = () => {
                     {/* Actions */}
                     <td className="p-5 relative">
                        <div className="flex items-center justify-center gap-2">
-                           <button 
+                           <button
                              onClick={() => setNotesModalCall(c)}
                              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
-                               c.notes 
-                                 ? 'bg-cyan-600 text-white  border border-cyan-700' 
+                               c.notes
+                                 ? 'bg-cyan-600 text-white  border border-cyan-700'
                                  : 'bg-slate-50 text-slate-500 border border-slate-200 hover:bg-slate-50 hover:text-cyan-600'
-                             }`} 
+                             }`}
                              title={c.notes || tr('یادداشت', 'Notes')}
                            >
                               <FileText size={18} />
                            </button>
-                           <button 
+                           <button
                              onClick={() => {
-                                updateCall({ 
-                                   ...c, 
-                                   callStatus: '', 
-                                   courses: [], 
-                                   advisory: '', 
-                                   advisoryDate: '', 
-                                   advisoryTime: '', 
-                                   registered: '', 
-                                   notes: '' 
+                                updateCall({
+                                   ...c,
+                                   callStatus: '',
+                                   courses: [],
+                                   advisory: '',
+                                   advisoryDate: '',
+                                   advisoryTime: '',
+                                   registered: '',
+                                   notes: ''
                                 });
                                 toast.success(tr('اطلاعات ریست شد.', 'Information reset.'));
                              }}
@@ -644,7 +656,7 @@ export const CallListWorkspace = () => {
                            >
                               <Eraser size={18} />
                            </button>
-                           <button 
+                           <button
                              onClick={() => {
                                 setConfirmModalConfig({
                                   isOpen: true,
@@ -662,7 +674,7 @@ export const CallListWorkspace = () => {
                            >
                               <Ban size={18} />
                            </button>
-                           <button 
+                           <button
                              onClick={() => {
                                 setConfirmModalConfig({
                                   isOpen: true,
@@ -682,13 +694,13 @@ export const CallListWorkspace = () => {
                        </div>
                     </td>
                   </tr>
-                  
-                  
+
+
                   </React.Fragment>
                 ))}
               </tbody>
             </table>
-            
+
             {filteredList.length === 0 && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-50 text-slate-500">
                   <Filter size={48} className="mb-4 text-slate-400" />
@@ -700,7 +712,7 @@ export const CallListWorkspace = () => {
         )}
       </div>
       </div>
-      <NotesModal 
+      <NotesModal
         call={notesModalCall}
         isOpen={!!notesModalCall}
         onClose={() => setNotesModalCall(null)}
@@ -719,12 +731,12 @@ export const CallListWorkspace = () => {
           }
         }}
       />
-      <ManualAddModal 
+      <ManualAddModal
         isOpen={isManualAddOpen}
         onClose={() => setIsManualAddOpen(false)}
         onAdd={handleManualAdd}
       />
-      <ConfirmDialog 
+      <ConfirmDialog
         isOpen={confirmModalConfig.isOpen}
         onCancel={() => setConfirmModalConfig({ ...confirmModalConfig, isOpen: false })}
         onConfirm={confirmModalConfig.onConfirm}
