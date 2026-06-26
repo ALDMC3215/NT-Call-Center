@@ -240,9 +240,18 @@ export const AuthProvider = ({
   // signOut
   // ---------------------------------------------------------------------------
   const signOut = useCallback(async () => {
+    if (supabaseUser) {
+      const sid = sessionStorage.getItem(`expert_session_${supabaseUser.id}`);
+      if (sid) {
+        try {
+          await supabase.rpc('end_session', { p_session_id: sid });
+        } catch (e) {} // ignore errors to ensure logout completes
+        sessionStorage.removeItem(`expert_session_${supabaseUser.id}`);
+      }
+    }
     await supabase.auth.signOut();
     // onAuthStateChange listener handles state cleanup
-  }, []);
+  }, [supabaseUser]);
 
   // ---------------------------------------------------------------------------
   // approveAgent — calls the secure SECURITY DEFINER RPC

@@ -3,6 +3,19 @@ import { CallAttempt, CallRecord, Profile } from '../types';
 import { storage } from '../utils/storage';
 import { v4 as uuidv4 } from 'uuid';
 import { jalaliDateTimeToIso, nowJalali } from '../utils/jalali';
+import { supabase } from '../lib/supabase';
+
+let lastActivityTime = 0;
+const reportMeaningfulActivity = (userId: string) => {
+  const now = Date.now();
+  if (now - lastActivityTime < 5000) return; // debounce 5s
+
+  const sid = sessionStorage.getItem(`expert_session_${userId}`);
+  if (!sid) return;
+
+  lastActivityTime = now;
+  supabase.rpc('record_activity', { p_session_id: sid }).catch(() => {});
+};
 
 export type ViewType = 'dashboard' | 'profile' | 'settings' | 'stats' | 'admin' | 'blacklist' | 'reports' | 'experts' | 'managers' | 'about';
 
@@ -101,6 +114,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const addCall = useCallback((callDto: Omit<CallRecord, 'id' | 'createdAt'>) => {
     if (!profile) return;
+    reportMeaningfulActivity(profile.sessionId);
     const newCall: CallRecord = {
       ...callDto,
       id: uuidv4(),
@@ -115,6 +129,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const updateCall = useCallback((updatedCall: CallRecord) => {
     if (!profile) return;
+    reportMeaningfulActivity(profile.sessionId);
     setCallsState(prev => {
       const updated = prev.map(c => c.id === updatedCall.id ? updatedCall : c);
       storage.saveCalls(profile.name, updated);
@@ -124,6 +139,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const deleteCall = useCallback((id: string) => {
     if (!profile) return;
+    reportMeaningfulActivity(profile.sessionId);
     setCallsState(prev => {
       const updated = prev.filter(c => c.id !== id);
       storage.saveCalls(profile.name, updated);
@@ -139,6 +155,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const bulkAddCalls = useCallback((callsArray: Omit<CallRecord, 'id' | 'createdAt'>[]) => {
     if (!profile) return;
+    reportMeaningfulActivity(profile.sessionId);
     const startOrder = calls.reduce((max, call) => Math.max(max, call.queueOrder ?? -1), -1) + 1;
     const newCalls = callsArray.map((callDto, index) => ({
       ...callDto,
@@ -156,6 +173,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const recordAttempt = useCallback((id: string, values: Pick<CallRecord, 'fullName' | 'callStatus' | 'courses' | 'advisory' | 'advisoryDate' | 'advisoryTime' | 'registered' | 'notes'>) => {
     if (!profile) return;
+    reportMeaningfulActivity(profile.sessionId);
     const needsFollowUp = ['پاسخ نداد', 'در دسترس نیست', 'مشغول بود', 'بعداً تماس بگیرید', 'نیازمند پیگیری'].includes(values.callStatus) || values.advisory === 'هماهنگی بعدا';
     const now = new Date();
     const scheduledAdvisory = values.advisory === 'بله' && values.advisoryDate && values.advisoryTime
@@ -192,14 +210,16 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const addToBlacklist = useCallback((phone: string) => {
+    if (profile) reportMeaningfulActivity(profile.sessionId);
     storage.addToBlacklist(phone);
     setBlacklistState(storage.getBlacklist());
-  }, []);
+  }, [profile]);
 
   const removeFromBlacklist = useCallback((phone: string) => {
+    if (profile) reportMeaningfulActivity(profile.sessionId);
     storage.removeFromBlacklist(phone);
     setBlacklistState(storage.getBlacklist());
-  }, []);
+  }, [profile]);
 
   const restoreBackup = useCallback((p: Profile, importedCalls: CallRecord[], importedBlacklist: string[]) => {
     storage.saveProfile(p);

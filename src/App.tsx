@@ -7,6 +7,7 @@ import React from 'react';
 import { useAuth } from './hooks/useAuth';
 import { useAppContext } from './hooks/useAppContext';
 import { ToastProvider, customToast as toast } from './components/UI/toast';
+import { supabase } from './lib/supabase';
 
 const ProfileView        = React.lazy(() => import('./components/Profile/ProfileView').then(m => ({ default: m.ProfileView })));
 const SettingsView       = React.lazy(() => import('./components/Settings/SettingsView').then(m => ({ default: m.SettingsView })));
@@ -100,6 +101,69 @@ const AgentTriedManagerPanel = () => {
 };
 
 // ---------------------------------------------------------------------------
+// Session Manager — tracks presence for active agents
+// ---------------------------------------------------------------------------
+const SessionManager = () => {
+  const { authStatus, supabaseUser } = useAuth();
+
+  React.useEffect(() => {
+    if (authStatus !== 'active_agent' || !supabaseUser) return;
+
+    const userId = supabaseUser.id;
+    const storageKey = `expert_session_${userId}`;
+    let intervalId: any;
+
+    const initSession = async () => {
+      let sid = sessionStorage.getItem(storageKey);
+      let isValid = false;
+
+      if (sid) {
+        // Try heartbeat to validate
+        const { error } = await supabase.rpc('heartbeat_session', { p_session_id: sid });
+        if (!error) {
+          isValid = true;
+        }
+      }
+
+      if (!isValid) {
+        // start new session
+        const { data, error } = await supabase.rpc('start_session');
+        if (error) {
+          return;
+        }
+        sid = data;
+        sessionStorage.setItem(storageKey, sid);
+      }
+
+      // Record activity once on enter
+      if (sid) {
+        await supabase.rpc('record_activity', { p_session_id: sid });
+      }
+
+      // Start 60s heartbeat
+      intervalId = setInterval(async () => {
+        const currentSid = sessionStorage.getItem(storageKey);
+        if (!currentSid) return;
+        const { error } = await supabase.rpc('heartbeat_session', { p_session_id: currentSid });
+        if (error) {
+           clearInterval(intervalId);
+           sessionStorage.removeItem(storageKey);
+           toast.error('نشست شما نامعتبر است یا در تب دیگری باز شده است. لطفا صفحه را رفرش کنید.', { duration: 10000 });
+        }
+      }, 60000);
+    };
+
+    initSession();
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [authStatus, supabaseUser]);
+
+  return null;
+};
+
+// ---------------------------------------------------------------------------
 // Main App
 // ---------------------------------------------------------------------------
 export default function App() {
@@ -180,6 +244,7 @@ export default function App() {
                 <motion.div key="main-app" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15, ease: 'easeOut' }} className="w-full h-screen overflow-hidden bg-transparent flex relative" dir={direction}>
                   <div className="flex flex-col w-full h-full overflow-hidden z-10">
                     <FollowupReminder />
+                    <SessionManager />
                     <div className="w-full pointer-events-auto shrink-0 z-20"><AppHeader /></div>
                     <div className="flex-1 w-full min-h-0 overflow-auto pointer-events-auto bg-transparent relative z-10">
                       <AnimatePresence mode="wait">

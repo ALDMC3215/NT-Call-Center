@@ -17,7 +17,7 @@ import { SupabaseProfile } from '../../types';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Shield, Users, Clock, CheckCircle2, Ban, LogOut,
-  RefreshCw, User, Mail, Calendar, AlertCircle,
+  RefreshCw, User, Mail, Calendar, AlertCircle, Activity,
 } from 'lucide-react';
 import { customToast as toast } from '../UI/toast';
 
@@ -43,6 +43,85 @@ const StatusBadge = ({ status }: { status: string }) => {
   };
   const { label, cls } = map[status] || { label: status, cls: 'bg-slate-100 text-slate-600 border-slate-200' };
   return <span className={`text-xs font-bold px-2.5 py-1 rounded-lg border ${cls}`}>{label}</span>;
+};
+
+// ---------------------------------------------------------------------------
+// Presence Section
+// ---------------------------------------------------------------------------
+const PresenceSection = () => {
+  const [presenceList, setPresenceList] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchPresence = async () => {
+    const { data, error } = await supabase.rpc('get_presence_summary');
+    if (!error && data) {
+      setPresenceList(data);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchPresence();
+    const interval = setInterval(fetchPresence, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const formatTime = (iso: string | null) => {
+    if (!iso) return '-';
+    return new Date(iso).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  if (loading) return null;
+
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 mb-8">
+      <div className="flex items-center justify-between mb-4">
+         <h2 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
+           <Activity size={20} className="text-indigo-600" />
+           وضعیت لحظه‌ای کارشناسان
+         </h2>
+         <span className="text-xs font-medium text-slate-400">به‌روزرسانی خودکار هر ۳۰ ثانیه</span>
+      </div>
+      {presenceList.length === 0 ? (
+         <div className="text-center py-6">
+           <p className="text-sm font-bold text-slate-500">هیچ کارشناس فعالی در سیستم وجود ندارد.</p>
+         </div>
+      ) : (
+         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+           {presenceList.map(p => (
+             <div key={p.expert_id} className={`p-4 rounded-xl border flex flex-col gap-3 ${p.status === 'online' ? 'bg-emerald-50 border-emerald-100' : p.status === 'idle' ? 'bg-amber-50 border-amber-100' : 'bg-slate-50 border-slate-200'}`}>
+                <div className="flex items-center justify-between">
+                   <span className="font-bold text-sm text-slate-900">{p.full_name}</span>
+                   <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${p.status === 'online' ? 'bg-emerald-100 text-emerald-700' : p.status === 'idle' ? 'bg-amber-100 text-amber-700' : 'bg-slate-200 text-slate-600'}`}>
+                     {p.status === 'online' ? 'آنلاین' : p.status === 'idle' ? 'بیکار' : 'آفلاین'}
+                   </span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                   <div className="flex flex-col gap-1">
+                     <span className="text-slate-400">ورود:</span>
+                     <span className="font-medium text-slate-700" dir="ltr">{formatTime(p.login_time)}</span>
+                   </div>
+                   <div className="flex flex-col gap-1">
+                     <span className="text-slate-400">آخرین فعالیت:</span>
+                     <span className="font-medium text-slate-700" dir="ltr">{formatTime(p.last_activity_time)}</span>
+                   </div>
+                   <div className="flex flex-col gap-1 col-span-2">
+                     <span className="text-slate-400">آخرین بازدید:</span>
+                     <span className="font-medium text-slate-700" dir="ltr">{formatTime(p.last_seen_time)}</span>
+                   </div>
+                </div>
+                {p.has_active_alert && (
+                   <div className="mt-1 flex items-center gap-1.5 text-[11px] font-bold text-rose-600 bg-rose-100 px-2 py-1 rounded-md w-fit">
+                     <AlertCircle size={12} />
+                     <span>هشدار عدم فعالیت</span>
+                   </div>
+                )}
+             </div>
+           ))}
+         </div>
+      )}
+    </div>
+  );
 };
 
 // ---------------------------------------------------------------------------
@@ -160,6 +239,8 @@ export const ManagerDashboard: React.FC = () => {
             <h1 className="text-2xl font-extrabold text-slate-900 mb-1 tracking-tight">پنل مدیریت نوین‌تک</h1>
             <p className="text-sm text-slate-500 font-medium">مدیریت کارشناسان و تأیید حساب‌های جدید</p>
           </div>
+
+          <PresenceSection />
 
           {/* Stats cards */}
           <div className="grid grid-cols-3 gap-4 mb-8">
