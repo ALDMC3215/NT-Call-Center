@@ -51,10 +51,14 @@ const StatusBadge = ({ status }: { status: string }) => {
 const PresenceSection = () => {
   const [presenceList, setPresenceList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
 
   const fetchPresence = async () => {
     const { data, error } = await supabase.rpc('get_presence_summary');
-    if (!error && data) {
+    if (error) {
+      setHasError(true);
+    } else if (data) {
+      setHasError(false);
       setPresenceList(data);
     }
     setLoading(false);
@@ -80,9 +84,21 @@ const PresenceSection = () => {
            <Activity size={20} className="text-indigo-600" />
            وضعیت لحظه‌ای کارشناسان
          </h2>
-         <span className="text-xs font-medium text-slate-400">به‌روزرسانی خودکار هر ۳۰ ثانیه</span>
+         <div className="flex items-center gap-3">
+           <span className="text-xs font-medium text-slate-400">به‌روزرسانی خودکار هر ۳۰ ثانیه</span>
+           {hasError && (
+             <button onClick={fetchPresence} className="flex items-center gap-1 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 px-2 py-1 rounded-md text-xs font-bold transition-colors">
+               <RefreshCw size={12} />
+               <span>تلاش مجدد</span>
+             </button>
+           )}
+         </div>
       </div>
-      {presenceList.length === 0 ? (
+      {hasError && presenceList.length === 0 ? (
+         <div className="text-center py-6">
+           <p className="text-sm font-bold text-red-600">دریافت وضعیت لحظهای کارشناسان با مشکل مواجه شد.</p>
+         </div>
+      ) : presenceList.length === 0 ? (
          <div className="text-center py-6">
            <p className="text-sm font-bold text-slate-500">هیچ کارشناس فعالی در سیستم وجود ندارد.</p>
          </div>

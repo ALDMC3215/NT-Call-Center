@@ -14,7 +14,11 @@ const reportMeaningfulActivity = (userId: string) => {
   if (!sid) return;
 
   lastActivityTime = now;
-  supabase.rpc('record_activity', { p_session_id: sid }).catch(() => {});
+  (async () => {
+    try {
+      await supabase.rpc('record_activity', { p_session_id: sid });
+    } catch (e) {}
+  })();
 };
 
 export type ViewType = 'dashboard' | 'profile' | 'settings' | 'stats' | 'admin' | 'blacklist' | 'reports' | 'experts' | 'managers' | 'about';

@@ -104,7 +104,7 @@ export const AuthProvider = ({
   // Fetch profile from public.profiles and update auth status
   // ---------------------------------------------------------------------------
   const loadProfile = useCallback(
-    async (user: User) => {
+    async (user: User, autoSyncLoginMode = false) => {
       if (fetchingRef.current) return;
       fetchingRef.current = true;
 
@@ -127,6 +127,9 @@ export const AuthProvider = ({
         if (sp.account_status === 'active') {
           onAuthenticated(buildLocalProfile(sp));
           setAuthStatus(sp.role === 'admin' ? 'active_admin' : 'active_agent');
+          if (autoSyncLoginMode) {
+            setLoginMode(sp.role === 'admin' ? 'manager' : 'agent');
+          }
         } else if (sp.account_status === 'disabled') {
           setAuthStatus('disabled');
         } else {
@@ -146,17 +149,17 @@ export const AuthProvider = ({
     supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
       if (session?.user) {
         setSupabaseUser(session.user);
-        loadProfile(session.user);
+        loadProfile(session.user, true);
       } else {
         setAuthStatus('unauthenticated');
       }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event: string, session: Session | null) => {
+      (event: string, session: Session | null) => {
         if (session?.user) {
           setSupabaseUser(session.user);
-          loadProfile(session.user);
+          loadProfile(session.user, event === 'INITIAL_SESSION');
         } else {
           setSupabaseUser(null);
           setSupabaseProfile(null);
