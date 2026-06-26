@@ -27,6 +27,7 @@ interface AppContextType {
   profile: Profile | null;
   calls: CallRecord[];
   isLoadingCalls: boolean;
+  hasInitialCallsLoaded: boolean;
   callsError: string | null;
   blacklist: string[];
   currentView: ViewType;
@@ -64,6 +65,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfileState] = useState<Profile | null>(() => storage.getProfile());
   const [calls, setCallsState] = useState<CallRecord[]>([]);
   const [isLoadingCalls, setIsLoadingCalls] = useState(false);
+  const [hasInitialCallsLoaded, setHasInitialCallsLoaded] = useState(false);
   const [callsError, setCallsError] = useState<string | null>(null);
   const [callsRefreshCounter, setCallsRefreshCounter] = useState(0);
   const [blacklist, setBlacklistState] = useState<string[]>(() => storage.getBlacklist());
@@ -72,6 +74,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (!profile) {
       setCallsState([]);
+      setHasInitialCallsLoaded(false);
       return;
     }
 
@@ -98,7 +101,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     let isMounted = true;
 
     const fetchCalls = async () => {
-      setIsLoadingCalls(true);
+      if (!hasInitialCallsLoaded) setIsLoadingCalls(true);
       setCallsError(null);
       try {
         const { data: contactsData, error: contactsError } = await supabase
@@ -179,6 +182,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         }
 
         setCallsState(formattedCalls);
+        setHasInitialCallsLoaded(true);
       } catch (err: any) {
         console.error("Error fetching calls:", err);
         if (isMounted) setCallsError("خطا در بارگیری اطلاعات از سرور ابری.");

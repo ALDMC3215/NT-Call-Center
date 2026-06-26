@@ -241,7 +241,23 @@ const ManualAddModal = ({ isOpen, onClose, onAdd }: { isOpen: boolean; onClose: 
 
 
 export const CallListWorkspace = () => {
-  const { calls, activeCallTab: activeTab, setActiveCallTab: setActiveTab, updateCall, deleteCall, addCall, bulkAddCalls, recordAttempt, profile, blacklist, addToBlacklist, layoutMargin, isLoadingCalls, callsError } = useAppContext();
+  const {
+    calls,
+    isLoadingCalls,
+    callsError,
+    hasInitialCallsLoaded,
+    updateCall,
+    deleteCall,
+    activeCallTab: activeTab,
+    setActiveCallTab,
+    addToBlacklist,
+    recordAttempt,
+    addCall,
+    bulkAddCalls,
+    profile,
+    blacklist,
+    layoutMargin
+  } = useAppContext();
   const { tr, valueLabel, direction } = useLocale();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
@@ -422,7 +438,7 @@ export const CallListWorkspace = () => {
     return list.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
   }, [calls, activeTab, searchQuery]);
 
-  if (isLoadingCalls) {
+  if (isLoadingCalls && !hasInitialCallsLoaded) {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50" dir={direction}>
         <div className="text-slate-500 font-medium">{tr('در حال بارگذاری اطلاعات تماس‌ها از سرور ابری...', 'Loading call data from cloud server...')}</div>
@@ -430,7 +446,7 @@ export const CallListWorkspace = () => {
     );
   }
 
-  if (callsError) {
+  if (callsError && !hasInitialCallsLoaded) {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50" dir={direction}>
         <div className="text-rose-500 font-medium">{callsError}</div>
@@ -440,6 +456,11 @@ export const CallListWorkspace = () => {
 
   return (
     <div className="w-full h-full flex flex-col pb-4 hide-scrollbar relative bg-slate-50" dir={direction}>
+      {callsError && hasInitialCallsLoaded && (
+        <div className="w-full max-w-3xl mx-auto mt-4 bg-rose-50 text-rose-600 px-4 py-3 rounded-2xl text-[13.5px] font-medium text-center border border-rose-200 shadow-sm animate-pulse">
+          {callsError}
+        </div>
+      )}
       {/* Global Search Bar Under Header */}
       <div className="pt-4 pb-2 w-full flex justify-center" style={{ paddingLeft: `${layoutMargin}px`, paddingRight: `${layoutMargin}px` }}>
         <div className="relative flex items-center w-full max-w-3xl group">
