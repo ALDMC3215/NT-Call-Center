@@ -94,11 +94,11 @@ export const AppHeader = () => {
 
           {/* ── LEFT: Logo ─────────────────────────── */}
           <div className="flex items-center gap-2 shrink-0 group">
-            <div className="w-8 h-8 bg-brand-500 rounded-lg flex items-center justify-center p-1.5 transition-colors">
-              <img src={NTLogo} alt="Novintech Logo" className="w-full h-full object-contain invert" />
+            <div className="w-8 h-8 flex items-center justify-center transition-colors">
+              <img src={NTLogo} alt="Novin Tech Logo" className="w-full h-full object-contain" />
             </div>
             <span className="text-slate-900 font-extrabold text-sm hidden md:block tracking-wide transition-colors">
-              Novintech
+              Novin Tech Panel
             </span>
           </div>
 

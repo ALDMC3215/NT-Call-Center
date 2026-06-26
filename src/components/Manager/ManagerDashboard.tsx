@@ -11,6 +11,7 @@
  */
 
 import React, { useCallback, useEffect, useState } from 'react';
+import NTLogo from '../../NT Logo.svg';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabase';
 import { SupabaseProfile } from '../../types';
@@ -103,35 +104,50 @@ const PresenceSection = () => {
            <p className="text-sm font-bold text-slate-500">هیچ کارشناس فعالی در سیستم وجود ندارد.</p>
          </div>
       ) : (
-         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+         <div className="flex flex-col gap-3">
            {presenceList.map(p => (
-             <div key={p.expert_id} className={`p-4 rounded-xl border flex flex-col gap-3 ${p.status === 'online' ? 'bg-emerald-50 border-emerald-100' : p.status === 'idle' ? 'bg-amber-50 border-amber-100' : 'bg-slate-50 border-slate-200'}`}>
-                <div className="flex items-center justify-between">
-                   <span className="font-bold text-sm text-slate-900">{p.full_name}</span>
-                   <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${p.status === 'online' ? 'bg-emerald-100 text-emerald-700' : p.status === 'idle' ? 'bg-amber-100 text-amber-700' : 'bg-slate-200 text-slate-600'}`}>
-                     {p.status === 'online' ? 'آنلاین' : p.status === 'idle' ? 'بیکار' : 'آفلاین'}
-                   </span>
+             <div key={p.expert_id} className={`p-4 rounded-2xl border flex flex-col lg:flex-row lg:items-center justify-between gap-4 lg:gap-6 ${p.status === 'online' ? 'bg-emerald-50 border-emerald-100' : p.status === 'idle' ? 'bg-amber-50 border-amber-100' : 'bg-slate-50 border-slate-200'}`}>
+                
+                {/* Right side: Identity & Status */}
+                <div className="flex items-center gap-3 lg:w-1/4 shrink-0">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-extrabold text-sm shrink-0 ${p.status === 'online' ? 'bg-emerald-100 text-emerald-700' : p.status === 'idle' ? 'bg-amber-100 text-amber-700' : 'bg-slate-200 text-slate-500'}`}>
+                    {p.full_name.charAt(0)}
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="font-bold text-sm text-slate-900 leading-none">{p.full_name}</span>
+                    <span className={`text-[10px] w-fit font-bold px-2 py-0.5 rounded mt-0.5 ${p.status === 'online' ? 'bg-emerald-100 text-emerald-700' : p.status === 'idle' ? 'bg-amber-100 text-amber-700' : 'bg-slate-200 text-slate-600'}`}>
+                      {p.status === 'online' ? 'آنلاین' : p.status === 'idle' ? 'بیکار' : 'آفلاین'}
+                    </span>
+                  </div>
                 </div>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                   <div className="flex flex-col gap-1">
-                     <span className="text-slate-400">ورود:</span>
-                     <span className="font-medium text-slate-700" dir="ltr">{formatTime(p.login_time)}</span>
-                   </div>
-                   <div className="flex flex-col gap-1">
-                     <span className="text-slate-400">آخرین فعالیت:</span>
-                     <span className="font-medium text-slate-700" dir="ltr">{formatTime(p.last_activity_time)}</span>
-                   </div>
-                   <div className="flex flex-col gap-1 col-span-2">
-                     <span className="text-slate-400">آخرین بازدید:</span>
-                     <span className="font-medium text-slate-700" dir="ltr">{formatTime(p.last_seen_time)}</span>
-                   </div>
+
+                {/* Middle: Metadata Blocks */}
+                <div className="flex-1 flex flex-row items-center justify-start lg:justify-center gap-6 sm:gap-8 bg-white/40 lg:bg-transparent p-3 lg:p-0 rounded-xl">
+                  <div className="flex flex-col gap-1.5 lg:items-center">
+                    <span className="text-[10px] font-bold text-slate-400">شروع حضور</span>
+                    <span className="font-bold text-xs text-slate-700" dir="ltr">{formatTime(p.login_time)}</span>
+                  </div>
+                  <div className="hidden sm:block w-px h-8 bg-slate-200"></div>
+                  <div className="flex flex-col gap-1.5 lg:items-center">
+                    <span className="text-[10px] font-bold text-slate-400">آخرین بازدید</span>
+                    <span className="font-bold text-xs text-slate-700" dir="ltr">{formatTime(p.last_seen_time)}</span>
+                  </div>
+                  <div className="hidden sm:block w-px h-8 bg-slate-200"></div>
+                  <div className="flex flex-col gap-1.5 lg:items-center">
+                    <span className="text-[10px] font-bold text-slate-400">آخرین فعالیت</span>
+                    <span className="font-bold text-xs text-slate-700" dir="ltr">{formatTime(p.last_activity_time)}</span>
+                  </div>
                 </div>
-                {p.has_active_alert && (
-                   <div className="mt-1 flex items-center gap-1.5 text-[11px] font-bold text-rose-600 bg-rose-100 px-2 py-1 rounded-md w-fit">
-                     <AlertCircle size={12} />
-                     <span>هشدار عدم فعالیت</span>
-                   </div>
-                )}
+
+                {/* Left side: Alerts */}
+                <div className="lg:w-1/4 flex justify-start lg:justify-end shrink-0">
+                  {p.has_active_alert && (
+                    <div className="flex items-center gap-1.5 text-[11px] font-bold text-rose-600 bg-rose-50 px-3 py-1.5 rounded-lg border border-rose-100 w-fit">
+                      <AlertCircle size={14} />
+                      <span>هشدار عدم فعالیت</span>
+                    </div>
+                  )}
+                </div>
              </div>
            ))}
          </div>
@@ -218,13 +234,10 @@ export const ManagerDashboard: React.FC = () => {
 
           {/* Logo */}
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
-              <Shield size={16} className="text-white" />
+            <div className="w-8 h-8 flex items-center justify-center transition-colors">
+              <img src={NTLogo} alt="Novin Tech Logo" className="w-full h-full object-contain" />
             </div>
-            <div>
-              <span className="text-slate-900 font-extrabold text-sm tracking-wide">Novintech</span>
-              <span className="text-indigo-600 font-bold text-xs mr-2">پنل مدیریت</span>
-            </div>
+            <span className="text-slate-900 font-extrabold text-sm tracking-wide">Novin Tech Panel</span>
           </div>
 
           {/* Manager info + logout */}
