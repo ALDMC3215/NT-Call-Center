@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAppContext } from '../../hooks/useAppContext';
+import { useAuth } from '../../hooks/useAuth';
 import { useLocale } from '../../hooks/useLocale';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -25,7 +26,8 @@ import NTLogo from '../../NT Logo.svg';
 type CallTab = 'queue' | 'today' | 'followup' | 'blacklist' | 'courses';
 
 export const AppHeader = () => {
-  const { currentView, setCurrentView, logout, profile, activeCallTab, setActiveCallTab, theme, setTheme } = useAppContext();
+  const { currentView, setCurrentView, profile, activeCallTab, setActiveCallTab } = useAppContext();
+  const { signOut } = useAuth();
   const { tr, direction } = useLocale();
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -170,7 +172,7 @@ export const AppHeader = () => {
             </div>
           </div>
 
-          {/* ── RIGHT: Profile + Time ─────────────────── */}
+          {/* ── RIGHT: Profile + Time + Logout ─────────────────── */}
           <div className="flex items-center gap-2 shrink-0">
 
             {/* Live Clock */}
@@ -184,14 +186,26 @@ export const AppHeader = () => {
               </span>
             </div>
 
+            {/* Logout button */}
+            <button
+              id="header-logout"
+              type="button"
+              onClick={() => setLogoutConfirmOpen(true)}
+              title={tr('خروج از حساب', 'Logout')}
+              className="flex items-center justify-center w-9 h-9 rounded-xl text-slate-500 hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-200 transition-all"
+            >
+              <LogOut size={16} />
+            </button>
+
           </div>
+
         </div>
       </header>
 
       <ConfirmDialog
         isOpen={logoutConfirmOpen}
         onCancel={() => setLogoutConfirmOpen(false)}
-        onConfirm={() => { logout(); setLogoutConfirmOpen(false); }}
+        onConfirm={() => { signOut(); setLogoutConfirmOpen(false); }}
         title={tr('خروج از حساب', 'Logout')}
         message={tr('آیا مطمئن هستید که می‌خواهید از حساب کاربری خود خارج شوید؟', 'Are you sure you want to logout?')}
         confirmText={tr('خروج', 'Logout')}

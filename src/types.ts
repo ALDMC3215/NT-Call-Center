@@ -1,3 +1,22 @@
+export type DutyGroup = 'early_week' | 'late_week';
+
+export interface SupabaseProfile {
+  id: string;
+  email: string;
+  full_name: string;
+  role: 'agent' | 'admin';
+  account_status: 'pending' | 'active' | 'disabled';
+  duty_group: DutyGroup | null;
+  approved_by: string | null;
+  approved_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// ---------------------------------------------------------------------------
+// Local app profile — kept as-is; all 40+ files depend on this shape.
+// useAuth maps SupabaseProfile → Profile on login.
+// ---------------------------------------------------------------------------
 export interface Profile {
   name: string;
   date: string;

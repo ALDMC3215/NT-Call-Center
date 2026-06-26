@@ -179,13 +179,8 @@
     --theme-brand-900: #0c4a6e;
   }
 
-  /* Global Overrides to aggressively disable all shadows and gradients */
-  [class*="shadow"] {
-    box-shadow: none !important;
-  }
-  [class*="bg-gradient"], [class*="from-"], [class*="to-"], [class*="via-"] {
-    background-image: none !important;
-  }
+  /* Shadow override intentionally kept minimal — gradient override removed
+     (it was stripping bg-clip-text gradients and making hero text invisible) */
 }
   body {
     font-family: var(--app-font);
@@ -247,20 +242,20 @@
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-2xl);
-  box-: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .bento-card:hover {
   background: var(--color-surface-hover);
   border-color: #cbd5e1;
-  box-: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
 }
 
 .glass-pill {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  box-: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
 /* Custom Tooltip Styling */
@@ -285,7 +280,7 @@
 
 ::selection {
   color: #ffffff;
-  background: #10b981; /* Emerald Green */
+  background: #0284c7; /* Sky-600 — neutral brand blue, no green artefact */
 }
 
 .hide-scrollbar::-webkit-scrollbar {
