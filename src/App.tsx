@@ -53,7 +53,7 @@ const FollowupReminder = () => {
 // Role-mismatch banners — shown inline when a signed-in user hits the wrong panel
 // ---------------------------------------------------------------------------
 const AdminTriedAgentPanel = () => {
-  const { signOut } = useAuth();
+  const { signOut, setLoginMode } = useAuth();
   return (
     <div className="flex w-full min-h-[100vh] items-center justify-center bg-slate-50" dir="rtl">
       <div className="bg-white rounded-[2rem] border border-indigo-200 p-10 shadow-xl max-w-md text-center">
@@ -64,11 +64,11 @@ const AdminTriedAgentPanel = () => {
         <p className="text-sm text-slate-600 font-medium leading-relaxed mb-6">
           شما با یک حساب مدیریت وارد شده‌اید. لطفاً از پنل مدیریت استفاده کنید.
         </p>
-        <a href="/" onClick={e => { e.preventDefault(); window.location.reload(); }}
+        <button onClick={e => { e.preventDefault(); setLoginMode('manager'); }}
           className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm transition-all shadow-md shadow-indigo-500/20 active:scale-95">
           <ArrowLeft size={16} />
           <span>رفتن به پنل مدیریت</span>
-        </a>
+        </button>
         <button onClick={signOut} className="block w-full mt-3 py-2.5 text-sm font-bold text-slate-500 hover:text-red-600 transition-colors">خروج از حساب</button>
       </div>
     </div>
@@ -76,7 +76,7 @@ const AdminTriedAgentPanel = () => {
 };
 
 const AgentTriedManagerPanel = () => {
-  const { signOut } = useAuth();
+  const { signOut, setLoginMode } = useAuth();
   return (
     <div className="flex w-full min-h-[100vh] items-center justify-center bg-slate-50" dir="rtl">
       <div className="bg-white rounded-[2rem] border border-red-200 p-10 shadow-xl max-w-md text-center">
@@ -88,11 +88,11 @@ const AgentTriedManagerPanel = () => {
           حساب شما از نوع کارشناس است و به پنل مدیریت دسترسی ندارد.<br />
           اگر فکر می‌کنید این اشتباه است، با مدیر سیستم تماس بگیرید.
         </p>
-        <a href="/" onClick={e => { e.preventDefault(); window.location.reload(); }}
+        <button onClick={e => { e.preventDefault(); setLoginMode('agent'); }}
           className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-sm transition-all shadow-md shadow-brand-500/20 active:scale-95">
           <ArrowLeft size={16} />
           <span>ورود به پنل کارشناسی</span>
-        </a>
+        </button>
         <button onClick={signOut} className="block w-full mt-3 py-2.5 text-sm font-bold text-slate-500 hover:text-red-600 transition-colors">خروج از حساب</button>
       </div>
     </div>
