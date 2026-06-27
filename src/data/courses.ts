@@ -5,6 +5,8 @@ export interface CourseItem {
   iconName: string;
   url?: string;
   price?: string;
+  originalPrice?: string;
+  thumbnail?: string;
   fullDescription?: string;
   sections?: {title: string, items: string[]}[];
   schedules?: string[];

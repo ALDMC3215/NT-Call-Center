@@ -201,23 +201,23 @@ const ManualAddModal = ({ isOpen, onClose, onAdd }: { isOpen: boolean; onClose: 
             </div>
             <div className="p-4 flex flex-col gap-4">
                <div>
-                  <label className="text-[12px] font-medium text-slate-500 mb-1 block">{tr('شماره موبایل', 'Mobile Number')} *</label>
+                  <label className="text-[12px] font-bold text-slate-600 mb-1.5 block">{tr('شماره موبایل', 'Mobile Number')} <span className="text-rose-500">*</span></label>
                   <input
                     type="tel"
                     value={phone}
                     onChange={e => setPhone(e.target.value)}
-                    className="w-full h-10 px-3 text-[13px] font-normal border border-slate-200 bg-white text-slate-900 rounded-xl outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20 text-left "
+                    className="w-full h-11 px-3 text-[14px] font-medium border border-slate-200 bg-slate-50 focus:bg-white text-slate-900 rounded-xl outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 text-left transition-all"
                     placeholder="0912..."
                     dir="ltr"
                   />
                </div>
                <div>
-                  <label className="text-[12px] font-medium text-slate-500 mb-1 block">{tr('نام و نام خانوادگی', 'Full Name')}</label>
+                  <label className="text-[12px] font-bold text-slate-600 mb-1.5 block">{tr('نام و نام خانوادگی', 'Full Name')}</label>
                   <input
                     type="text"
                     value={fullName}
                     onChange={e => setFullName(e.target.value)}
-                    className="w-full h-10 px-3 text-[13px] font-normal border border-slate-200 bg-white text-slate-900 rounded-xl outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20 "
+                    className="w-full h-11 px-3 text-[14px] font-medium border border-slate-200 bg-slate-50 focus:bg-white text-slate-900 rounded-xl outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all"
                     placeholder={tr('اختیاری...', 'Optional...')}
                   />
                </div>
@@ -272,6 +272,7 @@ export const CallListWorkspace = () => {
   const [advisoryModalCall, setAdvisoryModalCall] = useState<CallRecord | null>(null);
   const [isManualAddOpen, setIsManualAddOpen] = useState(false);
   const [confirmModalConfig, setConfirmModalConfig] = useState<{isOpen: boolean; title: string; message: string; onConfirm: () => void}>({ isOpen: false, title: '', message: '', onConfirm: () => {} });
+  const [submittingIds, setSubmittingIds] = useState<Set<string>>(new Set());
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -373,6 +374,31 @@ export const CallListWorkspace = () => {
     };
   };
 
+  const getFollowUpStatus = (isoDate?: string) => {
+    if (!isoDate) return { priority: 'none', label: 'بدون زمان', borderCls: 'border-r-slate-200', bgCls: 'bg-slate-50 text-slate-500 border-slate-200' };
+    const date = new Date(isoDate);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const targetDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    if (date.getTime() < now.getTime()) {
+      return { priority: 'overdue', label: 'عقب‌افتاده', borderCls: 'border-r-rose-500', bgCls: 'bg-rose-50 text-rose-600 border-rose-200' };
+    } else if (targetDay.getTime() === today.getTime()) {
+      return { priority: 'today', label: 'امروز', borderCls: 'border-r-amber-400', bgCls: 'bg-amber-50 text-amber-600 border-amber-200' };
+    } else if (targetDay.getTime() === tomorrow.getTime()) {
+      return { priority: 'upcoming', label: 'فردا', borderCls: 'border-r-blue-400', bgCls: 'bg-blue-50 text-blue-600 border-blue-200' };
+    } else {
+      const d = new DateObject({ date, calendar: persian, locale: persian_fa });
+      return {
+        priority: 'upcoming',
+        label: `${d.format("DD MMMM")} - ${date.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })}`,
+        borderCls: 'border-r-blue-400', bgCls: 'bg-blue-50 text-blue-600 border-blue-200'
+      };
+    }
+  };
+
   const handleStatusChange = (call: CallRecord, newStatus: string) => {
     if (newStatus !== 'پاسخ داد') {
       updateCall({ ...call, callStatus: newStatus, courses: [], advisory: undefined, registered: undefined });
@@ -381,17 +407,26 @@ export const CallListWorkspace = () => {
     }
   };
 
-  const handleRowSubmit = (call: CallRecord) => {
-    recordAttempt(call.id, {
-      fullName: call.fullName || '',
-      callStatus: call.callStatus || '',
-      courses: call.courses || [],
-      advisory: call.advisory || '',
-      advisoryDate: call.advisoryDate || '',
-      advisoryTime: call.advisoryTime || '',
-      registered: call.registered || '',
-      notes: call.notes || ''
-    });
+  const handleRowSubmit = async (call: CallRecord) => {
+    setSubmittingIds(prev => new Set(prev).add(call.id));
+    try {
+      await recordAttempt(call.id, {
+        fullName: call.fullName || '',
+        callStatus: call.callStatus || '',
+        courses: call.courses || [],
+        advisory: call.advisory || '',
+        advisoryDate: call.advisoryDate || '',
+        advisoryTime: call.advisoryTime || '',
+        registered: call.registered || '',
+        notes: call.notes || ''
+      });
+    } finally {
+      setSubmittingIds(prev => {
+        const next = new Set(prev);
+        next.delete(call.id);
+        return next;
+      });
+    }
   };
 
   const filteredList = useMemo(() => {
@@ -463,24 +498,34 @@ export const CallListWorkspace = () => {
       )}
       {/* Global Search Bar Under Header */}
       <div className="pt-4 pb-2 w-full flex justify-center" style={{ paddingLeft: `${layoutMargin}px`, paddingRight: `${layoutMargin}px` }}>
-        <div className="relative flex items-center w-full max-w-3xl group">
-          <div className="absolute inset-y-0 right-0 flex items-center pr-5 pointer-events-none text-slate-500/60 group-focus-within:text-brand-500 transition-colors">
-            <Search size={18} strokeWidth={2.5} />
+        <div className="relative flex items-center w-full max-w-4xl gap-3">
+          <div className="relative flex-1 group">
+            <div className="absolute inset-y-0 right-0 flex items-center pr-5 pointer-events-none text-slate-500/60 group-focus-within:text-brand-500 transition-colors">
+              <Search size={18} strokeWidth={2.5} />
+            </div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder={activeTab === 'courses' ? tr('جستجو در دوره‌ها...', 'Search courses...') : tr('جستجو در شماره‌ها و نام‌ها...', 'Search numbers and names...')}
+              dir={direction}
+              className="w-full h-12 bg-white border border-slate-200/80 rounded-[1.25rem] pr-12 pl-12 text-[14px] font-medium text-slate-900 placeholder:text-muted outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all shadow-sm hover:border-brand-500/40 hover:shadow-md"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute left-2.5 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-xl bg-slate-50 text-muted hover:text-rose-500 hover:bg-rose-50 transition-all cursor-pointer"
+              >
+                <X size={16} strokeWidth={2.5} />
+              </button>
+            )}
           </div>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            placeholder={activeTab === 'courses' ? tr('جستجو در دوره‌ها...', 'Search courses...') : tr('جستجو در شماره‌ها و نام‌ها...', 'Search numbers and names...')}
-            dir={direction}
-            className="w-full h-12 bg-white border border-slate-200/80 rounded-[1.25rem] pr-12 pl-12 text-[14px] font-medium text-slate-900 placeholder:text-muted outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all shadow-sm hover:border-brand-500/40 hover:shadow-md"
-          />
-          {searchQuery && (
+          {activeTab === 'queue' && (
             <button
-              onClick={() => setSearchQuery('')}
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-xl bg-slate-50 text-muted hover:text-rose-500 hover:bg-rose-50 transition-all cursor-pointer"
+              onClick={() => setIsManualAddOpen(true)}
+              className="h-12 px-5 rounded-[1.25rem] bg-brand-50 text-brand-600 flex items-center justify-center hover:bg-brand-100 transition-all font-bold text-[14px] gap-2 shrink-0 border border-brand-200"
             >
-              <X size={16} strokeWidth={2.5} />
+              <Plus size={18} strokeWidth={2.5} /> {tr('افزودن دستی', 'Add manually')}
             </button>
           )}
         </div>
@@ -491,15 +536,18 @@ export const CallListWorkspace = () => {
         {/* Center Grid */}
         <div className="flex-1 flex flex-col overflow-hidden relative">
 
-        {/* Contextual Toolbar (Moved from Right Sidebar) */}
+        {/* Contextual Toolbar */}
+        {activeTab === 'followup' && (
+          <div className="flex flex-col gap-1 mb-4 px-4 mt-2">
+            <h2 className="text-[17px] font-extrabold text-slate-900 flex items-center gap-2">
+              پیگیری‌های من
+              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-brand-100 text-brand-700">{filteredList.length}</span>
+            </h2>
+            <p className="text-[13px] text-slate-500 font-medium">تماس‌هایی که هنوز نیاز به نتیجه نهایی دارند.</p>
+          </div>
+        )}
         {activeTab === 'queue' && (
           <div className="flex items-center gap-2 mb-3 px-2">
-             <button
-                onClick={() => setIsManualAddOpen(true)}
-                className="h-9 px-3 rounded-xl bg-brand-500/10 text-brand-500 flex items-center justify-center hover:bg-brand-500/20 border border-brand-500/20 transition-all font-medium text-[12px] gap-2"
-              >
-                <Plus size={16} /> {tr('افزودن دستی', 'Add')}
-              </button>
               <button
                 onClick={() => {
                   setConfirmModalConfig({
@@ -512,7 +560,7 @@ export const CallListWorkspace = () => {
                     }
                   });
                 }}
-                className="h-9 px-3 mr-auto rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center hover:bg-rose-500/20 border border-rose-500/20 transition-all font-medium text-[12px] gap-2"
+                className="h-9 px-3 mr-auto rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-100 hover:text-rose-700 border border-rose-100 transition-all font-bold text-[12px] gap-2"
               >
                 <Trash2 size={16} /> {tr('حذف همه', 'Delete All')}
               </button>
@@ -541,30 +589,29 @@ export const CallListWorkspace = () => {
                 </tr>
               </thead>
               <tbody className="text-[13px] font-medium text-slate-700 relative z-0">
-                {filteredList.map((c, i) => (
+                {filteredList.map((c, i) => {
+                  const fuStatus = activeTab === 'followup' ? getFollowUpStatus(c.nextFollowUpAt) : null;
+                  return (
                   <React.Fragment key={c.id}>
                   <tr
-                    className="border-b border-slate-100 hover:bg-slate-50 transition-colors duration-300 group"
+                    className={`border-b border-slate-100 hover:bg-slate-50 transition-colors duration-300 group ${fuStatus ? `border-r-4 ${fuStatus.borderCls}` : ''}`}
                   >
                     {/* Phone */}
                     <td className="p-5 relative whitespace-nowrap min-w-[200px]">
-                       <div className="absolute right-4 top-1/2 -translate-y-1/2 z-10" title={tr('ثبت وضعیت (ثبت نهایی به عنوان کارشده)', 'Submit (Final check as worked)')}>
-                          <Checkbox
-                            checked={c.attempts?.some(a => (a.createdAt || " ").split('T')[0] === getDayLimits().today)}
-                            onCheckedChange={() => handleRowSubmit(c)}
-                            variant="default"
-                            disabled={!hasAnyFieldSelected(c)}
-                          />
-                       </div>
-                       <div className="flex flex-col items-center justify-center w-full px-8">
+                       <div className="flex flex-col items-center justify-center w-full px-4">
                           <span dir="ltr" className="font-extrabold text-[17px] tracking-wider text-slate-900 group-hover:text-cyan-600 transition-colors">{c.phone}</span>
                           <input
                             type="text"
                             value={c.fullName || ''}
                             onChange={e => handleFieldChange(c, 'fullName', e.target.value)}
                             placeholder={tr('نام شخص...', 'Name...')}
-                            className="text-[13px] text-slate-500 group-hover:text-slate-900 font-normal text-center bg-transparent border-b border-transparent hover:border-slate-200 focus:border-cyan-500 outline-none w-28 transition-colors"
+                            className="text-[14px] font-medium text-slate-700 text-center bg-transparent border-b-2 border-transparent hover:border-slate-200 focus:border-cyan-500 outline-none w-40 mt-1 transition-colors"
                           />
+                          {fuStatus && (
+                            <div className={`mt-2 text-[11px] font-bold px-2 py-0.5 rounded-md border ${fuStatus.bgCls}`}>
+                              {fuStatus.label}
+                            </div>
+                          )}
                        </div>
                     </td>
 
@@ -648,6 +695,14 @@ export const CallListWorkspace = () => {
                     <td className="p-5 relative">
                        <div className="flex items-center justify-center gap-2">
                            <button
+                             onClick={() => handleRowSubmit(c)}
+                             disabled={!hasAnyFieldSelected(c) || submittingIds.has(c.id)}
+                             className={`flex items-center justify-center h-10 px-4 rounded-xl font-bold text-[13px] transition-all shadow-sm tooltip-trigger shrink-0 ${hasAnyFieldSelected(c) ? 'bg-brand-600 text-white hover:bg-brand-500 hover:shadow shadow-brand-600/20' : 'bg-slate-100 text-slate-400 opacity-60 border border-slate-200'}`}
+                             title={tr('با ثبت نتیجه، این تماس در فعالیت امروز ثبت میشود.', 'Submitting saves this call attempt for today.')}
+                           >
+                             {submittingIds.has(c.id) ? tr('در حال ثبت...', 'Saving...') : tr('ثبت نتیجه', 'Submit')}
+                           </button>
+                           <button
                              onClick={() => setNotesModalCall(c)}
                              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
                                c.notes
@@ -718,14 +773,38 @@ export const CallListWorkspace = () => {
 
 
                   </React.Fragment>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
 
             {filteredList.length === 0 && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-50 text-slate-500">
-                  <Filter size={48} className="mb-4 text-slate-400" />
-                  <p className="font-medium">{tr('هیچ داده‌ای یافت نشد.', 'No data found.')}</p>
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-slate-500">
+                  {activeTab === 'followup' ? (
+                    <>
+                      <CheckCircle2 size={56} className="mb-4 text-emerald-300 opacity-50" />
+                      <p className="font-bold text-slate-700 text-lg mb-2">{tr('فعلاً پیگیری فعالی نداری', 'No active follow-ups')}</p>
+                      <p className="font-medium text-slate-500">{tr('شماره‌هایی که نیاز به تماس دوباره دارند، اینجا نمایش داده می‌شوند.', 'Contacts needing another call will appear here.')}</p>
+                    </>
+                  ) : (
+                    <>
+                      <div className="w-16 h-16 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center mb-4 shadow-sm">
+                        <Filter size={28} className="text-slate-400" />
+                      </div>
+                      <p className="font-bold text-slate-600 text-[15px] mb-2">{tr('هیچ داده‌ای یافت نشد', 'No data found')}</p>
+                      <p className="text-[13px] text-slate-400 font-medium max-w-sm text-center">{tr('برای این بخش هنوز اطلاعاتی ثبت نشده یا فیلترهای جستجو نتیجه‌ای نداشتند.', 'No information recorded yet or search yielded no results.')}</p>
+                    </>
+                  )}
+
+                  {activeTab === 'queue' && (
+                    <button
+                      onClick={() => setIsManualAddOpen(true)}
+                      className="h-11 px-6 bg-brand-500 hover:bg-brand-600 text-white rounded-xl font-bold text-[14px] transition-colors flex items-center justify-center gap-2 pointer-events-auto shadow-sm"
+                    >
+                      <Plus size={18} />
+                      {tr('افزودن شماره', 'Add number')}
+                    </button>
+                  )}
                 </div>
             )}
           </div>

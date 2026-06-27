@@ -76,7 +76,11 @@ const PresenceSection = () => {
     return new Date(iso).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
   };
 
-  if (loading) return null;
+  if (loading && presenceList.length === 0) return (
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 mb-8 flex justify-center py-10">
+      <RefreshCw size={20} className="animate-spin text-slate-300" />
+    </div>
+  );
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 mb-8">
@@ -96,46 +100,50 @@ const PresenceSection = () => {
          </div>
       </div>
       {hasError && presenceList.length === 0 ? (
-         <div className="text-center py-6">
-           <p className="text-sm font-bold text-red-600">دریافت وضعیت لحظهای کارشناسان با مشکل مواجه شد.</p>
+         <div className="text-center py-6 bg-slate-50 rounded-xl">
+           <p className="text-[13px] font-bold text-red-600">دریافت وضعیت لحظه‌ای کارشناسان با مشکل مواجه شد.</p>
          </div>
       ) : presenceList.length === 0 ? (
-         <div className="text-center py-6">
-           <p className="text-sm font-bold text-slate-500">هیچ کارشناس فعالی در سیستم وجود ندارد.</p>
+         <div className="text-center py-8 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+           <Users size={24} className="mx-auto mb-2 text-slate-300" />
+           <p className="text-[13px] font-bold text-slate-500">در حال حاضر کارشناس فعالی در پنل نیست</p>
          </div>
       ) : (
-         <div className="flex flex-col gap-3">
-           {presenceList.map(p => (
-             <div key={p.expert_id} className={`p-4 rounded-2xl border flex flex-col lg:flex-row lg:items-center justify-between gap-4 lg:gap-6 ${p.status === 'online' ? 'bg-emerald-50 border-emerald-100' : p.status === 'idle' ? 'bg-amber-50 border-amber-100' : 'bg-slate-50 border-slate-200'}`}>
+          <div className="flex flex-col gap-2">
+            {[...presenceList].sort((a, b) => {
+              const order = { online: 0, idle: 1, offline: 2 };
+              return (order[a.status as keyof typeof order] ?? 3) - (order[b.status as keyof typeof order] ?? 3);
+            }).map(p => (
+              <div key={p.expert_id} className={`p-3 rounded-xl border flex flex-col lg:flex-row lg:items-center justify-between gap-4 lg:gap-6 ${p.status === 'online' ? 'bg-white border-emerald-200 shadow-sm' : p.status === 'idle' ? 'bg-amber-50/50 border-amber-300 shadow-sm' : 'bg-slate-50 border-slate-200 opacity-75'}`}>
 
                 {/* Right side: Identity & Status */}
-                <div className="flex items-center gap-3 lg:w-1/4 shrink-0">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-extrabold text-sm shrink-0 ${p.status === 'online' ? 'bg-emerald-100 text-emerald-700' : p.status === 'idle' ? 'bg-amber-100 text-amber-700' : 'bg-slate-200 text-slate-500'}`}>
-                    {p.full_name.charAt(0)}
+                <div className="flex items-center gap-3 lg:w-1/3 shrink-0">
+                  <div className="relative">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-extrabold text-sm shrink-0 ${p.status === 'online' ? 'bg-emerald-100 text-emerald-700' : p.status === 'idle' ? 'bg-amber-200 text-amber-800' : 'bg-slate-200 text-slate-500'}`}>
+                      {p.full_name.charAt(0)}
+                    </div>
+                    {p.status === 'online' && (
+                      <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full"></span>
+                    )}
                   </div>
                   <div className="flex flex-col gap-1">
-                    <span className="font-bold text-sm text-slate-900 leading-none">{p.full_name}</span>
-                    <span className={`text-[10px] w-fit font-bold px-2 py-0.5 rounded mt-0.5 ${p.status === 'online' ? 'bg-emerald-100 text-emerald-700' : p.status === 'idle' ? 'bg-amber-100 text-amber-700' : 'bg-slate-200 text-slate-600'}`}>
-                      {p.status === 'online' ? 'آنلاین' : p.status === 'idle' ? 'بیکار' : 'آفلاین'}
+                    <span className="font-extrabold text-sm text-slate-900 leading-none">{p.full_name}</span>
+                    <span className={`text-[10px] w-fit font-bold px-2 py-0.5 rounded mt-0.5 ${p.status === 'online' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : p.status === 'idle' ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-slate-100 text-slate-500 border border-slate-200'}`}>
+                      {p.status === 'online' ? 'آنلاین' : p.status === 'idle' ? 'نیازمند توجه' : 'آفلاین'}
                     </span>
                   </div>
                 </div>
 
                 {/* Middle: Metadata Blocks */}
-                <div className="flex-1 flex flex-row items-center justify-start lg:justify-center gap-6 sm:gap-8 bg-white/40 lg:bg-transparent p-3 lg:p-0 rounded-xl">
-                  <div className="flex flex-col gap-1.5 lg:items-center">
+                <div className="flex-1 flex flex-row items-center justify-start lg:justify-center gap-8">
+                  <div className="flex flex-col gap-1 lg:items-center">
                     <span className="text-[10px] font-bold text-slate-400">شروع حضور</span>
-                    <span className="font-bold text-xs text-slate-700" dir="ltr">{formatTime(p.login_time)}</span>
+                    <span className="font-bold text-[13px] text-slate-700" dir="ltr">{formatTime(p.login_time)}</span>
                   </div>
-                  <div className="hidden sm:block w-px h-8 bg-slate-200"></div>
-                  <div className="flex flex-col gap-1.5 lg:items-center">
-                    <span className="text-[10px] font-bold text-slate-400">آخرین بازدید</span>
-                    <span className="font-bold text-xs text-slate-700" dir="ltr">{formatTime(p.last_seen_time)}</span>
-                  </div>
-                  <div className="hidden sm:block w-px h-8 bg-slate-200"></div>
-                  <div className="flex flex-col gap-1.5 lg:items-center">
+                  <div className="hidden sm:block w-px h-6 bg-slate-200"></div>
+                  <div className="flex flex-col gap-1 lg:items-center">
                     <span className="text-[10px] font-bold text-slate-400">آخرین فعالیت</span>
-                    <span className="font-bold text-xs text-slate-700" dir="ltr">{formatTime(p.last_activity_time)}</span>
+                    <span className="font-bold text-[13px] text-slate-700" dir="ltr">{formatTime(p.last_activity_time)}</span>
                   </div>
                 </div>
 
@@ -166,11 +174,11 @@ const DailyStatsSection = ({ profiles }: { profiles: SupabaseProfile[] }) => {
 
   const fetchStats = async () => {
     setLoading(true);
-    const { data, err } = await supabase
+    const { data, error } = await supabase
       .from('call_attempts')
       .select('expert_id, contact_id, created_at, jalali_date_time');
 
-    if (err) {
+    if (error) {
       setError(true);
     } else if (data) {
       setError(false);
@@ -235,7 +243,11 @@ const DailyStatsSection = ({ profiles }: { profiles: SupabaseProfile[] }) => {
     }
   }, [profiles]);
 
-  if (loading && stats.length === 0) return null;
+  if (loading && stats.length === 0) return (
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 mb-8 flex justify-center py-10">
+      <RefreshCw size={20} className="animate-spin text-slate-300" />
+    </div>
+  );
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 mb-8">
@@ -253,48 +265,49 @@ const DailyStatsSection = ({ profiles }: { profiles: SupabaseProfile[] }) => {
       </div>
 
       {error && stats.length === 0 ? (
-         <div className="text-center py-6">
-           <p className="text-sm font-bold text-red-600">دریافت آمار با مشکل مواجه شد.</p>
+         <div className="text-center py-6 bg-slate-50 rounded-xl">
+           <p className="text-[13px] font-bold text-red-600">دریافت آمار با مشکل مواجه شد.</p>
          </div>
       ) : stats.length === 0 ? (
-         <div className="text-center py-6">
-           <p className="text-sm font-bold text-slate-500">هیچ فعالیتی ثبت نشده است.</p>
+         <div className="text-center py-8 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+           <Activity size={24} className="mx-auto mb-2 text-slate-300" />
+           <p className="text-[13px] font-bold text-slate-500">هنوز فعالیت تماسی ثبت نشده</p>
          </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-right text-sm">
-            <thead className="bg-slate-50 text-slate-500 font-bold border-b border-slate-200">
+            <thead className="bg-slate-50 text-slate-400 font-bold border-b border-slate-200 text-[12px]">
               <tr>
-                <th className="py-3 px-4">نام کارشناس</th>
-                <th className="py-3 px-4">تاریخ</th>
-                <th className="py-3 px-4">تعداد شماره‌های کارشده</th>
-                <th className="py-3 px-4">تعداد کل تلاش‌های تماس</th>
-                <th className="py-3 px-4">اولین فعالیت</th>
-                <th className="py-3 px-4">آخرین فعالیت</th>
+                <th className="py-3 px-4 whitespace-nowrap">نام کارشناس</th>
+                <th className="py-3 px-4 whitespace-nowrap">تاریخ</th>
+                <th className="py-3 px-4 whitespace-nowrap">شماره‌های کارشده</th>
+                <th className="py-3 px-4 whitespace-nowrap">تلاش‌های تماس</th>
+                <th className="py-3 px-4 whitespace-nowrap">اولین فعالیت</th>
+                <th className="py-3 px-4 whitespace-nowrap">آخرین فعالیت</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+            <tbody className="divide-y divide-slate-100 text-[13px] font-medium text-slate-700">
               {stats.map((row, idx) => (
-                <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
-                  <td className="py-3 px-4 flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs shrink-0">
+                <tr key={idx} className="hover:bg-slate-50/50 transition-colors group">
+                  <td className="py-3 px-4 flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center font-extrabold text-[11px] shrink-0 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
                       {row.expertName.charAt(0)}
                     </div>
-                    {row.expertName}
+                    <span className="font-extrabold text-slate-900">{row.expertName}</span>
                   </td>
-                  <td className="py-3 px-4" dir="ltr">{row.dateStr}</td>
+                  <td className="py-3 px-4 text-slate-500 font-semibold" dir="ltr">{row.dateStr}</td>
                   <td className="py-3 px-4">
-                    <span className="bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-lg font-bold text-xs border border-emerald-100">
+                    <span className="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-lg font-extrabold text-[13px] border border-emerald-100 shadow-sm">
                       {row.workedCount}
                     </span>
                   </td>
                   <td className="py-3 px-4">
-                    <span className="bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg font-bold text-xs border border-slate-200">
+                    <span className="bg-brand-50 text-brand-700 px-3 py-1 rounded-lg font-extrabold text-[13px] border border-brand-100 shadow-sm">
                       {row.attemptsCount}
                     </span>
                   </td>
-                  <td className="py-3 px-4" dir="ltr">{row.minTimeStr}</td>
-                  <td className="py-3 px-4" dir="ltr">{row.maxTimeStr}</td>
+                  <td className="py-3 px-4 text-slate-500 font-semibold" dir="ltr">{row.minTimeStr}</td>
+                  <td className="py-3 px-4 text-slate-500 font-semibold" dir="ltr">{row.maxTimeStr}</td>
                 </tr>
               ))}
             </tbody>
@@ -413,9 +426,18 @@ export const ManagerDashboard: React.FC = () => {
         <div className="max-w-4xl mx-auto px-4 md:px-6 py-8">
 
           {/* Page title */}
-          <div className="mb-8">
-            <h1 className="text-2xl font-extrabold text-slate-900 mb-1 tracking-tight">پنل مدیریت نوین‌تک</h1>
-            <p className="text-sm text-slate-500 font-medium">مدیریت کارشناسان و تأیید حساب‌های جدید</p>
+          <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-xl font-extrabold text-slate-900 mb-1 tracking-tight">پنل مدیریت</h1>
+              <p className="text-[13px] text-slate-500 font-medium">نمای کلی وضعیت سیستم و کارشناسان</p>
+            </div>
+            <div className="flex items-center gap-2 text-[11px] font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full w-fit">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              آخرین به‌روزرسانی: همین حالا
+            </div>
           </div>
 
           <PresenceSection />
@@ -423,18 +445,20 @@ export const ManagerDashboard: React.FC = () => {
           <DailyStatsSection profiles={profiles} />
 
           {/* Stats cards */}
-          <div className="grid grid-cols-3 gap-4 mb-8">
+          <div className="grid grid-cols-3 gap-3 mb-8">
             {[
-              { label: 'در انتظار',  count: pendingAgents.length, color: 'amber',   icon: <Clock size={20} /> },
-              { label: 'کارشناسان', count: activeAgents.length,  color: 'emerald', icon: <Users size={20} /> },
-              { label: 'مدیران',     count: managers.length,      color: 'indigo',  icon: <Shield size={20} /> },
+              { label: 'در انتظار تأیید',  count: pendingAgents.length, color: 'rose',   icon: <Clock size={18} /> },
+              { label: 'کارشناسان فعال', count: activeAgents.length,  color: 'emerald', icon: <Users size={18} /> },
+              { label: 'مدیران سیستم',     count: managers.length,      color: 'indigo',  icon: <Shield size={18} /> },
             ].map(s => (
-              <div key={s.label} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
-                <div className={`w-10 h-10 rounded-xl bg-${s.color}-50 border border-${s.color}-100 flex items-center justify-center text-${s.color}-600 mb-3`}>
+              <div key={s.label} className={`bg-white rounded-xl border ${s.count > 0 && s.color === 'rose' ? 'border-rose-200 bg-rose-50/30 shadow-sm' : 'border-slate-200 shadow-sm'} p-4 flex items-center gap-4`}>
+                <div className={`w-10 h-10 rounded-xl bg-${s.color}-50 border border-${s.color}-100 flex items-center justify-center text-${s.color}-600 shrink-0`}>
                   {s.icon}
                 </div>
-                <p className="text-2xl font-extrabold text-slate-900">{s.count}</p>
-                <p className="text-xs text-slate-500 font-semibold mt-0.5">{s.label}</p>
+                <div>
+                  <p className="text-xl font-extrabold text-slate-900 leading-none mb-1">{s.count}</p>
+                  <p className="text-[11px] text-slate-500 font-bold">{s.label}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -472,9 +496,9 @@ export const ManagerDashboard: React.FC = () => {
 
           {/* Content panels */}
           <AnimatePresence mode="wait">
-            {loading ? (
+            {loading && profiles.length === 0 ? (
               <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-center py-16">
-                <RefreshCw size={24} className="animate-spin text-slate-400" />
+                <RefreshCw size={24} className="animate-spin text-slate-300" />
               </motion.div>
             ) : (
               <motion.div key={activeTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>

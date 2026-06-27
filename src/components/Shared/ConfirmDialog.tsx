@@ -43,11 +43,11 @@ export const ConfirmDialog = ({ isOpen, title, message, confirmText = 'بله، 
               onConfirm();
               onCancel();
             }}
-            className={`flex-1 mt-0 ${destructive ? 'bg-rose-500 hover:bg-rose-600 text-primary   border-transparent' : 'bg-brand-500 hover:bg-brand-600 text-primary   border-transparent'}`}
+            className={`flex-1 mt-0 font-bold ${destructive ? 'bg-rose-500 hover:bg-rose-600 text-white border-transparent shadow-sm shadow-rose-500/20' : 'bg-brand-500 hover:bg-brand-600 text-white border-transparent shadow-sm shadow-brand-500/20'}`}
           >
             {!isFa && confirmText === 'بله، تایید' ? 'Confirm' : confirmText}
           </AlertDialogAction>
-          <AlertDialogCancel onClick={onCancel} className="flex-1 mt-0">
+          <AlertDialogCancel onClick={onCancel} className="flex-1 mt-0 font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 border-slate-200">
             {tr('لغو', 'Cancel')}
           </AlertDialogCancel>
         </AlertDialogFooter>

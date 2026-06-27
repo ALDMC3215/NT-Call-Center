@@ -119,8 +119,8 @@ export const AppHeader = () => {
                     }}
                     className={`flex flex-row-reverse items-center gap-1.5 px-4 h-9 rounded-full text-[13.5px] transition-all whitespace-nowrap font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:ring-offset-2 ${
                       isActive
-                        ? 'bg-brand-500 text-white shadow-md shadow-brand-500/25'
-                        : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                        ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/25 border border-brand-500'
+                        : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100/80 border border-transparent'
                     }`}
                   >
                     {tab.icon}
@@ -141,8 +141,8 @@ export const AppHeader = () => {
                     onClick={() => setCurrentView(item.id as any)}
                     className={`flex flex-row-reverse items-center gap-1.5 px-4 h-9 rounded-full text-[13.5px] transition-all whitespace-nowrap font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:ring-offset-2 ${
                       isActive
-                        ? 'bg-brand-500 text-white shadow-md shadow-brand-500/25'
-                        : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                        ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/25 border border-brand-500'
+                        : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100/80 border border-transparent'
                     }`}
                   >
                     <Icon size={14} />
@@ -159,8 +159,8 @@ export const AppHeader = () => {
                     onClick={() => setCurrentView('admin')}
                     className={`flex flex-row-reverse items-center gap-1.5 px-4 h-9 rounded-full text-[13.5px] transition-all whitespace-nowrap font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:ring-offset-2 ${
                       currentView === 'admin'
-                        ? 'bg-brand-500 text-white shadow-md shadow-brand-500/25'
-                        : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                        ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/25 border border-brand-500'
+                        : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100/80 border border-transparent'
                     }`}
                   >
                     <Settings size={14} />

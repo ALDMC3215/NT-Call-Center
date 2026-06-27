@@ -148,56 +148,73 @@ export const CourseDetailsModal: React.FC<CourseDetailsModalProps> = ({ course, 
                       <div className="absolute -left-8 -bottom-8 opacity-[0.03] text-brand-500 transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-6">
                         <Banknote size={220} />
                       </div>
-                      <span className="text-sm font-extrabold text-brand-600 uppercase tracking-wider relative z-10">{tr('هزینه دوره', 'Investment')}</span>
-                      <div className="flex items-center gap-3 text-brand-600 relative z-10 mt-4">
-                        <span className="text-4xl lg:text-5xl font-extrabold tracking-tight">{course.price || 'نامشخص'}</span>
-                        {course.price && <span className="text-lg font-medium opacity-80 pt-2">تومان</span>}
-                      </div>
-                 </div>
-
-                 <div className="md:col-span-7 bg-surface rounded-[2rem] border-2 border-border p-8 shadow-sm hover:border-brand-500/30 transition-all hover:shadow-lg hover:shadow-brand-500/5">
-                      <h4 className="text-xl font-extrabold text-primary flex items-center gap-3 mb-6">
-                         <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500">
-                           <Clock size={20} />
-                         </div>
-                         {tr('سکشن‌های تشکیل', 'Active sections')}
-                      </h4>
-                      <div className="flex flex-col gap-4">
-                         {(course.schedules && course.schedules.length > 0) ? (
-                            course.schedules.map((schedule, idx) => (
-                              <div key={idx} className="bg-surface-hover/40 border border-border/80 p-5 rounded-2xl flex flex-wrap items-center gap-3 hover:border-amber-500/40 transition-colors group">
-                                {parseSchedule(schedule).map((badge, i) => {
-                                  if (badge.type === 'text') {
-                                    return <span key={i} className="text-[15px] font-extrabold text-primary ml-1">{badge.value}</span>;
-                                  } else if (badge.type === 'day') {
-                                    return <span key={i} className="px-3 py-1.5 bg-amber-50 text-amber-700 rounded-xl text-sm font-extrabold border border-amber-100">{badge.value}</span>;
-                                  } else if (badge.type === 'time') {
-                                    return <span key={i} className="px-3 py-1.5 bg-surface text-secondary rounded-xl text-[15px] font-medium border border-border shadow-sm">{badge.value}</span>;
-                                  } else if (badge.type === 'group_label') {
-                                    return <span key={i} className="px-2.5 py-1.5 bg-brand-500/10 text-brand-600 rounded-xl text-xs font-extrabold">{badge.value}</span>;
-                                  }
-                                  return null;
-                                })}
-                              </div>
-                            ))
-                         ) : (
-                            <div className="p-8 text-center bg-surface-hover/30 border border-border rounded-2xl border-dashed flex items-center justify-center">
-                              <p className="text-secondary font-normal">{tr('در حال حاضر سکشن فعالی برای این دوره ثبت نشده است.', 'No active sections.')}</p>
+                      {course.price ? (
+                        <>
+                          <span className="text-sm font-extrabold text-brand-600 uppercase tracking-wider relative z-10">{tr('هزینه دوره', 'Investment')}</span>
+                          <div className="flex flex-col gap-2 relative z-10 mt-4">
+                            {course.originalPrice && course.originalPrice !== course.price && (
+                               <span className="text-lg font-medium text-slate-500 line-through tracking-tight">{course.originalPrice}</span>
+                            )}
+                            <div className="flex items-center gap-3 text-brand-600">
+                              <span className="text-4xl lg:text-5xl font-extrabold tracking-tight">{course.price}</span>
                             </div>
-                         )}
-                      </div>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="flex flex-col gap-4 relative z-10 items-center justify-center text-center">
+                           <span className="text-sm font-extrabold text-brand-600 uppercase tracking-wider">{tr('هزینه نامشخص', 'Price Unknown')}</span>
+                           <a
+                             href={websiteUrl}
+                             target="_blank"
+                             rel="noreferrer"
+                             className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-brand-500 hover:bg-brand-600 text-white rounded-2xl font-extrabold transition-all shadow-md text-sm"
+                           >
+                             <Globe size={18} />
+                             <span>{tr('بررسی در سایت', 'Check on Website')}</span>
+                           </a>
+                        </div>
+                      )}
                  </div>
 
-                 {/* Bottom Row: Metadata & Features */}
-                 <div className="md:col-span-7 bg-surface rounded-[2rem] border-2 border-border p-8 shadow-sm hover:border-brand-500/30 transition-all hover:shadow-lg hover:shadow-brand-500/5">
-                    <h4 className="text-xl font-extrabold text-primary flex items-center gap-3 mb-6">
-                         <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
-                           <CheckCircle2 size={20} />
-                         </div>
-                         {tr('اطلاعات دقیق دوره', 'Course Info')}
-                    </h4>
-                    {(course.metadata && course.metadata.length > 0) ? (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                 {course.schedules && course.schedules.length > 0 && (
+                   <div className="md:col-span-7 bg-surface rounded-[2rem] border-2 border-border p-8 shadow-sm hover:border-brand-500/30 transition-all hover:shadow-lg hover:shadow-brand-500/5">
+                        <h4 className="text-xl font-extrabold text-primary flex items-center gap-3 mb-6">
+                           <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500">
+                             <Clock size={20} />
+                           </div>
+                           {tr('سکشن‌های تشکیل', 'Active sections')}
+                        </h4>
+                        <div className="flex flex-col gap-4">
+                           {course.schedules.map((schedule, idx) => (
+                                <div key={idx} className="bg-surface-hover/40 border border-border/80 p-5 rounded-2xl flex flex-wrap items-center gap-3 hover:border-amber-500/40 transition-colors group">
+                                  {parseSchedule(schedule).map((badge, i) => {
+                                    if (badge.type === 'text') {
+                                      return <span key={i} className="text-[15px] font-extrabold text-primary ml-1">{badge.value}</span>;
+                                    } else if (badge.type === 'day') {
+                                      return <span key={i} className="px-3 py-1.5 bg-amber-50 text-amber-700 rounded-xl text-sm font-extrabold border border-amber-100">{badge.value}</span>;
+                                    } else if (badge.type === 'time') {
+                                      return <span key={i} className="px-3 py-1.5 bg-surface text-secondary rounded-xl text-[15px] font-medium border border-border shadow-sm">{badge.value}</span>;
+                                    } else if (badge.type === 'group_label') {
+                                      return <span key={i} className="px-2.5 py-1.5 bg-brand-500/10 text-brand-600 rounded-xl text-xs font-extrabold">{badge.value}</span>;
+                                    }
+                                    return null;
+                                  })}
+                                </div>
+                              ))}
+                        </div>
+                   </div>
+                 )}
+
+                 {/* Bottom Row: Metadata & Syllabus */}
+                 {course.metadata && course.metadata.length > 0 && (
+                   <div className="md:col-span-12 bg-surface rounded-[2rem] border-2 border-border p-8 shadow-sm hover:border-brand-500/30 transition-all hover:shadow-lg hover:shadow-brand-500/5">
+                      <h4 className="text-xl font-extrabold text-primary flex items-center gap-3 mb-6">
+                           <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+                             <CheckCircle2 size={20} />
+                           </div>
+                           {tr('مشخصات و الزامات', 'Course Info')}
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                         {course.metadata.map((meta, idx) => (
                           <div key={idx} className="flex items-start gap-3 p-5 bg-surface-hover/50 rounded-2xl border border-border/50 hover:border-emerald-500/20 transition-colors text-[14px] font-medium text-secondary">
                             <div className="w-2 h-2 rounded-full bg-[#88c4a5] shrink-0 mt-1.5"></div>
@@ -205,33 +222,34 @@ export const CourseDetailsModal: React.FC<CourseDetailsModalProps> = ({ course, 
                           </div>
                         ))}
                       </div>
-                    ) : (
-                       <p className="text-secondary font-normal px-2">{tr('اطلاعات بیشتری ثبت نشده است.', 'No extra information.')}</p>
-                    )}
-                 </div>
+                   </div>
+                 )}
 
-                 <div className="md:col-span-5 bg-surface rounded-[2rem] border-2 border-border p-8 shadow-sm hover:border-brand-500/30 transition-all hover:shadow-lg hover:shadow-brand-500/5 flex flex-col justify-center">
-                    <h4 className="text-xl font-extrabold text-primary flex items-center gap-3 mb-6">
-                         <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
-                           <Users size={20} />
-                         </div>
-                         {tr('ویژگی‌های آموزشی', 'Features')}
-                    </h4>
-                    <ul className="flex flex-col gap-4">
-                      <li className="flex items-center gap-4 p-5 bg-emerald-500/5 rounded-2xl border border-emerald-500/10 hover:border-emerald-500/20 transition-colors text-[14px] font-medium text-secondary">
-                        <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-500 shrink-0 shadow-sm">
-                          <Users size={20} />
-                        </div>
-                        <span className="leading-relaxed">{tr('پشتیبانی کامل و ارتباط مستقیم با استاد', 'Full support and direct instructor contact')}</span>
-                      </li>
-                      <li className="flex items-center gap-4 p-5 bg-blue-500/5 rounded-2xl border border-blue-500/10 hover:border-blue-500/20 transition-colors text-[14px] font-medium text-secondary">
-                        <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-500 shrink-0 shadow-sm">
-                          <MonitorPlay size={20} />
-                        </div>
-                        <span className="leading-relaxed">{tr('ارائه پروژه عملی پایان دوره', 'Practical final project')}</span>
-                      </li>
-                    </ul>
-                 </div>
+                 {course.sections && course.sections.length > 0 && (
+                   <div className="md:col-span-12 bg-surface rounded-[2rem] border-2 border-border p-8 shadow-sm hover:border-brand-500/30 transition-all hover:shadow-lg hover:shadow-brand-500/5 flex flex-col justify-center">
+                      <h4 className="text-xl font-extrabold text-primary flex items-center gap-3 mb-6">
+                           <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
+                             <FolderOpen size={20} />
+                           </div>
+                           {tr('سرفصل‌ها و توضیحات تکمیلی', 'Syllabus & Details')}
+                      </h4>
+                      <div className="flex flex-col gap-6">
+                        {course.sections.map((section, idx) => (
+                          <div key={idx} className="flex flex-col gap-3">
+                            <h5 className="font-extrabold text-slate-800 text-[16px] border-b border-border pb-2">{section.title}</h5>
+                            <ul className="flex flex-col gap-2">
+                              {section.items.map((item, i) => (
+                                <li key={i} className="flex items-start gap-3 text-[14px] font-medium text-slate-600">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0 mt-2"></div>
+                                  <span className="leading-relaxed">{item}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        ))}
+                      </div>
+                   </div>
+                 )}
 
                  {/* Mobile CTA */}
                  <div className="md:col-span-12 sm:hidden mt-2">

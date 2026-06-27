@@ -15,14 +15,37 @@ export const TableMultiSelect = ({ values, onChange, placeholder, disabled }: Ta
   const ref = useRef<HTMLDivElement>(null);
 
   const allCourses = useMemo(() => {
+    let dynamicData: Record<string, any> = {};
+    try {
+      const cached = localStorage.getItem('NOVINTECH_COURSE_DYNAMIC_DATA');
+      if (cached) {
+        dynamicData = JSON.parse(cached);
+      }
+    } catch (e) {
+      console.error("Failed to load dynamic course data", e);
+    }
+
     const courses = new Set<string>();
+
     COURSE_CATEGORIES.forEach(cat => {
       cat.subcategories.forEach(sub => {
-        sub.courses.forEach(c => courses.add(c.title));
+        sub.courses.forEach(c => {
+          if (c.url && dynamicData[c.url]?.title) {
+            courses.add(dynamicData[c.url].title);
+          } else {
+            courses.add(c.title);
+          }
+        });
       });
     });
+
+    // Preserve previously selected historical titles
+    if (values && Array.isArray(values)) {
+      values.forEach(v => courses.add(v));
+    }
+
     return Array.from(courses);
-  }, []);
+  }, [values]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

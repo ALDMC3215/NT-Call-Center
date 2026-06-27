@@ -66,7 +66,7 @@ const AdminTriedAgentPanel = () => {
           شما با یک حساب مدیریت وارد شده‌اید. لطفاً از پنل مدیریت استفاده کنید.
         </p>
         <button onClick={e => { e.preventDefault(); setLoginMode('manager'); }}
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm transition-all shadow-md shadow-indigo-500/20 active:scale-95">
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[13px] transition-all shadow-sm shadow-indigo-500/20 active:scale-95">
           <ArrowLeft size={16} />
           <span>رفتن به پنل مدیریت</span>
         </button>
@@ -90,7 +90,7 @@ const AgentTriedManagerPanel = () => {
           اگر فکر می‌کنید این اشتباه است، با مدیر سیستم تماس بگیرید.
         </p>
         <button onClick={e => { e.preventDefault(); setLoginMode('agent'); }}
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-sm transition-all shadow-md shadow-brand-500/20 active:scale-95">
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-[13px] transition-all shadow-sm shadow-brand-500/20 active:scale-95">
           <ArrowLeft size={16} />
           <span>ورود به پنل کارشناسی</span>
         </button>
