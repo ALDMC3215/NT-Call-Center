@@ -1,11 +1,14 @@
-import React, { useState, useRef } from 'react';
-import { Settings, RefreshCw, Calendar, PhoneOff, Upload, FileText, User, Briefcase, MapPin, Clock, Download } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Settings, RefreshCw, Calendar, PhoneOff, Upload, User, Briefcase, MapPin, Clock, Download, Send, History, X } from 'lucide-react';
 import { COURSE_CATEGORIES } from '../../data/courses';
 import { fetchCourseDataDynamic } from '../../utils/scraper';
 import { useAppContext } from '../../hooks/useAppContext';
 import { customToast as toast } from '../UI/toast';
 import { useLocale } from '../../hooks/useLocale';
 import * as xlsx from 'xlsx';
+import { getActiveFollowups, buildFollowUpSnapshot } from '../../utils/followups';
+import { supabase } from '../../lib/supabase';
+import { motion, AnimatePresence } from 'motion/react';
 
 export const SettingsView: React.FC = () => {
   const { setCurrentView, setActiveCallTab, layoutMargin, calls, profile, blacklist, bulkAddCalls } = useAppContext();
@@ -13,6 +16,38 @@ export const SettingsView: React.FC = () => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncProgress, setSyncProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [activeManagers, setActiveManagers] = useState<{id: string, name: string}[]>([]);
+  const [lastSent, setLastSent] = useState<any>(null);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const [selectedManagerId, setSelectedManagerId] = useState('');
+
+  const followups = getActiveFollowups(calls);
+  const activeCount = followups.length;
+
+  useEffect(() => {
+    if (profile) {
+      supabase.rpc('get_active_managers').then(({ data }) => {
+        if (data) setActiveManagers(data);
+      });
+      fetchLastSent();
+    }
+  }, [profile]);
+
+  const fetchLastSent = () => {
+    if (!profile) return;
+    supabase.from('followup_shares')
+      .select('receiver_manager_id, sent_at, item_count')
+      .eq('sender_expert_id', profile.id)
+      .order('sent_at', { ascending: false })
+      .limit(1)
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          setLastSent(data[0]);
+        }
+      });
+  };
 
   const handleSyncData = async () => {
     setIsSyncing(true);
@@ -133,40 +168,39 @@ export const SettingsView: React.FC = () => {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const handleExportExcel = () => {
-    const exportData = calls.map(c => {
-      const lastAttempt = c.attempts && c.attempts.length > 0 ? c.attempts[c.attempts.length - 1] : c;
-      return {
-        'شماره': c.phone,
-        'نام و نام خانوادگی': c.fullName || '',
-        'آخرین وضعیت تماس': lastAttempt.callStatus || c.callStatus || '',
-        'دوره ها': (lastAttempt.courses || c.courses)?.join(', ') || '',
-        'وضعیت مشاوره': lastAttempt.advisory || c.advisory || '',
-        'تاریخ مشاوره': lastAttempt.advisoryDate || c.advisoryDate || '',
-        'ساعت مشاوره': lastAttempt.advisoryTime || c.advisoryTime || '',
-        'وضعیت ثبت نام': lastAttempt.registered || c.registered || '',
-        'آخرین یادداشت': lastAttempt.notes || c.notes || '',
-        'تاریخ ورود به سیستم': c.createdAt || '',
-        'تاریخ آخرین پیگیری': lastAttempt.createdAt || c.createdAt || ''
-      };
-    });
-    const ws = xlsx.utils.json_to_sheet(exportData);
-    const wb = xlsx.utils.book_new();
-    xlsx.utils.book_append_sheet(wb, ws, "Calls");
-    xlsx.writeFile(wb, `calls_export_${new Date().toISOString().split('T')[0]}.xlsx`);
-    toast.success(tr('فایل Excel با موفقیت دریافت شد.', 'Excel downloaded.'));
-  };
-
-  const handleExportJSON = () => {
-    const exportData = { profile, blacklist, calls };
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+  const handleDownloadFollowups = () => {
+    if (activeCount === 0) return toast.error(tr('پیگیری فعالی برای خروجی وجود ندارد.', 'No active follow-ups to export.'));
+    const snapshot = buildFollowUpSnapshot(calls);
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(snapshot, null, 2));
     const downloadAnchorNode = document.createElement('a');
     downloadAnchorNode.setAttribute("href", dataStr);
-    downloadAnchorNode.setAttribute("download", `calls_export_${new Date().toISOString().split('T')[0]}.json`);
+    downloadAnchorNode.setAttribute("download", `novintech-followups-${new Date().toISOString().split('T')[0]}.json`);
     document.body.appendChild(downloadAnchorNode);
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
-    toast.success(tr('فایل JSON با موفقیت دریافت شد.', 'JSON downloaded.'));
+    toast.success(tr('فایل JSON پیگیری‌ها با موفقیت دریافت شد.', 'Follow-ups JSON downloaded successfully.'));
+  };
+
+  const handleSendToManager = async () => {
+    if (!selectedManagerId) return toast.error(tr('لطفا یک مدیر را انتخاب کنید.', 'Please select a manager.'));
+    if (!profile) return;
+    const snapshot = buildFollowUpSnapshot(calls);
+
+    setIsSending(true);
+    const { error } = await supabase.rpc('create_followup_share', {
+      p_receiver_manager_id: selectedManagerId,
+      p_payload_json: snapshot,
+      p_item_count: snapshot.length
+    });
+    setIsSending(false);
+
+    if (error) {
+      toast.error(tr('ارسال با خطا مواجه شد.', 'Sending failed.'));
+    } else {
+      toast.success(tr('لیست پیگیری‌ها با موفقیت به مدیر ارسال شد.', 'Follow-ups successfully sent to manager.'));
+      setIsShareModalOpen(false);
+      fetchLastSent();
+    }
   };
 
   return (
@@ -179,7 +213,7 @@ export const SettingsView: React.FC = () => {
              <Settings size={32} className="text-indigo-600" />
           </div>
           <h2 className="text-3xl font-extrabold text-slate-900 mb-2 tracking-tight">{tr('ابزارها و عملیات کارشناس', 'Expert Tools & Operations')}</h2>
-          <p className="text-[15px] text-slate-600 max-w-2xl leading-relaxed">{tr('دسترسی سریع به عملیات روزانه، مدیریت داده‌ها و فایل‌ها', 'Quick access to daily operations, data management and files')}</p>
+          <p className="text-[15px] text-slate-600 max-w-2xl leading-relaxed">{tr('دسترسی سریع به عملیات روزانه، مدیریت داده‌ها و تبادل پیگیری‌ها', 'Quick access to daily operations, data management and follow-up exchange')}</p>
         </div>
 
         {/* Compact Profile Strip */}
@@ -287,29 +321,107 @@ export const SettingsView: React.FC = () => {
             </div>
           </div>
 
-          {/* Secondary data tools area */}
+          {/* Follow-up Exchange Area */}
           <div className="lg:col-span-4 flex flex-col gap-4">
             <h3 className="text-lg font-extrabold text-slate-800 flex items-center gap-2 px-1">
-              {tr('خروجی و پشتیبان', 'Export & Backup')}
+              {tr('تبادل پیگیری‌ها', 'Follow-up Exchange')}
             </h3>
             <div className="flex flex-col gap-3">
-              <button onClick={handleExportExcel} className="flex items-center p-4 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-colors group gap-3">
-                <div className="w-10 h-10 rounded-lg bg-green-50 text-green-600 flex items-center justify-center shrink-0">
-                  <Download size={20} className="group-hover:translate-y-1 transition-transform" />
+              <button
+                onClick={() => {
+                  if (activeCount > 0) setIsShareModalOpen(true);
+                  else toast.error(tr('شما هیچ پیگیری فعالی ندارید.', 'You have no active follow-ups.'));
+                }}
+                className={`flex items-center p-5 bg-white border ${activeCount > 0 ? 'border-brand-300 text-brand-700 hover:bg-brand-50 hover:shadow-md cursor-pointer' : 'border-slate-200 text-slate-400 cursor-not-allowed opacity-80'} rounded-2xl transition-all group gap-4`}
+              >
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${activeCount > 0 ? 'bg-brand-100 text-brand-600' : 'bg-slate-100 text-slate-400'}`}>
+                  <Send size={24} className={activeCount > 0 ? "group-hover:-translate-y-1 group-hover:translate-x-1 transition-transform" : ""} />
                 </div>
-                <span className="font-bold text-[14px]">{tr('خروجی اطلاعات در اکسل', 'Export Excel')}</span>
+                <div className="flex flex-col text-right">
+                  <span className="font-extrabold text-[15px]">{tr('ارسال لیست پیگیری‌ها', 'Send Follow-up List')}</span>
+                  <span className="text-[12px] font-bold mt-0.5 opacity-80">{tr('ارسال امن لیست به مدیر سیستم', 'Securely send list to system manager')}</span>
+                </div>
               </button>
 
-              <button onClick={handleExportJSON} className="flex items-center p-4 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-colors group gap-3">
-                <div className="w-10 h-10 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
-                  <FileText size={20} className="group-hover:scale-110 transition-transform" />
+              <button onClick={handleDownloadFollowups} className="flex items-center p-4 bg-white border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition-colors group gap-3 text-right">
+                <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                  <Download size={20} className="group-hover:translate-y-1 transition-transform" />
                 </div>
-                <span className="font-bold text-[14px]">{tr('دریافت بکاپ JSON', 'Export JSON')}</span>
+                <div className="flex flex-col">
+                  <span className="font-bold text-[14px]">{tr('دانلود JSON پیگیری‌ها', 'Download Follow-ups JSON')}</span>
+                  <span className="text-[11px] text-slate-500 font-bold mt-0.5">{activeCount > 0 ? `${activeCount} پیگیری فعال` : 'بدون پیگیری'}</span>
+                </div>
               </button>
+
+              {lastSent && (
+                <div className="flex flex-col mt-2 p-4 bg-slate-100 rounded-xl border border-slate-200">
+                  <div className="flex items-center gap-2 text-slate-600 font-bold text-[13px] mb-2">
+                    <History size={16} />
+                    <span>{tr('آخرین ارسال من', 'My Last Sent')}</span>
+                  </div>
+                  <div className="text-[12px] font-medium text-slate-500 space-y-1">
+                    <div className="flex justify-between"><span>به:</span><span className="font-bold text-slate-800">{activeManagers.find(m => m.id === lastSent.receiver_manager_id)?.name || 'مدیر'}</span></div>
+                    <div className="flex justify-between"><span>زمان:</span><span className="font-bold text-slate-800" dir="ltr">{new Date(lastSent.sent_at).toLocaleString('fa-IR')}</span></div>
+                    <div className="flex justify-between"><span>تعداد:</span><span className="font-bold text-slate-800">{lastSent.item_count} مورد</span></div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
+
+      <AnimatePresence>
+        {isShareModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" dir={direction}>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsShareModalOpen(false)} className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" />
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-white rounded-3xl w-full max-w-md relative z-10 overflow-hidden shadow-2xl border border-slate-200">
+              <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50">
+                 <div className="flex items-center gap-3">
+                   <div className="w-10 h-10 rounded-xl bg-brand-100 text-brand-600 flex items-center justify-center"><Send size={20} /></div>
+                   <span className="font-extrabold text-slate-900 text-lg">{tr('ارسال پیگیری‌ها به مدیر', 'Send follow-ups to manager')}</span>
+                 </div>
+                 <button onClick={() => setIsShareModalOpen(false)} className="text-slate-400 hover:text-slate-700 bg-white rounded-full p-2 border border-slate-200"><X size={18} /></button>
+              </div>
+              <div className="p-6 flex flex-col gap-5">
+                 <div className="bg-brand-50 border border-brand-100 rounded-xl p-4 flex flex-col items-center justify-center text-center gap-2">
+                   <span className="text-3xl font-black text-brand-600">{activeCount}</span>
+                   <span className="text-sm font-bold text-brand-700">{tr('مورد جهت ارسال آماده است', 'items ready to send')}</span>
+                 </div>
+
+                 <div className="flex flex-col gap-2">
+                    <label className="text-[13px] font-bold text-slate-700">{tr('انتخاب مدیر', 'Select Manager')}</label>
+                    <select
+                      value={selectedManagerId}
+                      onChange={e => setSelectedManagerId(e.target.value)}
+                      className="w-full h-12 bg-white border border-slate-200 rounded-xl px-4 text-sm font-medium outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 cursor-pointer"
+                    >
+                      <option value="" disabled>{tr('یک مدیر را انتخاب کنید...', 'Select a manager...')}</option>
+                      {activeManagers.map(m => (
+                        <option key={m.id} value={m.id}>{m.name}</option>
+                      ))}
+                    </select>
+                 </div>
+
+                 <button
+                   onClick={handleSendToManager}
+                   disabled={isSending || !selectedManagerId}
+                   className="w-full h-12 bg-brand-600 hover:bg-brand-500 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-xl font-extrabold text-sm transition-all flex items-center justify-center gap-2 mt-2 shadow-lg shadow-brand-500/25 disabled:shadow-none"
+                 >
+                   {isSending ? (
+                     <RefreshCw size={18} className="animate-spin" />
+                   ) : (
+                     <>
+                       <Send size={18} />
+                       <span>{tr('تایید و ارسال سریع', 'Confirm & Quick Send')}</span>
+                     </>
+                   )}
+                 </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

@@ -18,7 +18,7 @@ import { SupabaseProfile } from '../../types';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Shield, Users, Clock, CheckCircle2, Ban, LogOut,
-  RefreshCw, User, Mail, Calendar, AlertCircle, Activity,
+  Mail, Calendar, RefreshCw, AlertCircle, Activity, Inbox, Download, FileText, User,
 } from 'lucide-react';
 import { customToast as toast } from '../UI/toast';
 
@@ -327,7 +327,8 @@ export const ManagerDashboard: React.FC = () => {
   const [profiles, setProfiles]     = useState<SupabaseProfile[]>([]);
   const [loading, setLoading]       = useState(true);
   const [actionId, setActionId]     = useState<string | null>(null);
-  const [activeTab, setActiveTab]   = useState<'pending' | 'agents' | 'managers'>('pending');
+  const [activeTab, setActiveTab]   = useState<'pending' | 'agents' | 'managers' | 'followups'>('pending');
+  const [receivedShares, setReceivedShares] = useState<any[]>([]);
 
   // ---------------------------------------------------------------------------
   // Load all profiles (admin RLS policy allows this)
@@ -347,7 +348,20 @@ export const ManagerDashboard: React.FC = () => {
     setLoading(false);
   }, []);
 
-  useEffect(() => { loadProfiles(); }, [loadProfiles]);
+  const loadShares = useCallback(async () => {
+    if (!supabaseProfile?.id) return;
+    const { data, error } = await supabase
+      .from('followup_shares')
+      .select('id, item_count, sent_at, payload_json, sender:profiles!sender_expert_id(name)')
+      .eq('receiver_manager_id', supabaseProfile.id)
+      .order('sent_at', { ascending: false });
+
+    if (!error && data) {
+      setReceivedShares(data);
+    }
+  }, [supabaseProfile?.id]);
+
+  useEffect(() => { loadProfiles(); loadShares(); }, [loadProfiles, loadShares]);
 
   // ---------------------------------------------------------------------------
   // Approve
@@ -382,6 +396,7 @@ export const ManagerDashboard: React.FC = () => {
     { id: 'pending',  label: 'درخواست‌های جدید', count: pendingAgents.length, icon: <Clock size={15} /> },
     { id: 'agents',   label: 'کارشناسان فعال',    count: activeAgents.length,  icon: <Users size={15} /> },
     { id: 'managers', label: 'مدیران',             count: managers.length,      icon: <Shield size={15} /> },
+    { id: 'followups', label: 'پیگیری‌های دریافتی', count: receivedShares.length, icon: <Inbox size={15} /> },
   ] as const;
 
   // ---------------------------------------------------------------------------
@@ -485,7 +500,7 @@ export const ManagerDashboard: React.FC = () => {
             <button
               id="mgr-refresh"
               type="button"
-              onClick={loadProfiles}
+              onClick={() => { loadProfiles(); loadShares(); }}
               disabled={loading}
               className="flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-slate-700 px-3 py-1.5 rounded-xl hover:bg-slate-100 transition-all"
             >
@@ -634,6 +649,50 @@ export const ManagerDashboard: React.FC = () => {
                   </div>
                 )}
 
+                {/* ── Received Followups ──────────────────────────── */}
+                {activeTab === 'followups' && (
+                  <div className="space-y-3">
+                    {receivedShares.length === 0 && (
+                      <div className="bg-white rounded-2xl border border-slate-200 p-10 text-center">
+                        <Inbox size={32} className="text-slate-300 mx-auto mb-3" />
+                        <p className="text-sm font-bold text-slate-500">هیچ لیست پیگیری دریافت نشده است.</p>
+                      </div>
+                    )}
+                    {receivedShares.map(s => {
+                      const senderName = Array.isArray(s.sender) ? s.sender[0]?.name : s.sender?.name;
+                      return (
+                      <div key={s.id} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm flex flex-col sm:flex-row sm:items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-brand-50 border border-brand-100 flex items-center justify-center shrink-0">
+                          <FileText size={18} className="text-brand-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-extrabold text-slate-900 text-sm">لیست پیگیری از {senderName || 'کارشناس'}</span>
+                            <span className="bg-brand-100 text-brand-700 px-2 py-0.5 rounded-md text-[11px] font-bold">{s.item_count} مورد</span>
+                          </div>
+                          <div className="flex items-center gap-3 mt-1 flex-wrap text-slate-500 text-xs font-medium">
+                            <span className="flex items-center gap-1" dir="ltr"><Calendar size={11} />{new Date(s.sent_at).toLocaleString('fa-IR')}</span>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(s.payload_json, null, 2));
+                              const a = document.createElement('a');
+                              a.href = dataStr;
+                              a.download = `followups-${senderName || 'expert'}-${new Date(s.sent_at).toISOString().split('T')[0]}.json`;
+                              a.click();
+                            }}
+                            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all border border-slate-200 hover:border-slate-300"
+                          >
+                            <Download size={13} /><span>دانلود JSON</span>
+                          </button>
+                        </div>
+                      </div>
+                    )})}
+                  </div>
+                )}
               </motion.div>
             )}
           </AnimatePresence>

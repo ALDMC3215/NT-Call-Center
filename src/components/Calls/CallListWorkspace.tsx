@@ -20,6 +20,7 @@ import { BlacklistView } from '../Blacklist/BlacklistView';
 import { StatsView } from '../Stats/StatsView';
 import { CoursesView } from '../Courses/CoursesView';
 import { OrbitalCardView } from './OrbitalCardView';
+import { isActiveFollowup } from '../../utils/followups';
 
 type Tab = 'home' | 'queue' | 'today' | 'followup' | 'stats' | 'blacklist' | 'courses';
 
@@ -444,27 +445,7 @@ export const CallListWorkspace = () => {
          return !hasAnyAttempt;
       });
     } else if (activeTab === 'followup') {
-      list = list.filter(c => {
-         if (!c.attempts || c.attempts.length === 0) return false;
-         const lastAttempt = c.attempts[c.attempts.length - 1];
-
-         const reg = lastAttempt.registered;
-         if (reg === 'ثبت نام کرد' || reg === 'ثبت نام نکرد' || reg === 'قصد ندارد') {
-           return false;
-         }
-
-         const s = lastAttempt.callStatus;
-         const adv = lastAttempt.advisory;
-         return s === 'عدم تمایل' ||
-                s === 'پاسخ نداد' ||
-                s === 'نامشخص' ||
-                s === 'پیگیری مجدد در هفته آینده' ||
-                adv === 'بله' ||
-                adv === 'خیر' ||
-                adv === 'قصد دارد' ||
-                adv === 'در آینده' ||
-                adv === 'احتمالا';
-      });
+      list = list.filter(isActiveFollowup);
     }
 
     if (searchQuery.trim()) {
