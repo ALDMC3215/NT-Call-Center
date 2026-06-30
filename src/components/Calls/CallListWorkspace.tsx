@@ -21,6 +21,7 @@ import { StatsView } from '../Stats/StatsView';
 import { CoursesView } from '../Courses/CoursesView';
 import { OrbitalCardView } from './OrbitalCardView';
 import { isActiveFollowup } from '../../utils/followups';
+import { jalaliDateTimeToIso } from '../../utils/jalali';
 
 type Tab = 'home' | 'queue' | 'today' | 'followup' | 'stats' | 'blacklist' | 'courses';
 
@@ -333,7 +334,9 @@ export const CallListWorkspace = () => {
         }
 
         if (skippedPhones.length > 0) {
-          toast.error(tr(`تعداد ${skippedPhones.length} شماره به دلیل قرار داشتن در لیست سیاه حذف شدند:\n${skippedPhones.join(' ، ')}`, `${skippedPhones.length} numbers skipped due to blacklist:\n${skippedPhones.join(', ')}`), { duration: 8000 });
+          toast.error(tr(`تعداد ${skippedPhones.length} شماره به دلیل قرار داشتن در لیست سیاه حذف شدند:
+${skippedPhones.join(' ، ')}`, `${skippedPhones.length} numbers skipped due to blacklist:
+${skippedPhones.join(', ')}`), { duration: 8000 });
         }
 
         if (count > 0) {
@@ -556,17 +559,27 @@ export const CallListWorkspace = () => {
         ) : (
           <div className="relative h-full bg-white rounded-2xl border border-slate-200 flex flex-col overflow-hidden shadow-sm">
 
-          <div className="flex-1 overflow-auto custom-select-scroll relative z-10">
-            <table className="w-full text-center border-collapse min-w-[1200px]">
+          <div className="flex-1 overflow-x-auto custom-select-scroll relative z-10">
+            {/* Compact Table View */}
+            <table className="w-full text-center border-collapse table-fixed min-w-[950px]">
+              <colgroup>
+                <col className="w-[160px]" /> {/* Phone/Name */}
+                <col className="w-[140px]" /> {/* Call Status */}
+                <col className="w-[200px]" /> {/* Courses */}
+                <col className="w-[120px]" /> {/* Consultation */}
+                <col className="w-[140px]" /> {/* Registration */}
+                <col className="w-[150px]" /> {/* Date/Time */}
+                <col className="w-[110px]" /> {/* Actions */}
+              </colgroup>
               <thead className="sticky top-0 bg-slate-50 border-b border-slate-200 z-20">
                 <tr>
-                  <th className="py-5 px-4 text-[12px] font-bold text-slate-500 tracking-wide whitespace-nowrap">{tr('شماره تماس', 'Phone')}</th>
-                  <th className="py-5 px-4 text-[12px] font-bold text-slate-500 tracking-wide whitespace-nowrap">{tr('وضعیت تماس', 'Call Status')}</th>
-                  <th className="py-5 px-4 text-[12px] font-bold text-slate-500 tracking-wide whitespace-nowrap">{tr('دوره‌ها', 'Courses')}</th>
-                  <th className="py-5 px-4 text-[12px] font-bold text-slate-500 tracking-wide whitespace-nowrap">{tr('مشاوره حضوری', 'Consultation')}</th>
-                  <th className="py-5 px-4 text-[12px] font-bold text-slate-500 tracking-wide whitespace-nowrap">{tr('ثبت‌نام', 'Registration')}</th>
-                  <th className="py-5 px-4 text-[12px] font-bold text-slate-500 tracking-wide whitespace-nowrap">{tr('تاریخ و ساعت', 'Date & Time')}</th>
-                  <th className="py-5 px-4 text-[12px] font-bold text-slate-500 tracking-wide w-24">{tr('عملیات', 'Actions')}</th>
+                  <th className="py-3 px-2 text-[11px] font-bold text-slate-500 tracking-wide whitespace-nowrap">{tr('شماره تماس', 'Phone')}</th>
+                  <th className="py-3 px-2 text-[11px] font-bold text-slate-500 tracking-wide whitespace-nowrap">{tr('وضعیت تماس', 'Call Status')}</th>
+                  <th className="py-3 px-2 text-[11px] font-bold text-slate-500 tracking-wide whitespace-nowrap">{tr('دوره‌ها', 'Courses')}</th>
+                  <th className="py-3 px-2 text-[11px] font-bold text-slate-500 tracking-wide whitespace-nowrap">{tr('مشاوره حضوری', 'Consultation')}</th>
+                  <th className="py-3 px-2 text-[11px] font-bold text-slate-500 tracking-wide whitespace-nowrap">{tr('ثبت‌نام', 'Registration')}</th>
+                  <th className="py-3 px-2 text-[11px] font-bold text-slate-500 tracking-wide whitespace-nowrap">{tr('تاریخ و ساعت', 'Date & Time')}</th>
+                  <th className="py-3 px-2 text-[11px] font-bold text-slate-500 tracking-wide">{tr('عملیات', 'Actions')}</th>
                 </tr>
               </thead>
               <tbody className="text-[13px] font-medium text-slate-700 relative z-0">
@@ -578,18 +591,18 @@ export const CallListWorkspace = () => {
                     className={`border-b border-slate-100 hover:bg-slate-50 transition-colors duration-300 group ${fuStatus ? `border-r-4 ${fuStatus.borderCls}` : ''}`}
                   >
                     {/* Phone */}
-                    <td className="p-5 relative whitespace-nowrap min-w-[200px]">
-                       <div className="flex flex-col items-center justify-center w-full px-4">
-                          <span dir="ltr" className="font-extrabold text-[17px] tracking-wider text-slate-900 group-hover:text-cyan-600 transition-colors">{c.phone}</span>
+                    <td className="p-3 relative whitespace-nowrap">
+                       <div className="flex flex-col items-center justify-center w-full px-2">
+                          <span dir="ltr" className="font-extrabold text-[15px] tracking-wider text-slate-900 group-hover:text-cyan-600 transition-colors">{c.phone}</span>
                           <input
                             type="text"
                             value={c.fullName || ''}
                             onChange={e => handleFieldChange(c, 'fullName', e.target.value)}
                             placeholder={tr('نام شخص...', 'Name...')}
-                            className="text-[14px] font-medium text-slate-700 text-center bg-transparent border-b-2 border-transparent hover:border-slate-200 focus:border-cyan-500 outline-none w-40 mt-1 transition-colors"
+                            className="text-[12px] font-medium text-slate-700 text-center bg-transparent border-b border-transparent hover:border-slate-200 focus:border-cyan-500 outline-none w-32 mt-1 transition-colors"
                           />
                           {fuStatus && (
-                            <div className={`mt-2 text-[11px] font-bold px-2 py-0.5 rounded-md border ${fuStatus.bgCls}`}>
+                            <div className={`mt-1.5 text-[10px] font-bold px-2 py-0.5 rounded-md border ${fuStatus.bgCls}`}>
                               {fuStatus.label}
                             </div>
                           )}
@@ -597,8 +610,8 @@ export const CallListWorkspace = () => {
                     </td>
 
                     {/* Call Status */}
-                    <td className="p-5 relative whitespace-nowrap">
-                       <div className="flex items-center justify-center gap-2">
+                    <td className="p-3 relative whitespace-nowrap">
+                       <div className="flex items-center justify-center gap-1.5">
                           {getStatusIcon(c.callStatus || '')}
                           <TableDropdown
                             value={c.callStatus || ''}
@@ -610,41 +623,43 @@ export const CallListWorkspace = () => {
                     </td>
 
                     {/* Courses */}
-                    <td className="p-5 relative whitespace-nowrap">
-                       <div className="flex items-center justify-center gap-2">
-                          <BookOpen size={16} className="text-muted" />
-                          <TableMultiSelect
-                            values={c.courses || []}
-                            onChange={(vals) => handleFieldChange(c, 'courses', vals)}
-                            disabled={c.callStatus !== 'پاسخ داد'}
-                            placeholder={tr('انتخاب دوره', 'Select course')}
-                          />
+                    <td className="p-3 relative whitespace-nowrap">
+                       <div className="flex items-center justify-center gap-1.5">
+                          <BookOpen size={14} className="text-muted shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <TableMultiSelect
+                              values={c.courses || []}
+                              onChange={(vals) => handleFieldChange(c, 'courses', vals)}
+                              disabled={c.callStatus !== 'پاسخ داد'}
+                              placeholder={tr('انتخاب دوره', 'Select course')}
+                            />
+                          </div>
                        </div>
                     </td>
 
                     {/* Consultation */}
-                    <td className="p-5 relative whitespace-nowrap">
-                       <div className="flex items-center justify-center gap-2">
-                          <Users size={16} className="text-muted" />
+                    <td className="p-3 relative whitespace-nowrap">
+                       <div className="flex items-center justify-center gap-1.5">
+                          <Users size={14} className="text-muted shrink-0" />
                           <TableDropdown
                             value={c.advisory || ''}
                             onChange={(val) => handleFieldChange(c, 'advisory', val)}
                             disabled={c.callStatus !== 'پاسخ داد'}
                             options={['بله', 'خیر', 'هماهنگی بعدا'].map(s => ({ value: s, label: valueLabel(s) }))}
-                            placeholder={tr('مشاوره حضوری', 'Consultation')}
+                            placeholder={tr('مشاوره', 'Consultation')}
                           />
                        </div>
                     </td>
 
                     {/* Registration */}
-                    <td className="p-5 relative whitespace-nowrap">
-                       <div className="flex items-center justify-center gap-2">
+                    <td className="p-3 relative whitespace-nowrap">
+                       <div className="flex items-center justify-center gap-1.5">
                           {c.registered === 'ثبت نام کرد' || c.registered === 'قصد دارد' ? (
-                            <CheckCircle2 size={16} className="text-teal-500/80" />
+                            <CheckCircle2 size={14} className="text-teal-500/80 shrink-0" />
                           ) : c.registered === 'قصد ندارد' ? (
-                            <XCircle size={16} className="text-rose-400/80" />
+                            <XCircle size={14} className="text-rose-400/80 shrink-0" />
                           ) : (
-                            <CheckCircle2 size={16} className="text-slate-500" />
+                            <CheckCircle2 size={14} className="text-slate-400 shrink-0" />
                           )}
                           <TableDropdown
                             value={c.registered || ''}
@@ -657,61 +672,43 @@ export const CallListWorkspace = () => {
                     </td>
 
                     {/* Date & Time */}
-                    <td className="p-5 relative whitespace-nowrap">
+                    <td className="p-3 relative whitespace-nowrap">
                        <div className="flex items-center justify-center">
                           {c.advisory === 'بله' ? (
                              <button
                                onClick={() => setAdvisoryModalCall(c)}
-                               className="text-[14px] font-medium text-brand-600 bg-brand-50 hover:bg-brand-100 px-4 py-2 rounded-xl transition-colors border border-transparent hover:border-brand-200 min-w-[120px]"
+                               className="flex items-center justify-center gap-1.5 text-[12px] font-bold text-brand-700 bg-brand-50 hover:bg-brand-100 px-3 py-1.5 rounded-lg transition-colors border border-brand-100 hover:border-brand-200 min-w-[120px] shadow-sm"
+                               dir="ltr"
                              >
-                               {c.advisoryDate && c.advisoryTime ? `${c.advisoryDate} ${c.advisoryTime}` : tr('انتخاب تاریخ...', 'Select date...')}
+                               {c.advisoryDate && c.advisoryTime ? (
+                                 <>
+                                   <Calendar size={14} className="opacity-70 shrink-0" />
+                                   <span className="truncate">{c.advisoryDate} &middot; {c.advisoryTime}</span>
+                                 </>
+                               ) : (
+                                 <>
+                                   <Calendar size={14} className="opacity-70 shrink-0" />
+                                   <span dir="rtl" className="truncate">{tr('انتخاب زمان', 'Select time')}</span>
+                                 </>
+                               )}
                              </button>
                           ) : (
-                            <span className="text-slate-500">-</span>
+                            <span className="text-slate-400">-</span>
                           )}
                        </div>
                     </td>
 
                     {/* Actions */}
-                    <td className="p-5 relative">
-                       <div className="flex items-center justify-center gap-2">
+                    <td className="p-3 relative">
+                       <div className="flex items-center justify-center gap-1.5">
                            <button
                              onClick={() => handleRowSubmit(c)}
                              disabled={!hasAnyFieldSelected(c) || submittingIds.has(c.id)}
-                             className={`flex items-center justify-center h-10 px-4 rounded-xl font-bold text-[13px] transition-all shadow-sm tooltip-trigger shrink-0 ${hasAnyFieldSelected(c) ? 'bg-brand-600 text-white hover:bg-brand-500 hover:shadow shadow-brand-600/20' : 'bg-slate-100 text-slate-400 opacity-60 border border-slate-200'}`}
-                             title={tr('با ثبت نتیجه، این تماس در فعالیت امروز ثبت میشود.', 'Submitting saves this call attempt for today.')}
+                             aria-label={tr('ثبت نتیجه', 'Submit result')}
+                             className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all shadow-sm tooltip-trigger shrink-0 ${hasAnyFieldSelected(c) ? 'bg-brand-600 text-white hover:bg-brand-500 hover:shadow shadow-brand-600/20' : 'bg-slate-100 text-slate-400 opacity-60 border border-slate-200'}`}
+                             title={tr('ثبت نتیجه', 'Submit result')}
                            >
-                             {submittingIds.has(c.id) ? tr('در حال ثبت...', 'Saving...') : tr('ثبت نتیجه', 'Submit')}
-                           </button>
-                           <button
-                             onClick={() => setNotesModalCall(c)}
-                             className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
-                               c.notes
-                                 ? 'bg-cyan-600 text-white  border border-cyan-700'
-                                 : 'bg-slate-50 text-slate-500 border border-slate-200 hover:bg-slate-50 hover:text-cyan-600'
-                             }`}
-                             title={c.notes || tr('یادداشت', 'Notes')}
-                           >
-                              <FileText size={18} />
-                           </button>
-                           <button
-                             onClick={() => {
-                                updateCall({
-                                   ...c,
-                                   callStatus: '',
-                                   courses: [],
-                                   advisory: '',
-                                   advisoryDate: '',
-                                   advisoryTime: '',
-                                   registered: '',
-                                   notes: ''
-                                });
-                                toast.success(tr('اطلاعات ریست شد.', 'Information reset.'));
-                             }}
-                             className="w-10 h-10 rounded-xl flex items-center justify-center transition-all bg-slate-50 text-amber-600 border border-slate-200 hover:bg-amber-50 hover:border-amber-200 tooltip-trigger"
-                             title={tr('ریست کردن فیلدهای این شماره', 'Reset fields')}
-                           >
-                              <Eraser size={18} />
+                             {submittingIds.has(c.id) ? <Icons.Loader2 size={16} className="animate-spin" /> : <Check size={18} strokeWidth={2.5} />}
                            </button>
                            <button
                              onClick={() => {
@@ -726,10 +723,10 @@ export const CallListWorkspace = () => {
                                   }
                                 });
                              }}
-                             className="w-10 h-10 rounded-xl flex items-center justify-center transition-all bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-800 hover:text-white hover:border-slate-800 tooltip-trigger"
+                             className="w-9 h-9 rounded-lg flex items-center justify-center transition-all bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-800 hover:text-white hover:border-slate-800 tooltip-trigger shrink-0"
                              title={tr('افزودن به لیست سیاه', 'Add to blacklist')}
                            >
-                              <Ban size={18} />
+                              <Ban size={16} />
                            </button>
                            <button
                              onClick={() => {
@@ -743,21 +740,21 @@ export const CallListWorkspace = () => {
                                   }
                                 });
                              }}
-                             className="w-10 h-10 rounded-xl flex items-center justify-center transition-all bg-slate-50 text-rose-600 border border-slate-200 hover:bg-rose-500/20 hover:text-rose-700 hover:border-rose-400/50 tooltip-trigger"
+                             className="w-9 h-9 rounded-lg flex items-center justify-center transition-all bg-slate-50 text-rose-600 border border-slate-200 hover:bg-rose-500/20 hover:text-rose-700 hover:border-rose-400/50 tooltip-trigger shrink-0"
                              title={tr('حذف شماره', 'Delete number')}
                            >
-                              <Trash2 size={18} />
+                              <Trash2 size={16} />
                            </button>
                        </div>
                     </td>
                   </tr>
-
 
                   </React.Fragment>
                   );
                 })}
               </tbody>
             </table>
+
 
             {filteredList.length === 0 && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-slate-500">
@@ -807,8 +804,22 @@ export const CallListWorkspace = () => {
         onClose={() => setAdvisoryModalCall(null)}
         onSave={(date, time) => {
           if (advisoryModalCall) {
-             handleFieldChange(advisoryModalCall, 'advisoryDate', date);
-             handleFieldChange(advisoryModalCall, 'advisoryTime', time);
+             const scheduledAdvisory = date && time ? jalaliDateTimeToIso(date, time) : undefined;
+             const needsFollowUp = ['پاسخ نداد', 'در دسترس نیست', 'مشغول بود', 'بعداً تماس بگیرید', 'نیازمند پیگیری'].includes(advisoryModalCall.callStatus || '') || advisoryModalCall.advisory === 'هماهنگی بعدا';
+
+             let newFollowUpAt = advisoryModalCall.nextFollowUpAt;
+             if (scheduledAdvisory) {
+               newFollowUpAt = scheduledAdvisory;
+             } else if (!needsFollowUp) {
+               newFollowUpAt = undefined;
+             }
+
+             updateCall({
+               ...advisoryModalCall,
+               advisoryDate: date,
+               advisoryTime: time,
+               nextFollowUpAt: newFollowUpAt
+             });
           }
         }}
       />
