@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Settings, RefreshCw, Calendar, PhoneOff, Upload, User, Briefcase, MapPin, Clock, Download, Send, History, X } from 'lucide-react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Settings, RefreshCw, Calendar, PhoneOff, Upload, User, Briefcase, MapPin, Clock, Download, Send, History, X, MessageSquare, Inbox } from 'lucide-react';
 import { COURSE_CATEGORIES } from '../../data/courses';
 import { fetchCourseDataDynamic } from '../../utils/scraper';
 import { useAppContext } from '../../hooks/useAppContext';
@@ -25,6 +25,14 @@ export const SettingsView: React.FC = () => {
   const [isSending, setIsSending] = useState(false);
   const [selectedManagerId, setSelectedManagerId] = useState('');
 
+  // Messaging state
+  const [messages, setMessages] = useState<any[]>([]);
+  const [messagesLoading, setMessagesLoading] = useState(false);
+  const [messageBody, setMessageBody] = useState('');
+  const [isSendingMsg, setIsSendingMsg] = useState(false);
+  const [activeMessageManagerId, setActiveMessageManagerId] = useState('');
+  const [isMessagesModalOpen, setIsMessagesModalOpen] = useState(false);
+
   const followups = getActiveFollowups(calls);
   const activeCount = followups.length;
 
@@ -45,12 +53,20 @@ export const SettingsView: React.FC = () => {
     }
   };
 
+  const loadMessages = useCallback(async () => {
+    setMessagesLoading(true);
+    const { data, error } = await supabase.rpc('get_today_followup_messages');
+    if (!error && data) setMessages(data);
+    setMessagesLoading(false);
+  }, []);
+
   useEffect(() => {
     if (profile) {
       fetchManagers();
       fetchLastSent();
+      loadMessages();
     }
-  }, [profile]);
+  }, [profile, loadMessages]);
 
   const fetchLastSent = () => {
     if (!profile) return;
@@ -232,6 +248,50 @@ export const SettingsView: React.FC = () => {
       fetchLastSent();
     }
   };
+
+  const handleMarkRead = async (msgId: string) => {
+    await supabase.rpc('mark_followup_message_read', { p_message_id: msgId });
+    await loadMessages();
+  };
+
+  const openThread = async (managerId: string) => {
+    setActiveMessageManagerId(managerId);
+    setIsMessagesModalOpen(true);
+    const unread = messages.filter(m => m.sender_id === managerId && !m.read_at);
+    for (const msg of unread) {
+      await handleMarkRead(msg.id);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!activeMessageManagerId) return toast.error(tr('ارتباطی انتخاب نشده است.', 'No thread selected.'));
+    if (!messageBody.trim()) return toast.error(tr('متن پیام نمی‌تواند خالی باشد.', 'Message body cannot be empty.'));
+
+    setIsSendingMsg(true);
+    const trimmedMessageBody = messageBody.trim();
+    const { error } = await supabase.rpc('send_followup_message', {
+      p_recipient_id: activeMessageManagerId,
+      p_body: trimmedMessageBody
+    });
+    setIsSendingMsg(false);
+
+    if (error) {
+      console.error(error);
+      toast.error(tr('ارسال پیام انجام نشد. دوباره تلاش کنید.', 'Sending message failed.'));
+    } else {
+      toast.success(tr('پیام با موفقیت ارسال شد.', 'Message sent successfully.'));
+      setMessageBody('');
+      await loadMessages();
+    }
+  };
+
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isMessagesModalOpen) setIsMessagesModalOpen(false);
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [isMessagesModalOpen]);
 
   return (
     <div className="w-full h-full pt-6 pb-32 overflow-y-auto hide-scrollbar bg-slate-100" style={{ paddingLeft: `${layoutMargin}px`, paddingRight: `${layoutMargin}px` }}>
@@ -422,6 +482,53 @@ export const SettingsView: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Manager Messages Area */}
+        <div className="w-full mt-6 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm min-w-0">
+          <h3 className="text-lg font-extrabold text-slate-800 flex items-center gap-2 mb-4">
+            <MessageSquare size={20} className="text-indigo-500" />
+            {tr('پیام‌های مدیر', 'Manager Messages')}
+            {messages.filter(m => m.recipient_id === profile?.id && !m.read_at).length > 0 && (
+              <span className="bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full text-xs font-bold mr-2">
+                {messages.filter(m => m.recipient_id === profile?.id && !m.read_at).length} {tr('جدید', 'New')}
+              </span>
+            )}
+          </h3>
+
+          {messagesLoading ? (
+            <div className="flex justify-center py-6"><RefreshCw size={20} className="animate-spin text-slate-300" /></div>
+          ) : messages.length === 0 ? (
+             <div className="text-center py-8 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+               <Inbox size={24} className="mx-auto mb-2 text-slate-300" />
+               <p className="text-[13px] font-bold text-slate-500">{tr('امروز پیامی ارسال یا دریافت نشده است.', 'No messages today.')}</p>
+             </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {Array.from(new Set(messages.map(m => m.sender_id === profile?.id ? m.recipient_id : m.sender_id))).map(managerId => {
+                const threadMessages = messages.filter(m => m.sender_id === managerId || m.recipient_id === managerId);
+                const unreadCount = threadMessages.filter(m => m.recipient_id === profile?.id && !m.read_at).length;
+                const managerName = threadMessages.find(m => m.sender_id === managerId)?.sender_name || threadMessages.find(m => m.recipient_id === managerId)?.recipient_name || 'مدیر';
+                const lastMessage = threadMessages[threadMessages.length - 1];
+
+                return (
+                  <button
+                    key={managerId}
+                    onClick={() => openThread(managerId)}
+                    className="flex flex-col gap-2 p-4 rounded-2xl border border-slate-200 bg-slate-50 hover:bg-indigo-50/50 hover:border-indigo-200 transition-all text-right group"
+                  >
+                    <div className="flex justify-between items-center w-full">
+                      <span className="font-extrabold text-[14px] text-slate-800">{managerName}</span>
+                      {unreadCount > 0 && <span className="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full text-[10px] font-bold">{unreadCount} جدید</span>}
+                    </div>
+                    <div className="text-[12px] font-medium text-slate-500 line-clamp-1">
+                      {lastMessage.message_type === 'share_review' ? 'بررسی لیست پیگیری' : lastMessage.body}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
       <AnimatePresence>
@@ -495,6 +602,76 @@ export const SettingsView: React.FC = () => {
                      </>
                    )}
                  </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isMessagesModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" dir={direction}>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsMessagesModalOpen(false)} className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" />
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-white rounded-3xl w-full max-w-2xl relative z-10 overflow-hidden shadow-2xl border border-slate-200 flex flex-col max-h-[85vh]">
+              <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50 shrink-0">
+                 <div className="flex items-center gap-3">
+                   <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center"><MessageSquare size={20} /></div>
+                   <span className="font-extrabold text-slate-900 text-lg">
+                     {messages.find(m => m.sender_id === activeMessageManagerId)?.sender_name || messages.find(m => m.recipient_id === activeMessageManagerId)?.recipient_name || 'مدیر'}
+                   </span>
+                 </div>
+                 <button onClick={() => setIsMessagesModalOpen(false)} className="text-slate-400 hover:text-slate-700 bg-white rounded-full p-2 border border-slate-200 transition-colors"><X size={18} /></button>
+              </div>
+              <div className="p-6 flex-1 overflow-y-auto flex flex-col gap-3 bg-slate-50/50 hide-scrollbar">
+                {messages.filter(m => m.sender_id === activeMessageManagerId || m.recipient_id === activeMessageManagerId).map(m => {
+                  const isMine = m.sender_id === profile?.id;
+
+                  if (m.message_type === 'share_review') {
+                    const jalaliSentAt = m.related_share_sent_at ? new Date(m.related_share_sent_at).toLocaleString('fa-IR') : '—';
+                    const jalaliReviewedAt = new Date(m.created_at).toLocaleString('fa-IR');
+                    return (
+                      <div key={m.id} className="p-4 rounded-2xl border border-brand-200 bg-brand-50/50 ml-8 text-right">
+                        <div className="flex flex-col gap-2">
+                          <h4 className="font-extrabold text-sm text-brand-900">لیست پیگیری بررسی شد</h4>
+                          <p className="text-sm font-medium text-brand-800">مدیر {m.sender_name} فهرست پیگیری ارسالی شما را بررسی کرد.</p>
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            <span className="text-[11px] font-bold bg-white text-slate-600 px-2 py-1 rounded-md border border-slate-200">تعداد پیگیری‌ها: {m.related_share_item_count} مورد</span>
+                            <span className="text-[11px] font-bold bg-white text-slate-600 px-2 py-1 rounded-md border border-slate-200">زمان ارسال لیست: {jalaliSentAt}</span>
+                            <span className="text-[11px] font-bold bg-white text-slate-600 px-2 py-1 rounded-md border border-slate-200">زمان بررسی: {jalaliReviewedAt}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div key={m.id} className={`p-4 rounded-2xl border ${isMine ? 'bg-indigo-50/50 border-indigo-100 mr-8' : 'bg-white border-slate-200 ml-8'}`}>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-extrabold text-xs text-slate-700">{isMine ? tr('شما', 'You') : m.sender_name}</span>
+                        <span className="text-[10px] text-slate-400 font-bold" dir="ltr">{new Date(m.created_at).toLocaleTimeString('fa-IR', {hour: '2-digit', minute:'2-digit'})}</span>
+                      </div>
+                      <p className="text-sm font-medium text-slate-800 whitespace-pre-wrap leading-relaxed">{m.body}</p>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="p-4 border-t border-slate-100 bg-white shrink-0 flex flex-col gap-3">
+                <textarea
+                  className="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 text-sm font-medium text-slate-700 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all min-h-[80px] resize-y"
+                  placeholder={tr('پاسخ خود را بنویسید...', 'Type your reply...')}
+                  value={messageBody}
+                  onChange={(e) => setMessageBody(e.target.value)}
+                />
+                <div className="flex justify-end">
+                  <button
+                    onClick={handleSendMessage}
+                    disabled={isSendingMsg || !messageBody.trim()}
+                    className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-300 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all shadow-sm disabled:shadow-none"
+                  >
+                    {isSendingMsg ? <RefreshCw size={16} className="animate-spin" /> : <Send size={16} />}
+                    {tr('ارسال پاسخ', 'Send Reply')}
+                  </button>
+                </div>
               </div>
             </motion.div>
           </div>

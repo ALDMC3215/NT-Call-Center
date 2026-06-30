@@ -18,7 +18,7 @@ import { SupabaseProfile } from '../../types';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Shield, Users, Clock, CheckCircle2, Ban, LogOut,
-  Mail, Calendar, RefreshCw, AlertCircle, Activity, Inbox, Download, FileText, User,
+  Mail, Calendar, RefreshCw, AlertCircle, Activity, Inbox, Download, FileText, User, X, MessageSquare, Send
 } from 'lucide-react';
 import { customToast as toast } from '../UI/toast';
 
@@ -327,8 +327,20 @@ export const ManagerDashboard: React.FC = () => {
   const [profiles, setProfiles]     = useState<SupabaseProfile[]>([]);
   const [loading, setLoading]       = useState(true);
   const [actionId, setActionId]     = useState<string | null>(null);
-  const [activeTab, setActiveTab]   = useState<'pending' | 'agents' | 'managers' | 'followups'>('pending');
+  const [activeTab, setActiveTab]   = useState<'pending' | 'agents' | 'managers' | 'followups' | 'messages'>('pending');
   const [receivedShares, setReceivedShares] = useState<any[]>([]);
+  const [sharesLoading, setSharesLoading] = useState(true);
+  const [sharesError, setSharesError] = useState(false);
+  const [viewingShare, setViewingShare] = useState<any>(null);
+
+  // Messaging state
+  const [messages, setMessages] = useState<any[]>([]);
+  const [messagesLoading, setMessagesLoading] = useState(false);
+  const [activeExperts, setActiveExperts] = useState<{id: string, full_name: string}[]>([]);
+  const [selectedExpertId, setSelectedExpertId] = useState('');
+  const [messageBody, setMessageBody] = useState('');
+  const [isSendingMsg, setIsSendingMsg] = useState(false);
+  const [isReviewing, setIsReviewing] = useState(false);
 
   // ---------------------------------------------------------------------------
   // Load all profiles (admin RLS policy allows this)
@@ -350,18 +362,49 @@ export const ManagerDashboard: React.FC = () => {
 
   const loadShares = useCallback(async () => {
     if (!supabaseProfile?.id) return;
+    setSharesLoading(true);
+    setSharesError(false);
     const { data, error } = await supabase
       .from('followup_shares')
-      .select('id, item_count, sent_at, payload_json, sender:profiles!sender_expert_id(name)')
+      .select('id, item_count, sent_at, payload_json, reviewed_at, reviewed_by_manager_id, sender:profiles!sender_expert_id(full_name)')
       .eq('receiver_manager_id', supabaseProfile.id)
       .order('sent_at', { ascending: false });
 
-    if (!error && data) {
-      setReceivedShares(data);
+    if (error) {
+      setSharesError(true);
+      setSharesLoading(false);
+    } else {
+      setReceivedShares(data || []);
+      setSharesLoading(false);
     }
   }, [supabaseProfile?.id]);
 
-  useEffect(() => { loadProfiles(); loadShares(); }, [loadProfiles, loadShares]);
+  const loadExperts = useCallback(async () => {
+    const { data, error } = await supabase.rpc('get_active_experts');
+    if (!error && data) setActiveExperts(data);
+  }, []);
+
+  const loadMessages = useCallback(async () => {
+    setMessagesLoading(true);
+    const { data, error } = await supabase.rpc('get_today_followup_messages');
+    if (!error && data) setMessages(data);
+    setMessagesLoading(false);
+  }, []);
+
+  useEffect(() => {
+    loadProfiles();
+    loadShares();
+    loadExperts();
+    loadMessages();
+  }, [loadProfiles, loadShares, loadExperts, loadMessages]);
+
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && viewingShare && !isReviewing) setViewingShare(null);
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [viewingShare, isReviewing]);
 
   // ---------------------------------------------------------------------------
   // Approve
@@ -386,6 +429,53 @@ export const ManagerDashboard: React.FC = () => {
   };
 
   // ---------------------------------------------------------------------------
+  // Review Followup
+  // ---------------------------------------------------------------------------
+  const handleReviewShare = async (shareId: string) => {
+    setIsReviewing(true);
+    const { data, error } = await supabase.rpc('review_followup_share', { p_share_id: shareId });
+    setIsReviewing(false);
+    if (error) {
+      toast.error('خطا در بررسی لیست.');
+    } else {
+      toast.success('لیست به عنوان بررسی‌شده ثبت شد.');
+      await loadShares();
+      await loadMessages();
+      setViewingShare((prev: any) => prev && prev.id === shareId ? { ...prev, reviewed_at: new Date().toISOString() } : prev);
+    }
+  };
+
+  // ---------------------------------------------------------------------------
+  // Send Message
+  // ---------------------------------------------------------------------------
+  const handleSendMessage = async () => {
+    if (!selectedExpertId) return toast.error('لطفاً یک کارشناس انتخاب کنید.');
+    if (!messageBody.trim()) return toast.error('متن پیام نمی‌تواند خالی باشد.');
+
+    setIsSendingMsg(true);
+    const trimmedMessageBody = messageBody.trim();
+    const { error } = await supabase.rpc('send_followup_message', {
+      p_recipient_id: selectedExpertId,
+      p_body: trimmedMessageBody
+    });
+    setIsSendingMsg(false);
+
+    if (error) {
+      console.error(error);
+      toast.error('ارسال پیام انجام نشد. دوباره تلاش کنید.');
+    } else {
+      toast.success('پیام با موفقیت ارسال شد.');
+      setMessageBody('');
+      await loadMessages();
+    }
+  };
+
+  const handleMarkRead = async (msgId: string) => {
+    await supabase.rpc('mark_followup_message_read', { p_message_id: msgId });
+    await loadMessages();
+  };
+
+  // ---------------------------------------------------------------------------
   // Derived lists
   // ---------------------------------------------------------------------------
   const pendingAgents = profiles.filter(p => p.role === 'agent' && p.account_status === 'pending');
@@ -397,6 +487,7 @@ export const ManagerDashboard: React.FC = () => {
     { id: 'agents',   label: 'کارشناسان فعال',    count: activeAgents.length,  icon: <Users size={15} /> },
     { id: 'managers', label: 'مدیران',             count: managers.length,      icon: <Shield size={15} /> },
     { id: 'followups', label: 'پیگیری‌های دریافتی', count: receivedShares.length, icon: <Inbox size={15} /> },
+    { id: 'messages', label: 'پیام‌ها', count: messages.filter(m => m.recipient_id === supabaseProfile?.id && !m.read_at).length, icon: <MessageSquare size={15} /> },
   ] as const;
 
   // ---------------------------------------------------------------------------
@@ -500,7 +591,7 @@ export const ManagerDashboard: React.FC = () => {
             <button
               id="mgr-refresh"
               type="button"
-              onClick={() => { loadProfiles(); loadShares(); }}
+              onClick={() => { loadProfiles(); loadShares(); loadMessages(); }}
               disabled={loading}
               className="flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-slate-700 px-3 py-1.5 rounded-xl hover:bg-slate-100 transition-all"
             >
@@ -652,14 +743,28 @@ export const ManagerDashboard: React.FC = () => {
                 {/* ── Received Followups ──────────────────────────── */}
                 {activeTab === 'followups' && (
                   <div className="space-y-3">
-                    {receivedShares.length === 0 && (
+                    {sharesLoading && (
+                      <div className="bg-white rounded-2xl border border-slate-200 p-10 flex justify-center py-16">
+                        <RefreshCw size={24} className="animate-spin text-slate-300" />
+                      </div>
+                    )}
+                    {!sharesLoading && sharesError && (
+                      <div className="bg-white rounded-2xl border border-slate-200 p-10 text-center flex flex-col items-center">
+                        <AlertCircle size={32} className="text-red-400 mx-auto mb-3" />
+                        <p className="text-sm font-bold text-red-600 mb-4">خطا در دریافت لیست پیگیری‌ها</p>
+                        <button onClick={loadShares} className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold transition-all">
+                          <RefreshCw size={14} /><span>تلاش مجدد</span>
+                        </button>
+                      </div>
+                    )}
+                    {!sharesLoading && !sharesError && receivedShares.length === 0 && (
                       <div className="bg-white rounded-2xl border border-slate-200 p-10 text-center">
                         <Inbox size={32} className="text-slate-300 mx-auto mb-3" />
                         <p className="text-sm font-bold text-slate-500">هیچ لیست پیگیری دریافت نشده است.</p>
                       </div>
                     )}
-                    {receivedShares.map(s => {
-                      const senderName = Array.isArray(s.sender) ? s.sender[0]?.name : s.sender?.name;
+                    {!sharesLoading && !sharesError && receivedShares.map(s => {
+                      const senderName = Array.isArray(s.sender) ? s.sender[0]?.full_name : s.sender?.full_name;
                       return (
                       <div key={s.id} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm flex flex-col sm:flex-row sm:items-center gap-4">
                         <div className="w-10 h-10 rounded-xl bg-brand-50 border border-brand-100 flex items-center justify-center shrink-0">
@@ -669,6 +774,11 @@ export const ManagerDashboard: React.FC = () => {
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-extrabold text-slate-900 text-sm">لیست پیگیری از {senderName || 'کارشناس'}</span>
                             <span className="bg-brand-100 text-brand-700 px-2 py-0.5 rounded-md text-[11px] font-bold">{s.item_count} مورد</span>
+                            {s.reviewed_at ? (
+                              <span className="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-md text-[11px] font-bold">بررسی شده</span>
+                            ) : (
+                              <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-md text-[11px] font-bold">بررسی نشده</span>
+                            )}
                           </div>
                           <div className="flex items-center gap-3 mt-1 flex-wrap text-slate-500 text-xs font-medium">
                             <span className="flex items-center gap-1" dir="ltr"><Calendar size={11} />{new Date(s.sent_at).toLocaleString('fa-IR')}</span>
@@ -677,20 +787,108 @@ export const ManagerDashboard: React.FC = () => {
                         <div className="flex gap-2 shrink-0">
                           <button
                             type="button"
-                            onClick={() => {
-                              const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(s.payload_json, null, 2));
-                              const a = document.createElement('a');
-                              a.href = dataStr;
-                              a.download = `followups-${senderName || 'expert'}-${new Date(s.sent_at).toISOString().split('T')[0]}.json`;
-                              a.click();
-                            }}
-                            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all border border-slate-200 hover:border-slate-300"
+                            onClick={() => setViewingShare({ ...s, senderName })}
+                            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white hover:bg-brand-50 text-brand-700 text-xs font-bold transition-all border border-brand-200 hover:border-brand-300"
                           >
-                            <Download size={13} /><span>دانلود JSON</span>
+                            <FileText size={13} /><span>مشاهده</span>
                           </button>
                         </div>
                       </div>
                     )})}
+                  </div>
+                )}
+                {/* ── Messages ──────────────────────────────────── */}
+                {activeTab === 'messages' && (
+                  <div className="flex flex-col gap-6">
+                    <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+                      <h3 className="font-extrabold text-slate-900 mb-4 flex items-center gap-2">
+                        <MessageSquare size={18} className="text-indigo-600" />
+                        ارسال پیام به کارشناس
+                      </h3>
+                      <div className="flex flex-col gap-4">
+                        <select
+                          className="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 text-sm font-bold text-slate-700 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                          value={selectedExpertId}
+                          onChange={(e) => setSelectedExpertId(e.target.value)}
+                        >
+                          <option value="">انتخاب کارشناس...</option>
+                          {activeExperts.map(e => <option key={e.id} value={e.id}>{e.full_name}</option>)}
+                        </select>
+                        <textarea
+                          className="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 text-sm font-medium text-slate-700 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all min-h-[100px] resize-y"
+                          placeholder="متن پیام خود را بنویسید..."
+                          value={messageBody}
+                          onChange={(e) => setMessageBody(e.target.value)}
+                        />
+                        <div className="flex justify-end">
+                          <button
+                            onClick={handleSendMessage}
+                            disabled={isSendingMsg || !selectedExpertId || !messageBody.trim()}
+                            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-300 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all shadow-sm disabled:shadow-none"
+                          >
+                            {isSendingMsg ? <RefreshCw size={16} className="animate-spin" /> : <Send size={16} />}
+                            ارسال پیام
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+                      <h3 className="font-extrabold text-slate-900 mb-4 flex items-center gap-2">
+                        <Inbox size={18} className="text-slate-600" />
+                        پیام‌های امروز
+                      </h3>
+                      {messagesLoading ? (
+                        <div className="flex justify-center py-8"><RefreshCw size={20} className="animate-spin text-slate-300" /></div>
+                      ) : messages.length === 0 ? (
+                        <div className="text-center py-8 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                          <MessageSquare size={24} className="mx-auto mb-2 text-slate-300" />
+                          <p className="text-[13px] font-bold text-slate-500">امروز پیامی ارسال یا دریافت نشده است.</p>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-3">
+                          {messages.map(m => {
+                            const isMine = m.sender_id === supabaseProfile?.id;
+                            const isUnread = !isMine && !m.read_at;
+
+                            if (m.message_type === 'share_review') {
+                              const jalaliSentAt = m.related_share_sent_at ? new Date(m.related_share_sent_at).toLocaleString('fa-IR') : '—';
+                              const jalaliReviewedAt = new Date(m.created_at).toLocaleString('fa-IR');
+                              return (
+                                <div key={m.id} className="p-4 rounded-2xl border border-brand-200 bg-brand-50/50 mr-8">
+                                  <div className="flex flex-col gap-2">
+                                    <h4 className="font-extrabold text-sm text-brand-900">بررسی لیست پیگیری</h4>
+                                    <p className="text-sm font-medium text-brand-800">شما فهرست پیگیری ارسالی {m.recipient_name} را بررسی کردید.</p>
+                                    <div className="flex flex-wrap gap-2 mt-2">
+                                      <span className="text-[11px] font-bold bg-white text-slate-600 px-2 py-1 rounded-md border border-slate-200">تعداد پیگیری‌ها: {m.related_share_item_count} مورد</span>
+                                      <span className="text-[11px] font-bold bg-white text-slate-600 px-2 py-1 rounded-md border border-slate-200">زمان ارسال لیست: {jalaliSentAt}</span>
+                                      <span className="text-[11px] font-bold bg-white text-slate-600 px-2 py-1 rounded-md border border-slate-200">زمان بررسی: {jalaliReviewedAt}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            }
+
+                            return (
+                              <div key={m.id} className={`p-4 rounded-2xl border ${isMine ? 'bg-indigo-50/50 border-indigo-100 mr-8' : 'bg-slate-50 border-slate-200 ml-8'}`}>
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="font-extrabold text-xs text-slate-700">{isMine ? 'شما' : m.sender_name}</span>
+                                  <span className="text-[10px] text-slate-400 font-bold" dir="ltr">{new Date(m.created_at).toLocaleTimeString('fa-IR', {hour: '2-digit', minute:'2-digit'})}</span>
+                                </div>
+                                <p className="text-sm font-medium text-slate-800 whitespace-pre-wrap leading-relaxed">{m.body}</p>
+                                {isUnread && (
+                                  <div className="mt-3 flex justify-end">
+                                    <button onClick={() => handleMarkRead(m.id)} className="text-[11px] font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-100 px-2.5 py-1 rounded-md">
+                                      علامت به عنوان خوانده شده
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </motion.div>
@@ -699,6 +897,137 @@ export const ManagerDashboard: React.FC = () => {
 
         </div>
       </div>
+
+      {viewingShare && (
+        <div
+          className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => {
+            if (!isReviewing) setViewingShare(null);
+          }}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl w-full max-w-5xl flex flex-col overflow-hidden max-h-[90vh]"
+            dir="rtl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between shrink-0 bg-slate-50">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-brand-100 text-brand-600 flex items-center justify-center">
+                  <FileText size={20} />
+                </div>
+                <div className="flex flex-col">
+                  <h3 className="font-extrabold text-slate-900 text-lg">گزارش پیگیری‌ها - {viewingShare.senderName || 'کارشناس'}</h3>
+                  <span className="text-xs font-bold text-slate-500" dir="ltr">{new Date(viewingShare.sent_at).toLocaleString('fa-IR')}</span>
+                </div>
+              </div>
+              <button
+                disabled={isReviewing}
+                onClick={() => setViewingShare(null)}
+                className="w-8 h-8 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-5 overflow-y-auto bg-white flex-1 hide-scrollbar">
+              <div className="overflow-x-auto border border-slate-200 rounded-xl">
+                <table className="w-full text-right text-[13px]">
+                  <thead className="bg-slate-50 text-slate-500 font-extrabold border-b border-slate-200 whitespace-nowrap">
+                    <tr>
+                      <th className="py-3 px-4">نام</th>
+                      <th className="py-3 px-4">شماره تماس</th>
+                      <th className="py-3 px-4">وضعیت تماس</th>
+                      <th className="py-3 px-4">وضعیت ثبت‌نام</th>
+                      <th className="py-3 px-4">دوره‌ها</th>
+                      <th className="py-3 px-4">مشاوره حضوری</th>
+                      <th className="py-3 px-4">تاریخ و ساعت مشاوره</th>
+                      <th className="py-3 px-4">پیگیری بعدی</th>
+                      <th className="py-3 px-4">یادداشت‌ها</th>
+                      <th className="py-3 px-4">آخرین تلاش</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                    {Array.isArray(viewingShare.payload_json) ? viewingShare.payload_json.map((item: any, idx: number) => {
+                       const cDate = item.consultationDate ? new Date(item.consultationDate).toLocaleDateString('fa-IR') : '';
+                       const cTime = item.consultationTime || '';
+                       const advisoryStr = cDate && cTime ? `${cDate} - ${cTime}` : cDate || cTime || '—';
+                       const fDate = item.nextFollowUpDate ? new Date(item.nextFollowUpDate).toLocaleDateString('fa-IR') : '';
+                       const fTime = item.nextFollowUpTime || '';
+                       const followUpStr = fDate && fTime ? `${fDate} - ${fTime}` : fDate || fTime || '—';
+                       return (
+                        <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                          <td className="py-3 px-4 font-extrabold text-slate-900 whitespace-nowrap">{item.fullName || '—'}</td>
+                          <td className="py-3 px-4 whitespace-nowrap" dir="ltr">{item.phone || '—'}</td>
+                          <td className="py-3 px-4 whitespace-nowrap">
+                            <span className="bg-slate-100 px-2 py-1 rounded-md text-[11px] font-bold">{item.callStatus || '—'}</span>
+                          </td>
+                          <td className="py-3 px-4 whitespace-nowrap">
+                            <span className="bg-slate-100 px-2 py-1 rounded-md text-[11px] font-bold">{item.registrationStatus || '—'}</span>
+                          </td>
+                          <td className="py-3 px-4 min-w-[150px]">
+                            {item.interestedCourses && item.interestedCourses.length > 0 ? (
+                              <div className="flex flex-wrap gap-1">
+                                {item.interestedCourses.map((c: string, i: number) => <span key={i} className="bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap">{c}</span>)}
+                              </div>
+                            ) : '—'}
+                          </td>
+                          <td className="py-3 px-4 whitespace-nowrap">
+                            {item.inPersonAdvisory ? <CheckCircle2 size={16} className="text-emerald-500" /> : '—'}
+                          </td>
+                          <td className="py-3 px-4 whitespace-nowrap" dir="ltr">{advisoryStr}</td>
+                          <td className="py-3 px-4 whitespace-nowrap" dir="ltr">{followUpStr}</td>
+                          <td className="py-3 px-4 min-w-[200px] text-xs leading-relaxed">{item.notes || '—'}</td>
+                          <td className="py-3 px-4 whitespace-nowrap text-[11px] font-bold text-slate-400" dir="ltr">{item.lastAttemptTime ? new Date(item.lastAttemptTime).toLocaleString('fa-IR') : '—'}</td>
+                        </tr>
+                      );
+                    }) : (
+                      <tr><td colSpan={10} className="text-center py-4">داده نامعتبر است</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="p-5 border-t border-slate-100 flex items-center justify-between shrink-0 bg-slate-50">
+              <div className="flex items-center gap-4">
+                <span className="text-[13px] font-extrabold text-slate-600 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm">مجموع: {viewingShare.item_count} مورد</span>
+                <button
+                  type="button"
+                  disabled={isReviewing}
+                  onClick={() => {
+                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(viewingShare.payload_json, null, 2));
+                    const a = document.createElement('a');
+                    a.href = dataStr;
+                    a.download = `followups-${viewingShare.senderName || 'expert'}-${new Date(viewingShare.sent_at).toISOString().split('T')[0]}.json`;
+                    a.click();
+                  }}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 text-[13px] font-bold transition-all border border-slate-200 disabled:opacity-50"
+                >
+                  <Download size={15} />
+                  <span>دانلود فایل JSON</span>
+                </button>
+              </div>
+
+              {!viewingShare.reviewed_at ? (
+                <button
+                  type="button"
+                  onClick={() => handleReviewShare(viewingShare.id)}
+                  disabled={isReviewing}
+                  className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-[13px] font-bold transition-all shadow-md shadow-brand-500/25 disabled:opacity-70 disabled:shadow-none"
+                >
+                  {isReviewing ? <RefreshCw size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
+                  <span>بررسی و تایید</span>
+                </button>
+              ) : (
+                <div className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 text-[13px] font-bold cursor-default">
+                  <CheckCircle2 size={16} />
+                  <span>بررسی شده</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
