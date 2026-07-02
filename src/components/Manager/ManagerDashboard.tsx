@@ -529,76 +529,90 @@ export const ManagerDashboard: React.FC = () => {
 
       {/* ── Content ──────────────────────────────────────────────── */}
       <div className="flex-1 overflow-y-auto hide-scrollbar">
-        <div className="max-w-4xl mx-auto px-4 md:px-6 py-8">
+        <div className="w-full px-4 md:px-6 lg:px-8 py-6">
 
           {/* Page title */}
-          <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h1 className="text-xl font-extrabold text-slate-900 mb-1 tracking-tight">پنل مدیریت</h1>
+              <h1 className="text-xl font-bold text-slate-900 mb-1 tracking-tight">داشبورد مدیریت</h1>
               <p className="text-[13px] text-slate-500 font-medium">نمای کلی وضعیت سیستم و کارشناسان</p>
             </div>
-            <div className="flex items-center gap-2 text-[11px] font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full w-fit">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
-              آخرین به‌روزرسانی: همین حالا
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => { loadProfiles(); loadShares(); loadMessages(); }}
+                disabled={loading}
+                className="flex items-center gap-1.5 text-[12px] font-bold text-slate-500 hover:text-slate-700 bg-white border border-slate-200 px-3 py-1.5 rounded-md shadow-sm transition-colors"
+              >
+                <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+                <span>بروزرسانی</span>
+              </button>
+              <div className="flex items-center gap-2 text-[12px] font-bold text-slate-600 bg-white border border-slate-200 px-3 py-1.5 rounded-md shadow-sm w-fit">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                زنده
+              </div>
             </div>
           </div>
+
+          {/* KPI Cards across dashboard */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            {[
+              { label: 'در انتظار تأیید',  count: pendingAgents.length, color: 'rose',   icon: <Clock size={18} /> },
+              { label: 'کارشناس فعال', count: activeAgents.length,  color: 'emerald', icon: <Users size={18} /> },
+              { label: 'مدیر سیستم',     count: managers.length,      color: 'indigo',  icon: <Shield size={18} /> },
+            ].map(s => (
+              <div key={s.label} className={`bg-white rounded-lg border ${s.count > 0 && s.color === 'rose' ? 'border-rose-300 bg-rose-50/50' : 'border-slate-200'} p-4 flex items-center justify-between gap-4 shadow-sm`}>
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-md bg-${s.color}-50 text-${s.color}-600 border border-${s.color}-100 flex items-center justify-center shrink-0`}>
+                    {s.icon}
+                  </div>
+                  <p className="text-[13px] text-slate-700 font-bold">{s.label}</p>
+                </div>
+                <p className="text-xl font-black text-slate-900">{s.count}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+
+            {/* Main Area: Daily stats & presence */}
+            <div className="xl:col-span-8 flex flex-col gap-6">
 
           <PresenceSection />
 
           <DailyStatsSection profiles={profiles} />
 
-          {/* Stats cards */}
-          <div className="grid grid-cols-3 gap-3 mb-8">
-            {[
-              { label: 'در انتظار تأیید',  count: pendingAgents.length, color: 'rose',   icon: <Clock size={18} /> },
-              { label: 'کارشناسان فعال', count: activeAgents.length,  color: 'emerald', icon: <Users size={18} /> },
-              { label: 'مدیران سیستم',     count: managers.length,      color: 'indigo',  icon: <Shield size={18} /> },
-            ].map(s => (
-              <div key={s.label} className={`bg-white rounded-xl border ${s.count > 0 && s.color === 'rose' ? 'border-rose-200 bg-rose-50/30 shadow-sm' : 'border-slate-200 shadow-sm'} p-4 flex items-center gap-4`}>
-                <div className={`w-10 h-10 rounded-xl bg-${s.color}-50 border border-${s.color}-100 flex items-center justify-center text-${s.color}-600 shrink-0`}>
-                  {s.icon}
-                </div>
-                <div>
-                  <p className="text-xl font-extrabold text-slate-900 leading-none mb-1">{s.count}</p>
-                  <p className="text-[11px] text-slate-500 font-bold">{s.label}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+            </div>
 
-          {/* Tabs */}
-          <div className="flex gap-1 p-1 bg-slate-100 rounded-2xl mb-6">
-            {tabs.map(t => (
-              <button
-                key={t.id}
-                id={`mgr-tab-${t.id}`}
-                type="button"
-                onClick={() => setActiveTab(t.id)}
-                className={`flex items-center gap-2 flex-1 justify-center py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === t.id ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-              >
-                {t.icon}
-                <span className="hidden sm:inline">{t.label}</span>
-                {t.count > 0 && <span className={`text-[11px] font-extrabold px-1.5 py-0.5 rounded-md ${activeTab === t.id ? 'bg-brand-100 text-brand-700' : 'bg-slate-200 text-slate-600'}`}>{t.count}</span>}
-              </button>
-            ))}
-          </div>
+            {/* Sidebar Area: KPI summary & Manager actions */}
+            <div className="xl:col-span-4 flex flex-col gap-6">
 
-          {/* Refresh */}
-          <div className="flex justify-end mb-4">
-            <button
-              id="mgr-refresh"
-              type="button"
-              onClick={() => { loadProfiles(); loadShares(); loadMessages(); }}
-              disabled={loading}
-              className="flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-slate-700 px-3 py-1.5 rounded-xl hover:bg-slate-100 transition-all"
-            >
-              <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
-              <span>بروزرسانی</span>
-            </button>
-          </div>
+              {/* Action Tabs Area */}
+              <div className="bg-white border border-slate-200 rounded-lg p-4 flex flex-col">
+                <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                  <h2 className="text-sm font-bold text-slate-800">عملیات مدیریتی</h2>
+                </div>
+
+                <div className="flex flex-wrap gap-1 mb-4 border-b border-slate-100 pb-2">
+                  {tabs.map(t => (
+                    <button
+                      key={t.id}
+                      onClick={() => setActiveTab(t.id)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] font-bold transition-all ${
+                        activeTab === t.id
+                          ? 'bg-slate-100 text-slate-900 shadow-sm'
+                          : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                      }`}
+                    >
+                      {t.icon}
+                      <span>{t.label}</span>
+                      {t.count > 0 && <span className="bg-brand-100 text-brand-700 text-[11px] px-1.5 py-0.5 rounded font-black ml-1">{t.count}</span>}
+                    </button>
+                  ))}
+                </div>
 
           {/* Content panels */}
           <AnimatePresence mode="wait">
@@ -613,9 +627,9 @@ export const ManagerDashboard: React.FC = () => {
                 {activeTab === 'pending' && (
                   <div className="space-y-3">
                     {pendingAgents.length === 0 && (
-                      <div className="bg-white rounded-2xl border border-slate-200 p-10 text-center">
-                        <CheckCircle2 size={32} className="text-emerald-400 mx-auto mb-3" />
-                        <p className="text-sm font-bold text-slate-500">هیچ درخواست در انتظاری وجود ندارد.</p>
+                      <div className="bg-slate-50 rounded-lg border border-slate-200 p-4 flex items-center justify-center gap-3">
+                        <CheckCircle2 size={18} className="text-emerald-500" />
+                        <p className="text-[13px] font-bold text-slate-500">هیچ درخواست در انتظاری وجود ندارد.</p>
                       </div>
                     )}
                     {pendingAgents.map(p => (
@@ -894,8 +908,10 @@ export const ManagerDashboard: React.FC = () => {
               </motion.div>
             )}
           </AnimatePresence>
-
+          </div>
+          </div>
         </div>
+      </div>
       </div>
 
       {viewingShare && (

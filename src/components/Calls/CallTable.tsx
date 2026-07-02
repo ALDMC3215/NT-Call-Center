@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useAppContext } from '../../hooks/useAppContext';
 import { Trash2, FileText, X, PhoneCall, Link as LinkIcon, Users, BookOpen, CheckCircle, CalendarClock, ArrowUp, ArrowDown, ArrowUpDown, ChevronDown, Dices, ShieldBan } from 'lucide-react';
-import { CALL_STATUSES, LINK_OPTIONS, ADV_OPTIONS, REG_OPTIONS, COURSES } from '../../constants';
+import { CALL_STATUSES, LINK_OPTIONS, ADV_OPTIONS, REGISTRATION_STATUSES, COURSES } from '../../constants';
 import { CallRecord } from '../../types';
 import { InlineJalaliCalendar } from '../Shared/InlineJalaliCalendar';
 import { InlineAnalogTimePicker } from '../Shared/InlineAnalogTimePicker';
@@ -30,17 +30,22 @@ const CallRow: React.FC<CallRowProps> = React.memo(({ call, index, updateCallAct
 
   const getFeatureColor = (value: string) => {
     if (!value) return 'border-border text-secondary bg-surface-hover hover:bg-slate-200';
-    
-    if (['پاسخ داد', 'بله', 'ثبت نام کرد', 'ارسال شد'].includes(value)) 
+
+    if (['پاسخ داد', 'بله', 'ثبت نام کرد', 'ارسال شد'].includes(value))
       return 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400';
-      
-    if (['پاسخ نداد', 'خیر', 'ثبت نام نکرد', 'ارسال نشد'].includes(value)) 
+
+    if (['پاسخ نداد', 'خیر', 'ثبت نام نکرد', 'ارسال نشد'].includes(value))
       return 'border-rose-500/30 bg-rose-500/10 text-rose-400';
-      
-    if (['در دسترس نیست', 'هماهنگی بعدا', 'در حال بررسی'].includes(value)) 
+
+    if (value === 'پاسخ نداد')
       return 'border-amber-500/30 bg-amber-500/10 text-amber-400';
-      
-    if (['عدم تمایل', 'قصد ندارد'].includes(value)) 
+    if (value === 'ناموجود')
+      return 'border-rose-500/30 bg-rose-500/10 text-rose-400';
+
+    if (['در دسترس نیست', 'هماهنگی بعدا', 'در حال بررسی'].includes(value))
+      return 'border-amber-500/30 bg-amber-500/10 text-amber-400';
+
+    if (['عدم تمایل', 'قصد ندارد'].includes(value))
       return 'border-border bg-slate-200 text-secondary';
 
     return 'border-blue-500/30 bg-blue-500/10 text-blue-400';
@@ -64,7 +69,7 @@ const CallRow: React.FC<CallRowProps> = React.memo(({ call, index, updateCallAct
   return (
     <div className="group relative bg-transparent border-b border-border hover:bg-surface-hover py-4 px-4 z-10 transition-all duration-150 ease-out last:border-0 pointer-events-auto">
       <div className={`w-full ${GRID_LAYOUT}`}>
-        
+
         {/* Phone */}
         <div className="flex items-center gap-2">
           <div className="font-medium tracking-wider text-secondary text-[16px]" dir="ltr">
@@ -74,14 +79,14 @@ const CallRow: React.FC<CallRowProps> = React.memo(({ call, index, updateCallAct
 
         {/* Status */}
         <div className="min-w-0">
-          <CustomSelect 
+          <CustomSelect
             value={call.callStatus || ''}
             onChange={(val) => handleUpdate('callStatus', val)}
             options={CALL_STATUSES.map(s => ({ value: s, label: s }))}
             placeholder="وضعیت تماس"
             variant="unstyled"
             customTrigger={
-              <div 
+              <div
                 className={`flex items-center justify-between w-full px-3 py-1.5 rounded-xl text-[12px] font-medium border ${getFeatureColor(call.callStatus || '')}`}
               >
                 <div className="flex items-center gap-1.5 truncate">
@@ -96,14 +101,14 @@ const CallRow: React.FC<CallRowProps> = React.memo(({ call, index, updateCallAct
 
         {/* Link */}
         <div className="min-w-0">
-          <CustomSelect 
+          <CustomSelect
             value={call.linkSent || ''}
             onChange={(val) => handleUpdate('linkSent', val)}
             options={LINK_OPTIONS.map(s => ({ value: s, label: s }))}
             placeholder="ارسال لینک"
             variant="unstyled"
             customTrigger={
-              <div 
+              <div
                 className={`flex items-center justify-between w-full px-3 py-1.5 rounded-xl text-[12px] font-medium border ${getFeatureColor(call.linkSent || '')}`}
               >
                 <div className="flex items-center gap-1.5 truncate">
@@ -118,14 +123,14 @@ const CallRow: React.FC<CallRowProps> = React.memo(({ call, index, updateCallAct
 
         {/* Course */}
         <div className="min-w-0">
-          <CustomSelect 
+          <CustomSelect
             value={call.courses?.[0] || ''}
             onChange={(val) => handleUpdate('courses', val ? [val] : [])}
             options={COURSES.map(s => ({ value: s, label: s }))}
             placeholder="پکیج"
             variant="unstyled"
             customTrigger={
-              <div 
+              <div
                 className={`flex items-center justify-between w-full px-3 py-1.5 rounded-xl text-[12px] font-medium border ${getFeatureColor(call.courses?.[0] || '')}`}
               >
                 <div className="flex items-center gap-1.5 truncate">
@@ -140,7 +145,7 @@ const CallRow: React.FC<CallRowProps> = React.memo(({ call, index, updateCallAct
 
         {/* Advisory */}
         <div className="min-w-0">
-          <CustomSelect 
+          <CustomSelect
             value={call.advisory || ''}
             onChange={(val) => {
               if (val !== 'بله') {
@@ -160,7 +165,7 @@ const CallRow: React.FC<CallRowProps> = React.memo(({ call, index, updateCallAct
             placeholder="مشاوره"
             variant="unstyled"
             customTrigger={
-              <div 
+              <div
                 className={`flex items-center justify-between w-full px-3 py-1.5 rounded-xl text-[12px] font-medium border ${getFeatureColor(call.advisory || '')}`}
               >
                 <div className="flex items-center gap-1.5 truncate">
@@ -175,14 +180,14 @@ const CallRow: React.FC<CallRowProps> = React.memo(({ call, index, updateCallAct
 
         {/* Registration */}
         <div className="min-w-0">
-          <CustomSelect 
+          <CustomSelect
             value={call.registered || ''}
             onChange={(val) => handleUpdate('registered', val)}
-            options={REG_OPTIONS.map(s => ({ value: s, label: s }))}
+            options={REGISTRATION_STATUSES.map(s => ({ value: s, label: s }))}
             placeholder="وضعیت ثبت نام"
             variant="unstyled"
             customTrigger={
-              <div 
+              <div
                 className={`flex items-center justify-between w-full px-3 py-1.5 rounded-xl text-[12px] font-medium border ${getFeatureColor(call.registered || '')}`}
               >
                 <div className="flex items-center gap-1.5 truncate">
@@ -199,7 +204,7 @@ const CallRow: React.FC<CallRowProps> = React.memo(({ call, index, updateCallAct
         <div className="flex justify-center text-center">
           {showAdvisoryCols ? (
             <>
-              <button 
+              <button
                 onClick={() => setIsDateTimeModalOpen(true)}
                 className={`w-8 h-8 flex items-center justify-center rounded-xl ${advisoryDate || advisoryTime ? 'border border-brand-500/50 bg-brand-500/20 text-brand-700' : 'border border-border bg-surface-hover text-secondary hover:bg-slate-200 hover:text-secondary'}`}
                 title="زمانبندی مشاوره"
@@ -217,7 +222,7 @@ const CallRow: React.FC<CallRowProps> = React.memo(({ call, index, updateCallAct
                           </div>
                           <h3 className="font-medium text-secondary text-lg">زمانبندی مشاوره</h3>
                       </div>
-                      <button 
+                      <button
                         onClick={() => setIsDateTimeModalOpen(false)}
                         className="text-secondary hover:text-secondary rounded-xl p-1"
                       >
@@ -232,7 +237,7 @@ const CallRow: React.FC<CallRowProps> = React.memo(({ call, index, updateCallAct
                             انتخاب تاریخ
                         </label>
                         <div className="bg-surface  rounded-xl border border-border p-4 h-[320px] ">
-                          <InlineJalaliCalendar 
+                          <InlineJalaliCalendar
                             value={advisoryDate}
                             onChange={(val) => {
                                 setAdvisoryDate(val);
@@ -248,7 +253,7 @@ const CallRow: React.FC<CallRowProps> = React.memo(({ call, index, updateCallAct
                             انتخاب زمان
                         </label>
                         <div className="bg-surface  rounded-xl border border-border p-4 h-[320px] flex items-center justify-center ">
-                          <InlineAnalogTimePicker 
+                          <InlineAnalogTimePicker
                             value={advisoryTime}
                             onChange={(val) => {
                                 setAdvisoryTime(val);
@@ -260,7 +265,7 @@ const CallRow: React.FC<CallRowProps> = React.memo(({ call, index, updateCallAct
                       </div>
                   </div>
                   <div className="px-6 py-4 border-t border-border bg-surface  flex justify-end gap-3 rounded-xl-b-md">
-                      <button 
+                      <button
                         onClick={() => {
                             setAdvisoryDate('');
                             setAdvisoryTime('');
@@ -271,7 +276,7 @@ const CallRow: React.FC<CallRowProps> = React.memo(({ call, index, updateCallAct
                       >
                         پاک کردن
                       </button>
-                      <button 
+                      <button
                         onClick={() => setIsDateTimeModalOpen(false)}
                         className="px-6 py-2 bg-surface-hover text-slate-900 border border-slate-800 rounded-xl text-sm font-medium hover:bg-surface-hover"
                       >
@@ -288,7 +293,7 @@ const CallRow: React.FC<CallRowProps> = React.memo(({ call, index, updateCallAct
 
         {/* Notes & Actions */}
         <div className="flex justify-center items-center gap-2 text-center">
-            <button 
+            <button
               onClick={(e) => {
                 e.stopPropagation();
                 if (window.confirm('آیا مایلید این شماره به لیست سیاه اضافه و همچنین از صف تماس‌ها پاک شود؟')) {
@@ -300,7 +305,7 @@ const CallRow: React.FC<CallRowProps> = React.memo(({ call, index, updateCallAct
             >
               <ShieldBan size={15} strokeWidth={2} />
             </button>
-            <button 
+            <button
               onClick={() => setIsNotesOpen(true)}
               className={`w-8 h-8 flex items-center justify-center rounded-xl tooltip-left-edge ${notes ? 'border border-brand-500/50 bg-brand-500/20 text-brand-700' : 'border border-border bg-surface-hover text-secondary hover:bg-slate-200 hover:text-secondary'}`}
               data-tooltip-bottom="یادداشت"
@@ -333,22 +338,22 @@ const CallRow: React.FC<CallRowProps> = React.memo(({ call, index, updateCallAct
                   />
               </div>
               <div className="px-6 py-4 border-t border-border bg-surface  flex justify-between items-center rounded-xl-b-md">
-                  <button 
+                  <button
                     onClick={() => setShowConfirmClearNotes(true)}
                     className="flex items-center gap-1.5 px-4 py-2 text-secondary border border-border hover:bg-surface  /5 rounded-xl text-sm font-medium"
                   >
                     <Trash2 size={16} />
                     حذف
                   </button>
-                  
-                  <ConfirmDialog 
+
+                  <ConfirmDialog
                     isOpen={showConfirmClearNotes}
                     title="حذف یادداشت"
                     message="آیا از حذف این یادداشت اطمینان دارید؟ این عملیات غیرقابل بازگشت است."
                     onConfirm={() => setNotes('')}
                     onCancel={() => setShowConfirmClearNotes(false)}
                   />
-                <button 
+                <button
                   onClick={() => setIsNotesOpen(false)}
                   className="px-6 py-2 bg-surface-hover text-slate-900 rounded-xl text-sm font-medium hover:bg-surface-hover tracking-wide border border-slate-800"
                 >
@@ -368,14 +373,14 @@ CallRow.displayName = 'CallRow';
 // Reusable Modal Wrapper (Flat, No Animation)
 const Modal = ({ children, onClose, maxWidth = 'max-w-3xl' }: { children: React.ReactNode; onClose: () => void; maxWidth?: string }) => {
   return createPortal(
-    <div 
-      className="fixed inset-0 flex items-center justify-center bg-surface-hover overflow-hidden text-left p-4" 
-      style={{ zIndex: Z.MODAL_BACKDROP }} 
+    <div
+      className="fixed inset-0 flex items-center justify-center bg-surface-hover overflow-hidden text-left p-4"
+      style={{ zIndex: Z.MODAL_BACKDROP }}
       dir="ltr"
       onClick={onClose}
     >
-      <div 
-        className={`bg-surface  rounded-xl border border-border w-full max-h-full overflow-y-auto ${maxWidth} flex flex-col relative`} 
+      <div
+        className={`bg-surface  rounded-xl border border-border w-full max-h-full overflow-y-auto ${maxWidth} flex flex-col relative`}
         style={{ zIndex: Z.MODAL_CONTENT }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -399,7 +404,7 @@ const SortableHeader: React.FC<SortableHeaderProps> = React.memo(({ label, sortK
   const direction = sortConfig.key === sortKey ? sortConfig.direction : null;
 
   return (
-    <div 
+    <div
       className={`font-sans text-[12px] font-medium tracking-wider uppercase px-2 group ${sortKey ? 'cursor-pointer hover:text-secondary text-secondary' : 'text-secondary'} text-center`}
       onClick={() => sortKey && requestSort(sortKey)}
     >
@@ -416,7 +421,7 @@ const SortableHeader: React.FC<SortableHeaderProps> = React.memo(({ label, sortK
 });
 
 export const CallTable = () => {
-  const { calls, bulkAddCalls, clearAllCalls, updateCall, deleteCall, addToBlacklist, blacklist } = useAppContext();
+  const { calls, bulkAddCalls, clearAllCalls, updateCall, deleteCall, addToBlacklist, blacklist, isBlacklisted } = useAppContext();
   const [sortConfig, setSortConfig] = useState<{ key: keyof CallRecord | null; direction: 'asc' | 'desc' | null }>({
     key: null,
     direction: null,
@@ -438,7 +443,7 @@ export const CallTable = () => {
         const key = sortConfig.key as keyof CallRecord;
         let aValue = String(a[key] || '');
         let bValue = String(b[key] || '');
-        
+
         if (Array.isArray(a[key])) aValue = String((a[key] as any)[0] || '');
         if (Array.isArray(b[key])) bValue = String((b[key] as any)[0] || '');
 
@@ -455,7 +460,7 @@ export const CallTable = () => {
     } else if (sortConfig.key === key && sortConfig.direction === 'desc') {
       direction = null;
     }
-    
+
     setSortConfig({ key: direction ? key : null, direction });
   }, [sortConfig]);
 
@@ -466,12 +471,12 @@ export const CallTable = () => {
       const callStatus = CALL_STATUSES[Math.floor(Math.random() * CALL_STATUSES.length)];
       const linkSent = LINK_OPTIONS[Math.floor(Math.random() * LINK_OPTIONS.length)];
       const advisory = ADV_OPTIONS[Math.floor(Math.random() * ADV_OPTIONS.length)];
-      const registered = REG_OPTIONS[Math.floor(Math.random() * REG_OPTIONS.length)];
+      const registered = REGISTRATION_STATUSES[Math.floor(Math.random() * REGISTRATION_STATUSES.length)];
       const course = COURSES[Math.floor(Math.random() * COURSES.length)];
-      
+
       const pastDays = Math.floor(Math.random() * 10);
       const hours = Math.floor(Math.random() * 10) + 8;
-      
+
       return {
         phone: `09${Math.floor(Math.random() * 900000000 + 100000000)}`,
         callStatus: Math.random() > 0.1 ? callStatus : '',
@@ -484,7 +489,7 @@ export const CallTable = () => {
         notes: Math.random() > 0.5 ? 'این یک یادداشت عملیاتی است که به صورت تستی ثبت شده است.' : ''
       };
     });
-    
+
     bulkAddCalls(newCalls);
     toast.success('داده‌های تستی با موفقیت اضافه شد.');
   };
@@ -495,7 +500,7 @@ export const CallTable = () => {
       toast.error('شماره تلفن نامعتبر است.');
       return;
     }
-    if (blacklist.includes(cleanPhone)) {
+    if (isBlacklisted(cleanPhone)) {
       toast.error('خطا: این شماره در لیست سیاه قرار دارد و نمی‌تواند اضافه شود.');
       return;
     }
@@ -522,7 +527,7 @@ export const CallTable = () => {
          <div className="flex items-center gap-2">
             {isAddingCall && (
               <div className="flex items-center gap-2 bg-surface  border border-border rounded-xl px-1 min-w-[200px] h-9">
-                <button 
+                <button
                   onClick={() => setIsAddingCall(false)}
                   className="p-1 text-secondary hover:text-secondary rounded-xl"
                 >
@@ -546,9 +551,9 @@ export const CallTable = () => {
                 </button>
               </div>
             )}
-            
+
             {!isAddingCall && (
-               <button 
+               <button
                  onClick={() => setIsAddingCall(true)}
                  className="flex justify-center items-center gap-2 px-4 h-9 text-[13px] font-medium text-white bg-slate-200 rounded-xl hover:bg-slate-300 transition-colors border border-border"
                  title="افزودن دستی شماره"
@@ -558,7 +563,7 @@ export const CallTable = () => {
                </button>
             )}
 
-            <button 
+            <button
               onClick={() => setShowConfirmClearAll(true)}
               disabled={calls.length === 0}
               className={`flex justify-center items-center px-4 h-9 rounded-xl border transition-colors font-medium text-[13px] ${
@@ -569,8 +574,8 @@ export const CallTable = () => {
               <Trash2 size={14} className="ml-2" />
               حذف همه
             </button>
-            
-            <ConfirmDialog 
+
+            <ConfirmDialog
               isOpen={showConfirmClearAll}
               title="حذف تمام تماس‌ها"
               message="آیا مطمئن هستید که می‌خواهید تمام شماره‌ها را از صف حذف کنید؟ این عملیات غیرقابل بازگشت است."
@@ -584,7 +589,7 @@ export const CallTable = () => {
          </div>
 
           <div className="flex items-center">
-            <button 
+            <button
               onClick={handleGenerateTestData}
               className="flex justify-center items-center w-9 h-9 text-brand-700 border border-brand-500/30 bg-brand-500/10 rounded-xl hover:bg-brand-500/20 transition-colors"
               title="تولید داده تستی"

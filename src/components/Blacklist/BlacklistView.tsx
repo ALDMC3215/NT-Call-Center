@@ -12,7 +12,7 @@ export const BlacklistView = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [phoneToDelete, setPhoneToDelete] = useState<string | null>(null);
 
-  const filteredList = blacklist.filter(p => p.includes(searchQuery));
+  const filteredList = blacklist.filter(b => b.phone.includes(searchQuery) || b.reason.includes(searchQuery));
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,11 +21,11 @@ export const BlacklistView = () => {
       toast.error(tr('شماره تلفن معتبر نیست.', 'Invalid phone number.'));
       return;
     }
-    if (blacklist.includes(cleanPhone)) {
+    if (blacklist.some(b => b.phone === cleanPhone)) {
       toast.error(tr('این شماره قبلاً در لیست سیاه ثبت شده است.', 'This number is already blacklisted.'));
       return;
     }
-    addToBlacklist(cleanPhone);
+    addToBlacklist(cleanPhone, 'افزودن دستی');
     setNewPhone('');
     toast.success(tr('شماره به لیست سیاه اضافه شد.', 'Number added to the blacklist.'));
   };
@@ -106,16 +106,22 @@ export const BlacklistView = () => {
                <p className="font-normal text-sm text-muted">{tr('هیچ شماره‌ای در لیست سیاه یافت نشد.', 'No blacklisted number found.')}</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-2 p-2">
-               {filteredList.map(phone => (
-             <div key={phone} className="flex items-center justify-between p-3 bg-surface-hover/80 border border-border rounded-lg hover:border-rose-500/50 hover:bg-rose-900/20 transition-all group">
-                <span className="font-medium text-muted tracking-wider text-[15px]" dir="ltr">{phone}</span>
-                <button 
-                   onClick={() => setPhoneToDelete(phone)}
-                   className="text-muted hover:text-rose-400 p-1.5 rounded-lg hover:bg-rose-900/40 transition-colors opacity-0 group-hover:opacity-100"
-                >
-                   <Trash2 size={16} />
-                </button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 p-2">
+               {filteredList.map(entry => (
+             <div key={entry.phone} className="flex flex-col p-3 bg-surface-hover/80 border border-border rounded-lg hover:border-rose-500/50 hover:bg-rose-900/20 transition-all group gap-2">
+                <div className="flex items-center justify-between">
+                   <span className="font-bold text-slate-800 tracking-wider text-[15px]" dir="ltr">{entry.phone}</span>
+                   <button
+                      onClick={() => setPhoneToDelete(entry.phone)}
+                      className="text-muted hover:text-rose-400 p-1.5 rounded-lg hover:bg-rose-900/40 transition-colors opacity-0 group-hover:opacity-100"
+                   >
+                      <Trash2 size={16} />
+                   </button>
+                </div>
+                <div className="flex items-center justify-between mt-1">
+                   <span className="text-[10px] font-bold px-2 py-0.5 rounded border border-rose-200 bg-rose-50 text-rose-600">{entry.reason}</span>
+                   <span className="text-[10px] text-slate-400 font-medium">{entry.createdAt && new Date(entry.createdAt).toLocaleDateString('fa-IR')}</span>
+                </div>
              </div>
                ))}
             </div>

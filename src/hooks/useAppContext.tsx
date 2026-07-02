@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { CallAttempt, CallRecord, Profile } from '../types';
+import { CallAttempt, CallRecord, Profile, BlacklistEntry, BlacklistReason } from '../types';
 import { storage } from '../utils/storage';
 import { v4 as uuidv4 } from 'uuid';
 import { jalaliDateTimeToIso, nowJalali } from '../utils/jalali';
@@ -29,7 +29,7 @@ interface AppContextType {
   isLoadingCalls: boolean;
   hasInitialCallsLoaded: boolean;
   callsError: string | null;
-  blacklist: string[];
+  blacklist: BlacklistEntry[];
   currentView: ViewType;
   setCurrentView: (view: ViewType) => void;
   activeCallTab: 'cards' | 'queue' | 'today' | 'followup' | 'stats' | 'blacklist' | 'courses';
@@ -42,13 +42,13 @@ interface AppContextType {
   clearAllCalls: () => void;
   bulkAddCalls: (callsArray: Omit<CallRecord, 'id' | 'createdAt'>[]) => void;
   importData: (profile: Profile, calls: CallRecord[]) => void;
-  wipeAllData: () => void;
   importedData: { profile: Profile; calls: CallRecord[] } | null;
   setImportedData: (data: { profile: Profile; calls: CallRecord[] } | null) => void;
-  addToBlacklist: (phone: string) => void;
+  addToBlacklist: (phone: string, reason?: BlacklistReason) => void;
   removeFromBlacklist: (phone: string) => void;
-  restoreBackup: (p: Profile, importedCalls: CallRecord[], importedBlacklist: string[]) => void;
-  recordAttempt: (id: string, values: Pick<CallRecord, 'fullName' | 'callStatus' | 'courses' | 'advisory' | 'advisoryDate' | 'advisoryTime' | 'registered' | 'notes'>) => void;
+  isBlacklisted: (phone: string) => boolean;
+  restoreBackup: (p: Profile, importedCalls: CallRecord[], importedBlacklist: BlacklistEntry[]) => void;
+  recordAttempt: (id: string, values: Pick<CallRecord, 'fullName' | 'callStatus' | 'courses' | 'advisory' | 'advisoryDate' | 'advisoryTime' | 'registered' | 'notes'>) => Promise<boolean>;
   enableFluid: boolean;
   setEnableFluid: (val: boolean) => void;
   accentColor: string;
@@ -68,7 +68,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [hasInitialCallsLoaded, setHasInitialCallsLoaded] = useState(false);
   const [callsError, setCallsError] = useState<string | null>(null);
   const [callsRefreshCounter, setCallsRefreshCounter] = useState(0);
-  const [blacklist, setBlacklistState] = useState<string[]>(() => storage.getBlacklist());
+  const [blacklist, setBlacklistState] = useState<BlacklistEntry[]>(() => storage.getBlacklist());
   const [importedData, setImportedData] = useState<{ profile: Profile; calls: CallRecord[] } | null>(null);
 
   useEffect(() => {
@@ -323,18 +323,22 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [profile, updateFollowUpInStorage]);
 
-  const deleteCall = useCallback(async (id: string) => {
-    if (!profile) return;
+  const deleteCall = useCallback(async (id: string): Promise<boolean> => {
+    if (!profile) return false;
     reportMeaningfulActivity(profile.sessionId);
-
-    setCallsState(prev => prev.filter(c => c.id !== id));
-    updateFollowUpInStorage(profile, id, undefined);
 
     try {
       const { error } = await supabase.rpc('delete_contact', { p_id: id });
-      if (error) console.error("Error deleting contact:", error);
+      if (error) {
+        console.error("Error deleting contact:", error);
+        return false;
+      }
+      setCallsState(prev => prev.filter(c => c.id !== id));
+      updateFollowUpInStorage(profile, id, undefined);
+      return true;
     } catch (err) {
       console.error(err);
+      return false;
     }
   }, [profile, updateFollowUpInStorage]);
 
@@ -376,11 +380,24 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [profile, calls]);
 
-  const recordAttempt = useCallback(async (id: string, values: Pick<CallRecord, 'fullName' | 'callStatus' | 'courses' | 'advisory' | 'advisoryDate' | 'advisoryTime' | 'registered' | 'notes'>) => {
-    if (!profile) return;
+  const recordAttempt = useCallback(async (id: string, values: Pick<CallRecord, 'fullName' | 'callStatus' | 'courses' | 'advisory' | 'advisoryDate' | 'advisoryTime' | 'registered' | 'notes'>): Promise<boolean> => {
+    if (!profile) return false;
     reportMeaningfulActivity(profile.sessionId);
 
-    const isTerminal = values.registered === 'ثبت نام کرد' || values.registered === 'ثبت نام نکرد' || values.registered === 'قصد ندارد';
+    const s = values.callStatus;
+    const r = values.registered;
+
+    let needsFollowUp = false;
+
+    if (s === 'پاسخ نداد') {
+      needsFollowUp = true;
+    } else if (s === 'ناموجود') {
+      needsFollowUp = false;
+    } else if (s === 'پاسخ داد' && r === 'ثبت نام کرد') {
+      needsFollowUp = false;
+    } else if (s === 'پاسخ داد') {
+      needsFollowUp = true;
+    }
 
     const now = new Date();
     const jalaliTime = nowJalali();
@@ -396,22 +413,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
     let newFollowUpAt: string | undefined = undefined;
 
-    if (!isTerminal) {
-      const needsFollowUp = ['پاسخ نداد', 'در دسترس نیست', 'مشغول بود', 'بعداً تماس بگیرید', 'نیازمند پیگیری'].includes(values.callStatus) || values.advisory === 'هماهنگی بعدا';
+    if (needsFollowUp) {
       const scheduledAdvisory = values.advisory === 'بله' && values.advisoryDate && values.advisoryTime
         ? jalaliDateTimeToIso(values.advisoryDate, values.advisoryTime)
         : undefined;
-      newFollowUpAt = scheduledAdvisory || (needsFollowUp ? new Date(now.getTime() + 60 * 60 * 1000).toISOString() : undefined);
+      newFollowUpAt = scheduledAdvisory || new Date(now.getTime() + 60 * 60 * 1000).toISOString();
     }
-
-    setCallsState(prev => prev.map(call => call.id === id ? {
-      ...call,
-      ...values,
-      attempts: [...(call.attempts || []), attempt],
-      nextFollowUpAt: newFollowUpAt
-    } : call));
-
-    updateFollowUpInStorage(profile, id, newFollowUpAt);
 
     try {
       const { error } = await supabase.rpc('create_call_attempt', {
@@ -427,9 +434,24 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         p_notes: values.notes || null
       });
 
-      if (error) console.error("Error creating attempt:", error);
+      if (error) {
+        console.error("Error creating attempt:", error);
+        return false;
+      }
+
+      setCallsState(prev => prev.map(call => call.id === id ? {
+        ...call,
+        ...values,
+        attempts: [...(call.attempts || []), attempt],
+        nextFollowUpAt: newFollowUpAt
+      } : call));
+
+      updateFollowUpInStorage(profile, id, newFollowUpAt);
+      return true;
+
     } catch (err) {
       console.error(err);
+      return false;
     }
   }, [profile, updateFollowUpInStorage]);
 
@@ -444,9 +466,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setCurrentView('dashboard');
   }, []);
 
-  const addToBlacklist = useCallback((phone: string) => {
+  const addToBlacklist = useCallback((phone: string, reason: BlacklistReason = 'افزودن دستی') => {
     if (profile) reportMeaningfulActivity(profile.sessionId);
-    storage.addToBlacklist(phone);
+    storage.addToBlacklist(phone, reason);
     setBlacklistState(storage.getBlacklist());
   }, [profile]);
 
@@ -456,7 +478,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setBlacklistState(storage.getBlacklist());
   }, [profile]);
 
-  const restoreBackup = useCallback((p: Profile, importedCalls: CallRecord[], importedBlacklist: string[]) => {
+  const isBlacklisted = useCallback((phone: string) => {
+    return blacklist.some(b => b.phone === phone);
+  }, [blacklist]);
+
+  const restoreBackup = useCallback((p: Profile, importedCalls: CallRecord[], importedBlacklist: BlacklistEntry[]) => {
     storage.saveProfile(p);
     storage.saveBlacklist(importedBlacklist);
     setProfileState(p);

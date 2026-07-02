@@ -78,3 +78,11 @@ export interface ExportData {
   summary: ExportSummary;
   calls: CallRecord[];
 }
+
+export type BlacklistReason = 'افزودن دستی' | 'ناموجود بودن شماره';
+
+export interface BlacklistEntry {
+  phone: string;
+  reason: BlacklistReason;
+  createdAt: string;
+}

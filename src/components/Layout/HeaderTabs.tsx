@@ -8,6 +8,7 @@ import { customToast as toast } from '../UI/toast';
 import { ConfirmDialog } from '../Shared/ConfirmDialog';
 import * as XLSX from 'xlsx';
 import { useLocale } from '../../hooks/useLocale';
+import { isActiveFollowup } from '../../utils/followups';
 
 interface TabItem {
   id: 'dashboard' | 'profile' | 'settings' | 'stats' | 'admin' | 'blacklist';
@@ -23,7 +24,7 @@ const TABS: TabItem[] = [
 ];
 
 export const HeaderTabs = () => {
-  const { profile, calls, blacklist, logout, currentView, setCurrentView, bulkAddCalls, restoreBackup } = useAppContext();
+  const { activeCallTab: activeTab, setActiveCallTab: setActiveTab, profile, calls, blacklist, isBlacklisted, logout, currentView, setCurrentView, bulkAddCalls, restoreBackup } = useAppContext();
   const { isFa, tr, language, direction } = useLocale();
   const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -88,20 +89,8 @@ export const HeaderTabs = () => {
     const filteredCalls = calls.filter(c => {
       const isToday = c.attempts?.some(a => (a.createdAt || " ").split('T')[0] === todayStr);
       if (isToday) return true;
-      
-      if (!c.attempts || c.attempts.length === 0) return false;
-      const lastAttempt = c.attempts[c.attempts.length - 1];
-      const s = lastAttempt.callStatus;
-      const adv = lastAttempt.advisory;
-      return s === 'عدم تمایل' || 
-             s === 'پاسخ نداد' || 
-             s === 'نامشخص' || 
-             s === 'پیگیری مجدد در هفته آینده' ||
-             adv === 'بله' || 
-             adv === 'خیر' || 
-             adv === 'قصد دارد' ||
-             adv === 'در آینده' ||
-             adv === 'احتمالا';
+      if (isToday) return true;
+      return isActiveFollowup(c);
     });
 
     // Add complete and accurate information
@@ -192,7 +181,7 @@ export const HeaderTabs = () => {
           for (let i = 0; i < Math.min(row.length, 3); i++) {
             const cellVal = String(row[i] || '').trim();
             if (cellVal.length >= 7 && /\d{4}/.test(cellVal) && !/[a-zA-Z]/.test(cellVal)) {
-              if (blacklist && blacklist.includes(cellVal)) {
+              if (isBlacklisted(cellVal)) {
                 skippedPhones.push(cellVal);
               } else {
                 newCalls.push({

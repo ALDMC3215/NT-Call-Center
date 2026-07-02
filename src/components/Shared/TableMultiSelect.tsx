@@ -78,12 +78,12 @@ export const TableMultiSelect = ({ values, onChange, placeholder, disabled }: Ta
       <button
         disabled={disabled}
         onClick={() => setIsOpen(!isOpen)}
-        className={`outline-none pl-8 pr-3 py-1.5 rounded-lg border flex items-center gap-2 transition-all cursor-pointer w-full justify-between min-w-[140px] max-w-[180px] ${disabled ? 'opacity-50 grayscale cursor-not-allowed border-transparent text-muted' :
-          values.length === 0 ? 'border-transparent hover:border-border text-[13px] text-muted' : 'border-border bg-surface-hover hover:bg-surface-hover text-[14px] font-medium text-primary'
+        className={`outline-none pl-8 pr-3 py-1.5 rounded-lg border flex items-center gap-2 transition-all cursor-pointer w-full justify-between min-w-[140px] max-w-[180px] ${disabled ? 'opacity-60 grayscale cursor-not-allowed border-transparent text-slate-400' :
+          values.length === 0 ? 'border-transparent hover:border-slate-300 text-[13px] text-slate-500 font-medium' : 'border-slate-300 bg-white hover:bg-slate-50 text-[14px] font-bold text-slate-800'
           }`}
       >
         <span className="truncate">{values.length > 0 ? values.join(' ، ') : placeholder}</span>
-        <ChevronDown size={14} className={`text-muted shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown size={14} className={`text-slate-500 shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isOpen && (

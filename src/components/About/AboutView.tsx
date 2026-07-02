@@ -21,93 +21,92 @@ export const AboutView = () => {
   ];
 
   return (
-    <div className="w-full h-full pt-4 pb-32 overflow-y-auto hide-scrollbar bg-slate-50" style={{ paddingLeft: `${layoutMargin}px`, paddingRight: `${layoutMargin}px` }}>
-      <div className="w-full flex flex-col max-w-5xl mx-auto" dir={direction}>
+    <div className="w-full h-full pt-6 pb-32 overflow-y-auto hide-scrollbar bg-slate-100" style={{ paddingLeft: `${layoutMargin}px`, paddingRight: `${layoutMargin}px` }}>
+      <div className="w-full flex flex-col gap-6 px-4 md:px-6 lg:px-8" dir={direction}>
 
-        {/* Compact Hero */}
-        <div className="flex flex-col items-center w-full mb-10 mt-6 text-center">
-          <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-slate-800 mb-5 shadow-sm border border-slate-200">
-             <BookOpen size={32} className="text-cyan-600" />
+        {/* Compact Header */}
+        <div className="w-full flex items-center gap-3 mb-2">
+          <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-slate-800 shadow-sm border border-slate-200 shrink-0">
+             <BookOpen size={20} className="text-cyan-600" />
           </div>
-          <h2 className="text-3xl font-extrabold text-slate-900 mb-2 tracking-tight">
-            {tr('راهنمای جامع پنل نوین تک', 'Novin Tech Panel Guide')}
-          </h2>
-          <p className="text-[15px] font-bold text-cyan-700 bg-cyan-50 px-4 py-1.5 rounded-full mb-4">
-            {tr('راهنمای استفاده، منطق ثبت فعالیت‌ها و نکات کاری کارشناسان', 'Usage guide, activity logic, and expert rules')}
-          </p>
-          <p className="text-[14px] text-slate-600 max-w-2xl leading-relaxed">
-            {tr('این صفحه به شما کمک می‌کند تا از سیستم به درستی استفاده کنید، جریان کار و منطق ثبت فعالیت‌های روزانه خود را بشناسید و از قوانین محیط کاری مطلع باشید.', 'This page helps you use the system correctly, understand your daily activity logic, and stay informed about workplace rules.')}
-          </p>
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+              {tr('راهنمای جامع پنل نوین تک', 'Novin Tech Panel Guide')}
+            </h2>
+            <p className="text-[13px] text-slate-500 font-medium mt-0.5">
+              {tr('این صفحه به شما کمک می‌کند تا جریان کار سیستم، روند ثبت فعالیت‌ها و قوانین کاری را بهتر بشناسید.', 'This page helps you understand the system workflow, activity registration process, and workplace rules.')}
+            </p>
+          </div>
         </div>
 
         {/* Quick Start Workflow */}
-        <div className="mb-8 bg-white border border-slate-200 rounded-3xl p-6 shadow-sm overflow-hidden relative">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-full blur-3xl pointer-events-none"></div>
-          <h3 className="text-lg font-extrabold text-slate-800 mb-6 relative z-10 flex items-center gap-2">
-            <CheckSquare className="text-emerald-500" size={20} />
+        <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-sm">
+          <h3 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
+            <CheckSquare className="text-emerald-500" size={16} />
             شروع سریع (جریان کار)
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 relative z-10">
+          <div className="flex flex-col md:flex-row items-center gap-3">
             {[
-              { title: 'شماره‌ها را بررسی کن', icon: Phone },
-              { title: 'نتیجه تماس را ثبت کن', icon: CheckCircle2 },
-              { title: 'برای پیگیری‌ها زمان مشخص کن', icon: Calendar },
-              { title: 'پیگیری‌های باز را کامل کن', icon: ListTodo },
+              { title: 'بررسی شماره‌ها', icon: Phone },
+              { title: 'ثبت نتیجه تماس', icon: CheckCircle2 },
+              { title: 'تعیین زمان پیگیری', icon: Calendar },
+              { title: 'تکمیل پیگیری‌ها', icon: ListTodo },
             ].map((step, i) => (
-              <div key={i} className="flex flex-col items-center text-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 relative">
-                <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-emerald-600 shadow-sm font-black border border-slate-200">
+              <div key={i} className="flex-1 w-full flex items-center gap-3 p-3 bg-slate-50 rounded-md border border-slate-100 relative group">
+                <div className="w-8 h-8 rounded-md bg-white flex items-center justify-center text-emerald-600 shadow-sm font-black border border-slate-200 text-sm shrink-0">
                   {i + 1}
                 </div>
-                <span className="font-extrabold text-slate-700 text-[14px]">{step.title}</span>
-                {i < 3 && <div className="hidden md:block absolute left-[-16px] top-1/2 -translate-y-1/2 w-8 h-[2px] bg-slate-200"></div>}
+                <div className="flex flex-col">
+                  <span className="font-bold text-slate-700 text-[14px]">{step.title}</span>
+                </div>
+                {i < 3 && <div className="hidden md:block absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-[2px] bg-slate-200 z-10"></div>}
               </div>
             ))}
           </div>
         </div>
 
         {/* Info Blocks Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
           {/* منطق ثبت تماس و فعالیت */}
-          <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
-            <h3 className="text-lg font-extrabold text-slate-800 mb-4 flex items-center gap-2">
-              <Info className="text-blue-500" size={20} />
+          <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-sm">
+            <h3 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+              <Info className="text-blue-500" size={16} />
               منطق ثبت تماس و فعالیت
             </h3>
-            <ul className="space-y-3 text-[14px] text-slate-700 font-medium leading-relaxed">
-              <li className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0"></div><span>تغییر گزینه‌های فرم (مثل دوره‌ها، وضعیت، یادداشت) به تنهایی تماس محسوب <strong>نمی‌شود</strong>.</span></li>
-              <li className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0"></div><span>فقط با کلیک روی دکمه <strong>«ثبت نتیجه»</strong> یک تلاش (Attempt) واقعی ثبت می‌شود.</span></li>
-              <li className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0"></div><span>پس از ثبت نهایی، تماس در <strong>فعالیت امروز</strong> قرار می‌گیرد.</span></li>
-              <li className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0"></div><span>در آمار مدیران، یک شماره تکراری فقط ۱ بار در روز محاسبه می‌شود، اما <strong>هر ثبت نتیجه</strong> به عنوان یک تلاش جداگانه برای عملکرد شما ثبت می‌گردد.</span></li>
+            <ul className="space-y-3 text-[13px] text-slate-700 font-medium leading-relaxed">
+              <li className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0"></div><span>تغییر گزینه‌های فرم (مثل دوره‌ها، وضعیت، یادداشت) به تنهایی تماس محسوب <strong>نمی‌شود</strong>.</span></li>
+              <li className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0"></div><span>فقط با کلیک روی دکمه <strong>«ثبت نتیجه»</strong> یک تلاش (Attempt) واقعی ثبت می‌شود.</span></li>
+              <li className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0"></div><span>پس از ثبت نهایی، تماس در <strong>فعالیت امروز</strong> قرار می‌گیرد.</span></li>
+              <li className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0"></div><span>در آمار مدیران، هر ثبت نتیجه به عنوان یک تلاش جداگانه محاسبه می‌شود.</span></li>
             </ul>
           </div>
 
           {/* پیگیری‌ها چگونه کار می‌کنند؟ */}
-          <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
-            <h3 className="text-lg font-extrabold text-slate-800 mb-4 flex items-center gap-2">
-              <Clock className="text-amber-500" size={20} />
+          <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-sm">
+            <h3 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+              <Clock className="text-amber-500" size={16} />
               پیگیری‌ها چگونه کار می‌کنند؟
             </h3>
-            <p className="text-[14px] text-slate-700 font-medium leading-relaxed mb-4">
+            <p className="text-[13px] text-slate-700 font-medium leading-relaxed mb-3">
               پیگیری‌ها برای شماره‌هایی است که هنوز نتیجه نهایی آن‌ها مشخص نیست. وضعیت‌های <strong>غیر قطعی</strong> در لیست باقی می‌مانند.
             </p>
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4 text-[13px] text-amber-800 font-bold">
+            <div className="bg-amber-50 border border-amber-200 rounded-md p-3 mb-3 text-[13px] text-amber-800 font-bold">
               نکته مهم: تغییر گزینه‌ها به‌تنهایی پیگیری را نمی‌بندد؛ ثبت نتیجه نهایی لازم است.
             </div>
-            <p className="text-[14px] text-slate-700 font-medium leading-relaxed">
-              ثبت وضعیت‌های قطعی مثل <span className="font-bold">«ثبت نام کرد»</span>، <span className="font-bold">«ثبت نام نکرد»</span> یا <span className="font-bold">«قصد ندارد»</span> به همراه «ثبت نتیجه»، پیگیری را می‌بندد و آن را به «فعالیت امروز» منتقل می‌کند.
+            <p className="text-[13px] text-slate-700 font-medium leading-relaxed">
+              ثبت وضعیت‌های قطعی مثل <span className="font-bold">«ثبت نام کرد»</span>، <span className="font-bold">«ثبت نام نکرد»</span> یا <span className="font-bold">«قصد ندارد»</span>، پیگیری را می‌بندد و آن را به بخش عملکرد شما اضافه می‌کند.
             </p>
           </div>
-
         </div>
 
         {/* بخش‌های اصلی پنل */}
-        <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm mb-8">
-          <h3 className="text-lg font-extrabold text-slate-800 mb-6 flex items-center gap-2">
-            <LayoutGrid className="text-indigo-500" size={20} />
+        <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-sm">
+          <h3 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
+            <LayoutGrid className="text-indigo-500" size={16} />
             بخش‌های اصلی پنل
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {[
               { title: 'شماره‌ها', icon: Phone, desc: 'لیست اصلی مخاطبین برای تماس اولیه.' },
               { title: 'پیگیری‌ها', icon: ListTodo, desc: 'مخاطبینی که نیاز به تماس مجدد دارند.' },
@@ -116,110 +115,96 @@ export const AboutView = () => {
               { title: 'لیست سیاه', icon: PhoneOff, desc: 'شماره‌های مسدود شده و غیرقابل تماس.' },
               { title: 'تنظیمات', icon: Settings, desc: 'ورود فایل، خروجی و ابزارهای داده.' }
             ].map((section, idx) => (
-              <div key={idx} className="flex gap-3 p-4 bg-slate-50 border border-slate-100 rounded-2xl hover:border-slate-300 transition-colors">
-                <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-indigo-500 shrink-0 shadow-sm border border-slate-100">
-                  <section.icon size={20} />
+              <div key={idx} className="flex gap-3 p-3 bg-slate-50 border border-slate-100 rounded-md">
+                <div className="w-8 h-8 rounded-md bg-white flex items-center justify-center text-indigo-500 shrink-0 shadow-sm border border-slate-100">
+                  <section.icon size={16} />
                 </div>
                 <div>
                   <h4 className="font-bold text-slate-800 text-[14px]">{section.title}</h4>
-                  <p className="text-[12px] text-slate-500 font-medium mt-1 leading-relaxed">{section.desc}</p>
+                  <p className="text-[12px] text-slate-500 font-medium mt-0.5">{section.desc}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* داده‌ها و منطق برنامه */}
-        <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm mb-8 relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-48 h-48 bg-blue-50 rounded-full blur-3xl pointer-events-none"></div>
-          <h3 className="text-lg font-extrabold text-slate-800 mb-4 flex items-center gap-2 relative z-10">
-            <Shield className="text-blue-500" size={20} />
-            داده‌ها و منطق برنامه
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
-            <div className="flex gap-3">
-              <div className="w-2 h-2 rounded-full bg-blue-400 mt-2 shrink-0"></div>
-              <p className="text-[14px] text-slate-700 font-medium leading-relaxed">اطلاعات مخاطبین و تاریخچه تماس‌ها در سیستم ابری ذخیره می‌شوند و با <strong>رفرش کردن صفحه</strong> پاک نمی‌شوند.</p>
-            </div>
-            <div className="flex gap-3">
-              <div className="w-2 h-2 rounded-full bg-blue-400 mt-2 shrink-0"></div>
-              <p className="text-[14px] text-slate-700 font-medium leading-relaxed">هر کارشناس تنها لیست کارهای اختصاصی خود را می‌بیند.</p>
-            </div>
-            <div className="flex gap-3">
-              <div className="w-2 h-2 rounded-full bg-blue-400 mt-2 shrink-0"></div>
-              <p className="text-[14px] text-slate-700 font-medium leading-relaxed">مدیران از طریق داشبورد، آمار تماس‌ها و وضعیت آنلاین بودن کارشناسان را نظارت می‌کنند.</p>
-            </div>
-            <div className="flex gap-3">
-              <div className="w-2 h-2 rounded-full bg-blue-400 mt-2 shrink-0"></div>
-              <p className="text-[14px] text-slate-700 font-medium leading-relaxed">زمان‌بندی پیگیری‌ها در حال حاضر به صورت لایه موقتِ محلی روی مرورگر کارشناس عمل می‌کند تا در به‌روزرسانی‌های بعدی به سیستم ابری متصل شود.</p>
-            </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* داده‌ها و منطق برنامه */}
+          <div className="lg:col-span-5 bg-white border border-slate-200 rounded-lg p-5 shadow-sm">
+            <h3 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+              <Shield className="text-blue-500" size={16} />
+              داده‌ها و منطق برنامه
+            </h3>
+            <ul className="space-y-3 text-[13px] text-slate-700 font-medium leading-relaxed">
+              <li className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 shrink-0"></div><p>اطلاعات مخاطبین و تاریخچه تماس‌ها در سیستم ابری ذخیره می‌شوند و با <strong>رفرش کردن صفحه</strong> پاک نمی‌شوند.</p></li>
+              <li className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 shrink-0"></div><p>هر کارشناس تنها لیست کارهای اختصاصی خود را می‌بیند.</p></li>
+              <li className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 shrink-0"></div><p>مدیران از طریق داشبورد، آمار تماس‌ها و وضعیت کارشناسان را نظارت می‌کنند.</p></li>
+              <li className="flex gap-2 items-start"><div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 shrink-0"></div><p>زمان‌بندی پیگیری‌ها در حال حاضر به صورت لایه موقت محلی روی مرورگر عمل می‌کند.</p></li>
+            </ul>
           </div>
-        </div>
 
-        {/* قوانین و نکات کاری */}
-        <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm mb-8">
-          <h3 className="text-lg font-extrabold text-slate-800 mb-4 flex items-center gap-2">
-            <Info className="text-rose-500" size={20} />
-            قوانین و نکات کاری
-          </h3>
-          <div className="grid grid-cols-1 gap-3">
-            {rules.map((rule, idx) => (
-              <div key={idx} className="flex gap-3 p-3.5 bg-slate-50 border border-slate-100 rounded-2xl hover:border-slate-300 transition-colors">
-                <div className="w-6 h-6 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center font-bold shrink-0 text-sm">
-                  {idx + 1}
+          {/* قوانین و نکات کاری */}
+          <div className="lg:col-span-7 bg-white border border-slate-200 rounded-lg p-5 shadow-sm">
+            <h3 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+              <Info className="text-rose-500" size={16} />
+              قوانین و نکات کاری
+            </h3>
+            <div className="flex flex-col gap-2">
+              {rules.map((rule, idx) => (
+                <div key={idx} className="flex gap-2.5 p-2 bg-slate-50 border border-slate-100 rounded-md">
+                  <div className="w-5 h-5 rounded bg-rose-100 text-rose-600 flex items-center justify-center font-bold shrink-0 text-xs mt-0.5">
+                    {idx + 1}
+                  </div>
+                  <p className="text-[13px] text-slate-700 font-medium leading-relaxed pt-1">
+                    {rule}
+                  </p>
                 </div>
-                <p className="text-[14px] text-slate-700 font-medium leading-relaxed text-justify pt-0.5">
-                  {rule}
-                </p>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
 
         {/* برنامه شیفت کارشناسان */}
-        <div className="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden mb-8">
-          <div className="p-6 border-b border-slate-200 bg-slate-50/50">
-            <h3 className="text-lg font-extrabold text-slate-800 mb-1 flex items-center gap-2">
-              <Calendar className="text-brand-500" size={20} />
+        <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+          <div className="p-4 border-b border-slate-200 bg-slate-50">
+            <h3 className="text-sm font-bold text-slate-800 mb-1 flex items-center gap-2">
+              <Calendar className="text-brand-500" size={16} />
               برنامه شیفت کارشناسان
             </h3>
-            <p className="text-[13px] text-slate-500 font-medium">برای هماهنگی حضور و پاسخگویی، برنامه شیفت‌ها را پیش از شروع کار بررسی کنید.</p>
           </div>
 
-          <div className="w-full overflow-x-auto">
-            <table className="w-full min-w-[600px] text-center">
-              <thead>
+          <div className="w-full overflow-x-auto pb-4">
+            <table className="w-full text-right text-[14px]">
+              <thead className="bg-slate-50 border-b border-slate-200 text-slate-500">
                 <tr>
-                  <th className="py-4 px-4 bg-slate-100 border-b border-slate-200 text-slate-700 w-1/4">
-                    <span className="font-extrabold text-[15px]">روزهای هفته</span>
+                  <th className="py-3 px-4 font-bold border-l border-slate-200 w-1/4">روزهای هفته</th>
+                  <th className="py-3 px-4 font-bold border-l border-slate-200">
+                    <span className="ml-2">شیفت صبح</span>
+                    <span className="text-[11px] font-medium" dir="ltr">8:30 - 14:30</span>
                   </th>
-                  <th className="py-4 px-4 bg-slate-100 border-b border-slate-200 w-[37.5%] border-r border-slate-200">
-                    <div className="font-extrabold text-slate-700 text-[15px] mb-1">شیفت صبح</div>
-                    <div className="text-[12px] text-slate-500 font-bold" dir="ltr">8:30 - 14:30</div>
-                  </th>
-                  <th className="py-4 px-4 bg-slate-100 border-b border-slate-200 w-[37.5%] border-r border-slate-200">
-                    <div className="font-extrabold text-slate-700 text-[15px] mb-1">شیفت عصر</div>
-                    <div className="text-[12px] text-slate-500 font-bold" dir="ltr">14:30 - 21:00</div>
+                  <th className="py-3 px-4 font-bold">
+                    <span className="ml-2">شیفت عصر</span>
+                    <span className="text-[11px] font-medium" dir="ltr">14:30 - 21:00</span>
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 text-slate-700">
                 {SCHEDULE_DATA.map((row, i) => (
-                  <tr key={i} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="py-4 px-4 font-extrabold text-slate-800 text-[14px] bg-slate-50/30">
+                  <tr key={i} className="hover:bg-slate-50/50">
+                    <td className="py-2.5 px-4 font-extrabold text-[13px] bg-slate-50/50 border-l border-slate-200">
                       {row.dayName}
                     </td>
-                    <td className="py-4 px-4 border-r border-slate-100">
-                      <div className="flex flex-col gap-1.5 items-center justify-center">
+                    <td className="py-2.5 px-4 border-l border-slate-100">
+                      <div className="flex flex-wrap gap-2">
                         {row.morning.map((name, idx) => (
-                          <span key={idx} className="text-slate-700 font-bold text-[14px] bg-white border border-slate-200 px-3 py-1 rounded-lg shadow-sm min-w-[120px]">{name}</span>
+                          <span key={idx} className="bg-white border border-slate-200 px-2.5 py-1 rounded text-[12px] font-bold shadow-sm">{name}</span>
                         ))}
                       </div>
                     </td>
-                    <td className="py-4 px-4 border-r border-slate-100">
-                      <div className="flex flex-col gap-1.5 items-center justify-center">
+                    <td className="py-2.5 px-4">
+                      <div className="flex flex-wrap gap-2">
                         {row.evening.map((name, idx) => (
-                          <span key={idx} className="text-slate-700 font-bold text-[14px] bg-white border border-slate-200 px-3 py-1 rounded-lg shadow-sm min-w-[120px]">{name}</span>
+                          <span key={idx} className="bg-white border border-slate-200 px-2.5 py-1 rounded text-[12px] font-bold shadow-sm">{name}</span>
                         ))}
                       </div>
                     </td>

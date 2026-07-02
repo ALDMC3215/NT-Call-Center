@@ -115,22 +115,24 @@
 @theme {
   --font-sans: var(--app-font), sans-serif;
   
-  --radius-sm: 0.75rem;
-  --radius-md: 0.75rem;
-  --radius-lg: 0.75rem;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
   --radius-xl: 0.75rem;
-  --radius-2xl: 0.75rem;
+  --radius-2xl: 1rem;
 
-  /* Theming using explicit colors instead of variables for Tailwind v4 compatibility */
-  --color-bg-base: #ffffff;
+  /* Semantic Surfaces and Borders */
+  --color-bg-base: #f8fafc; /* subtle gray background */
   --color-surface: #ffffff;
-  --color-surface-hover: #f7f7f8;
-  --color-border: #8e8e8e;
+  --color-surface-hover: #f1f5f9;
+  --color-border: #e2e8f0;
+  --color-border-muted: #f1f5f9;
+  --color-border-strong: #cbd5e1;
 
   /* Typography Colors */
-  --color-text-primary: #0f0f0f;
-  --color-text-secondary: #3f3f3f;
-  --color-text-muted: #595959;
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-muted: #64748b;
 
   /* Brand Palette */
   --color-brand-100: var(--theme-brand-100);
@@ -241,15 +243,14 @@
 .bento-card {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-2xl);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
 }
 
 .bento-card:hover {
   background: var(--color-surface-hover);
-  border-color: #cbd5e1;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+  border-color: var(--color-border-strong);
 }
 
 .glass-pill {

@@ -1,4 +1,4 @@
-import { CallRecord, Profile } from '../types';
+import { CallRecord, Profile, BlacklistEntry, BlacklistReason } from '../types';
 
 const PROFILE_KEY = 'novintech_profile';
 
@@ -40,18 +40,29 @@ export const storage = {
   getProfile: (): Profile | null => JSON.parse(localStorage.getItem(PROFILE_KEY) || 'null'),
   saveProfile: (p: Profile) => localStorage.setItem(PROFILE_KEY, JSON.stringify(p)),
   logout: () => localStorage.removeItem(PROFILE_KEY),
-  getBlacklist: (): string[] => JSON.parse(localStorage.getItem('novintech_blacklist') || '[]'),
-  saveBlacklist: (phones: string[]) => localStorage.setItem('novintech_blacklist', JSON.stringify(phones)),
-  addToBlacklist: (phone: string) => {
+  getBlacklist: (): BlacklistEntry[] => {
+    const data = JSON.parse(localStorage.getItem('novintech_blacklist') || '[]');
+    return data.map((item: any) => {
+      if (typeof item === 'string') {
+        return { phone: item, reason: 'افزودن دستی' as BlacklistReason, createdAt: new Date().toISOString() };
+      }
+      return item;
+    });
+  },
+  saveBlacklist: (entries: BlacklistEntry[]) => localStorage.setItem('novintech_blacklist', JSON.stringify(entries)),
+  addToBlacklist: (phone: string, reason: BlacklistReason = 'افزودن دستی') => {
     const list = storage.getBlacklist();
-    if (!list.includes(phone)) {
-      list.push(phone);
+    if (!list.some(entry => entry.phone === phone)) {
+      list.push({ phone, reason, createdAt: new Date().toISOString() });
       storage.saveBlacklist(list);
     }
   },
   removeFromBlacklist: (phone: string) => {
     const list = storage.getBlacklist();
-    storage.saveBlacklist(list.filter(p => p !== phone));
+    storage.saveBlacklist(list.filter(entry => entry.phone !== phone));
+  },
+  isBlacklisted: (phone: string): boolean => {
+    return storage.getBlacklist().some(entry => entry.phone === phone);
   },
   clearAll: (username: string) => { 
     if (username) localStorage.removeItem(`novintech_calls_${username}`); 

@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Settings, RefreshCw, Calendar, PhoneOff, Upload, User, Briefcase, MapPin, Clock, Download, Send, History, X, MessageSquare, Inbox } from 'lucide-react';
+import { Settings, RefreshCw, Calendar, PhoneOff, Upload, User, Briefcase, MapPin, Clock, Download, Send, History, X, MessageSquare, Inbox, Lock } from 'lucide-react';
 import { COURSE_CATEGORIES } from '../../data/courses';
 import { fetchCourseDataDynamic } from '../../utils/scraper';
 import { useAppContext } from '../../hooks/useAppContext';
+import { useAuth } from '../../hooks/useAuth';
 import { customToast as toast } from '../UI/toast';
 import { useLocale } from '../../hooks/useLocale';
 import * as xlsx from 'xlsx';
@@ -12,7 +13,7 @@ import { supabase } from '../../lib/supabase';
 import { motion, AnimatePresence } from 'motion/react';
 
 export const SettingsView: React.FC = () => {
-  const { setCurrentView, setActiveCallTab, layoutMargin, calls, profile, blacklist, bulkAddCalls } = useAppContext();
+  const { setCurrentView, setActiveCallTab, layoutMargin, calls, profile, blacklist, isBlacklisted, bulkAddCalls } = useAppContext();
   const { tr, direction } = useLocale();
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncProgress, setSyncProgress] = useState(0);
@@ -35,6 +36,12 @@ export const SettingsView: React.FC = () => {
 
   const followups = getActiveFollowups(calls);
   const activeCount = followups.length;
+
+  const { supabaseUser } = useAuth();
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   const fetchManagers = async () => {
     setManagerLoadState('loading');
@@ -67,6 +74,60 @@ export const SettingsView: React.FC = () => {
       loadMessages();
     }
   }, [profile, loadMessages]);
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      toast.error(tr('لطفاً تمام فیلدها را پر کنید.', 'Please fill all fields.'));
+      return;
+    }
+    if (newPassword.length < 8) {
+      toast.error(tr('رمز عبور جدید باید حداقل ۸ کاراکتر باشد.', 'New password must be at least 8 characters.'));
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error(tr('رمز عبور جدید و تکرار آن مطابقت ندارند.', 'New password and confirmation do not match.'));
+      return;
+    }
+    if (newPassword === currentPassword) {
+      toast.error(tr('رمز عبور جدید نمی‌تواند مشابه رمز فعلی باشد.', 'New password cannot be the same as current password.'));
+      return;
+    }
+    if (!supabaseUser?.email) {
+      toast.error(tr('ایمیل کاربر یافت نشد.', 'User email not found.'));
+      return;
+    }
+
+    setIsChangingPassword(true);
+
+    // Verify current password via sign in
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: supabaseUser.email,
+      password: currentPassword
+    });
+
+    if (signInError) {
+      setIsChangingPassword(false);
+      toast.error(tr('رمز عبور فعلی نامعتبر است.', 'Current password invalid.'));
+      return;
+    }
+
+    // Update password
+    const { error: updateError } = await supabase.auth.updateUser({
+      password: newPassword
+    });
+
+    setIsChangingPassword(false);
+
+    if (updateError) {
+      toast.error(tr('خطایی در تغییر رمز عبور رخ داد. دوباره تلاش کنید.', 'Generic retry error.'));
+    } else {
+      toast.success(tr('رمز عبور با موفقیت تغییر کرد.', 'Password changed successfully.'));
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    }
+  };
 
   const fetchLastSent = () => {
     if (!profile) return;
@@ -169,7 +230,7 @@ export const SettingsView: React.FC = () => {
              }
           }
           if (phoneStr) {
-             if (blacklist.includes(phoneStr)) {
+             if (isBlacklisted(phoneStr)) {
                skippedPhones.push(phoneStr);
              } else {
                toAdd.push({ phone: phoneStr, fullName: nameStr || '' });
@@ -295,187 +356,224 @@ export const SettingsView: React.FC = () => {
 
   return (
     <div className="w-full h-full pt-6 pb-32 overflow-y-auto hide-scrollbar bg-slate-100" style={{ paddingLeft: `${layoutMargin}px`, paddingRight: `${layoutMargin}px` }}>
-      <div className="w-full flex flex-col max-w-[1100px] mx-auto" dir={direction}>
+      <div className="w-full flex flex-col px-4 md:px-6 lg:px-8" dir={direction}>
 
         {/* Title */}
-        <div className="w-full flex flex-col items-center text-center mb-8">
-          <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-slate-800 mb-4 shadow-sm border border-slate-200">
-             <Settings size={32} className="text-indigo-600" />
+        <div className="w-full flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-slate-800 shadow-sm border border-slate-200 shrink-0">
+             <Settings size={20} className="text-indigo-600" />
           </div>
-          <h2 className="text-3xl font-extrabold text-slate-900 mb-2 tracking-tight">{tr('ابزارها و عملیات کارشناس', 'Expert Tools & Operations')}</h2>
-          <p className="text-[15px] text-slate-500 font-medium max-w-2xl leading-relaxed">{tr('دسترسی سریع به عملیات روزانه، مدیریت داده‌ها و تبادل پیگیری‌ها', 'Quick access to daily operations, data management and follow-up exchange')}</p>
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 tracking-tight">{tr('ابزارها و عملیات کارشناس', 'Expert Tools & Operations')}</h2>
+            <p className="text-[12px] text-slate-500 font-medium">{tr('دسترسی سریع به عملیات روزانه، مدیریت داده‌ها و تبادل پیگیری‌ها', 'Quick access to daily operations, data management and follow-up exchange')}</p>
+          </div>
         </div>
 
         {/* Compact Profile Strip */}
         {profile && (
-          <div className="w-full bg-white rounded-2xl border border-slate-200 p-4 shadow-sm mb-8 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-8">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center text-cyan-600 border border-slate-100 shrink-0">
-                <User size={24} />
+          <div className="w-full bg-white rounded-lg border border-slate-200 p-3 shadow-sm mb-6 flex flex-col lg:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-md bg-slate-50 flex items-center justify-center text-cyan-600 border border-slate-100 shrink-0">
+                <User size={18} />
               </div>
               <div className="flex flex-col">
-                <h3 className="text-lg font-extrabold text-slate-900 leading-tight">{profile.name}</h3>
-                <div className="flex items-center gap-1.5 text-[12px] text-slate-500 font-bold mt-1">
-                  <Briefcase size={12} />
+                <h3 className="text-sm font-bold text-slate-900 leading-tight">{profile.name}</h3>
+                <div className="flex items-center gap-1.5 text-[11px] text-slate-500 font-medium mt-0.5">
+                  <Briefcase size={10} />
                   <span>{tr('اپراتور سیستم', 'System Operator')}</span>
                 </div>
               </div>
             </div>
 
-            <div className="hidden md:block w-px h-8 bg-slate-100"></div>
+            <div className="hidden lg:block w-px h-6 bg-slate-100"></div>
 
-            <div className="flex items-center justify-end flex-1 gap-4 md:gap-8">
-              <div className="flex items-center gap-3 bg-indigo-50/50 px-4 py-2 rounded-xl border border-indigo-50">
-                <Calendar size={18} className="text-indigo-500 shrink-0" />
-                <div className="flex flex-col text-[12px] font-bold">
-                  <span className="text-slate-400 leading-none mb-1">{tr('تاریخ امروز', 'Today Date')}</span>
-                  <span className="text-slate-700 leading-none" dir="ltr">{profile.date}</span>
-                </div>
+            <div className="flex items-center justify-end flex-1 gap-2">
+              <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-md border border-slate-100">
+                <Calendar size={14} className="text-indigo-500 shrink-0" />
+                <span className="text-[11px] font-semibold text-slate-700" dir="ltr">{profile.date}</span>
               </div>
 
-              <div className="flex items-center gap-3 bg-amber-50/50 px-4 py-2 rounded-xl border border-amber-50">
-                <Clock size={18} className="text-amber-500 shrink-0" />
-                <div className="flex flex-col text-[12px] font-bold">
-                  <span className="text-slate-400 leading-none mb-1">{tr('شیفت فعال', 'Active Shift')}</span>
-                  <span className="text-slate-700 leading-none">
-                    {profile.shift === 'Morning' ? tr('صبح', 'Morning') : profile.shift === 'Evening' ? tr('عصر', 'Evening') : profile.shift.includes('to') ? profile.shift.replace('to', tr('تا', 'to')) : profile.shift}
-                  </span>
-                </div>
+              <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-md border border-slate-100">
+                <Clock size={14} className="text-amber-500 shrink-0" />
+                <span className="text-[11px] font-semibold text-slate-700">
+                  {profile.shift === 'Morning' ? tr('صبح', 'Morning') : profile.shift === 'Evening' ? tr('عصر', 'Evening') : profile.shift.includes('to') ? profile.shift.replace('to', tr('تا', 'to')) : profile.shift}
+                </span>
               </div>
 
-              <div className="flex items-center gap-3 bg-rose-50/50 px-4 py-2 rounded-xl border border-rose-50">
-                <MapPin size={18} className="text-rose-500 shrink-0" />
-                <div className="flex flex-col text-[12px] font-bold">
-                  <span className="text-slate-400 leading-none mb-1">{tr('محل استقرار', 'Location')}</span>
-                  <span className="text-slate-700 leading-none">
-                    {tr('شعبه', 'Branch')} {profile.branch === 'Pardis' ? tr('پردیس', 'Pardis') : profile.branch === 'Zargari' ? tr('زرگری', 'Zargari') : profile.branch}
-                  </span>
-                </div>
+              <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-md border border-slate-100">
+                <MapPin size={14} className="text-rose-500 shrink-0" />
+                <span className="text-[11px] font-semibold text-slate-700">
+                  {profile.branch === 'Pardis' ? tr('پردیس', 'Pardis') : profile.branch === 'Zargari' ? tr('زرگری', 'Zargari') : profile.branch}
+                </span>
               </div>
             </div>
           </div>
         )}
 
-        <div className="w-full grid grid-cols-1 xl:grid-cols-12 gap-6 lg:gap-8 items-start">
+        <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
           {/* Main quick-actions area */}
-          <div className="xl:col-span-7 2xl:col-span-8 flex flex-col gap-5 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm min-w-0">
-            <h3 className="text-lg font-extrabold text-slate-800 flex items-center gap-2 mb-2">
-              <Briefcase size={20} className="text-indigo-500" />
+          <div className="lg:col-span-8 flex flex-col gap-4">
+            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 mb-1">
+              <Briefcase size={16} className="text-indigo-500" />
               {tr('ابزارهای کاری', 'Working Tools')}
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+            <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm flex flex-col gap-3">
               <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept=".xlsx, .xls, .csv" className="hidden" />
-              <button onClick={() => fileInputRef.current?.click()} className="flex flex-col items-center justify-center p-8 bg-brand-600 text-white rounded-2xl hover:bg-brand-500 transition-all shadow-md shadow-brand-500/30 group col-span-1 sm:col-span-2 relative overflow-hidden border border-brand-500">
-                <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <Upload size={36} className="mb-4 group-hover:-translate-y-1 transition-transform" />
-                <span className="font-black text-xl mb-1.5">{tr('ورود فایل اکسل', 'Import Excel')}</span>
-                <span className="text-[14px] text-brand-100 font-medium">{tr('وارد کردن لیست شماره‌های جدید', 'Import new contact numbers list')}</span>
-              </button>
-
-              <button onClick={() => { setActiveCallTab('today'); setCurrentView('dashboard'); }} className="flex items-center p-5 bg-slate-50 border border-slate-200 text-slate-700 rounded-2xl hover:bg-white hover:border-indigo-300 hover:shadow-sm transition-all group gap-4 text-right">
-                <div className="w-12 h-12 rounded-xl bg-indigo-100/50 text-indigo-600 flex items-center justify-center shrink-0">
-                  <Calendar size={22} className="group-hover:scale-110 transition-transform" />
+              <button onClick={() => fileInputRef.current?.click()} className="flex items-center p-3 bg-brand-50 border border-brand-200 text-brand-700 rounded-md hover:bg-brand-100 transition-colors w-full gap-3 text-right group">
+                <div className="w-10 h-10 bg-brand-600 text-white rounded-md flex items-center justify-center shrink-0">
+                  <Upload size={18} />
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-extrabold text-[15px]">{tr('فعالیت امروز', "Today's Activity")}</span>
-                  <span className="text-[12px] text-slate-500 font-bold mt-0.5">{tr('مشاهده گزارش عملکرد امروز', 'View today performance report')}</span>
+                  <span className="font-bold text-sm">{tr('ورود فایل اکسل', 'Import Excel')}</span>
+                  <span className="text-[11px] text-brand-600 font-medium mt-0.5">{tr('وارد کردن لیست شماره‌های جدید برای تماس', 'Import new contact numbers list')}</span>
                 </div>
               </button>
 
-              <button onClick={() => setCurrentView('blacklist')} className="flex items-center p-5 bg-slate-50 border border-slate-200 text-slate-700 rounded-2xl hover:bg-white hover:border-slate-400 hover:shadow-sm transition-all group gap-4 text-right">
-                <div className="w-12 h-12 rounded-xl bg-slate-200/50 text-slate-600 flex items-center justify-center shrink-0">
-                  <PhoneOff size={22} className="group-hover:scale-110 transition-transform" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="font-extrabold text-[15px]">{tr('لیست سیاه', 'Blacklist')}</span>
-                  <span className="text-[12px] text-slate-500 font-bold mt-0.5">{tr('مدیریت شماره‌های مسدود', 'Manage blocked numbers')}</span>
-                </div>
-              </button>
+              <div className="grid grid-cols-2 gap-3">
+                <button onClick={() => { setActiveCallTab('today'); setCurrentView('dashboard'); }} className="flex items-center p-3 bg-slate-50 border border-slate-200 text-slate-700 rounded-md hover:bg-white hover:border-indigo-300 transition-colors gap-3 text-right">
+                  <div className="w-8 h-8 rounded-md bg-indigo-100/50 text-indigo-600 flex items-center justify-center shrink-0">
+                    <Calendar size={16} />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-bold text-xs">{tr('فعالیت امروز', "Today's Activity")}</span>
+                  </div>
+                </button>
 
-              <button onClick={() => { if(!isSyncing) handleSyncData(); }} disabled={isSyncing} className="flex items-center p-5 bg-slate-50 border border-slate-200 text-slate-700 rounded-2xl hover:bg-white hover:border-teal-300 hover:shadow-sm transition-all group gap-4 disabled:opacity-70 disabled:hover:shadow-none col-span-1 sm:col-span-2 text-right">
-                <div className="w-12 h-12 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center shrink-0 border border-teal-100">
-                  <RefreshCw size={22} className={isSyncing ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'} />
+                <button onClick={() => setCurrentView('blacklist')} className="flex items-center p-3 bg-slate-50 border border-slate-200 text-slate-700 rounded-md hover:bg-white hover:border-slate-300 transition-colors gap-3 text-right">
+                  <div className="w-8 h-8 rounded-md bg-slate-200/50 text-slate-600 flex items-center justify-center shrink-0">
+                    <PhoneOff size={16} />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-bold text-xs">{tr('لیست سیاه', 'Blacklist')}</span>
+                  </div>
+                </button>
+              </div>
+
+              <button onClick={() => { if(!isSyncing) handleSyncData(); }} disabled={isSyncing} className="flex items-center p-3 bg-slate-50 border border-slate-200 text-slate-700 rounded-md hover:bg-white hover:border-teal-300 transition-colors gap-3 disabled:opacity-70 text-right">
+                <div className="w-8 h-8 rounded-md bg-teal-50 text-teal-600 flex items-center justify-center shrink-0 border border-teal-100">
+                  <RefreshCw size={16} className={isSyncing ? 'animate-spin' : ''} />
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-extrabold text-[15px]">{tr('به‌روزرسانی دوره‌ها', 'Sync Courses')}</span>
-                  <span className="text-[12px] text-slate-500 font-bold mt-0.5">
-                    {isSyncing ? `${tr('در حال دریافت اطلاعات...', 'Fetching info...')} ${syncProgress}%` : tr('دریافت جدیدترین قیمت و اطلاعات دوره‌ها از وب‌سایت', 'Get latest prices and course info from website')}
+                  <span className="font-bold text-xs">{tr('به‌روزرسانی دوره‌ها', 'Sync Courses')}</span>
+                  <span className="text-[11px] text-slate-500 font-medium mt-0.5">
+                    {isSyncing ? `${tr('در حال دریافت...', 'Fetching...')} ${syncProgress}%` : tr('دریافت آخرین قیمت‌های دوره‌ها از وب‌سایت', 'Get latest course prices')}
                   </span>
                 </div>
               </button>
             </div>
+
+            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 mb-1 mt-4">
+              <Lock size={16} className="text-rose-500" />
+              {tr('امنیت حساب / تغییر رمز عبور', 'Account Security / Change Password')}
+            </h3>
+
+            <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+              <form onSubmit={handleChangePassword} className="flex flex-col gap-3">
+                <div>
+                  <input
+                    type="password"
+                    placeholder={tr('رمز فعلی', 'Current Password')}
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    className="w-full h-10 px-3 text-sm font-medium border border-slate-200 bg-slate-50 focus:bg-white text-slate-900 rounded-md outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/10 transition-all placeholder:text-slate-400"
+                    dir="ltr"
+                  />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <input
+                    type="password"
+                    placeholder={tr('رمز جدید', 'New Password')}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full h-10 px-3 text-sm font-medium border border-slate-200 bg-slate-50 focus:bg-white text-slate-900 rounded-md outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/10 transition-all placeholder:text-slate-400"
+                    dir="ltr"
+                  />
+                  <input
+                    type="password"
+                    placeholder={tr('تکرار رمز جدید', 'Repeat New Password')}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full h-10 px-3 text-sm font-medium border border-slate-200 bg-slate-50 focus:bg-white text-slate-900 rounded-md outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/10 transition-all placeholder:text-slate-400"
+                    dir="ltr"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={isChangingPassword || !currentPassword || !newPassword || !confirmPassword}
+                  className="h-10 mt-1 bg-rose-600 hover:bg-rose-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-md font-bold text-sm transition-all flex items-center justify-center gap-2"
+                >
+                  {isChangingPassword ? <RefreshCw size={16} className="animate-spin" /> : <Lock size={16} />}
+                  <span>{tr('تغییر رمز عبور', 'Change Password')}</span>
+                </button>
+              </form>
+            </div>
+
           </div>
 
           {/* Follow-up Exchange Area */}
-          <div className="xl:col-span-5 2xl:col-span-4 flex flex-col gap-5 bg-brand-50/30 p-6 rounded-3xl border border-brand-100/50 shadow-sm min-w-0">
-            <h3 className="text-lg font-extrabold text-slate-800 flex items-center gap-2 mb-2">
-              <Send size={20} className="text-brand-500" />
+          <div className="lg:col-span-4 flex flex-col gap-4">
+            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 mb-1">
+              <Send size={16} className="text-brand-500" />
               {tr('تبادل پیگیری‌ها', 'Follow-up Exchange')}
             </h3>
-            <div className="flex flex-col gap-4">
+
+            <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm flex flex-col gap-3">
               <button
                 onClick={() => {
                   if (activeCount > 0) setIsShareModalOpen(true);
                   else toast.error(tr('شما هیچ پیگیری فعالی ندارید.', 'You have no active follow-ups.'));
                 }}
-                className={`flex items-center p-5 bg-white border ${activeCount > 0 ? 'border-brand-200 text-slate-700 hover:border-brand-400 hover:shadow-md cursor-pointer' : 'border-slate-200 text-slate-400 cursor-not-allowed opacity-80'} rounded-2xl transition-all group gap-4 text-right`}
+                className={`flex items-center p-3 border ${activeCount > 0 ? 'border-brand-200 bg-brand-50/30 text-brand-700 hover:border-brand-300 hover:bg-brand-50' : 'border-slate-200 bg-slate-50 text-slate-400 cursor-not-allowed opacity-80'} rounded-md transition-colors gap-3 text-right w-full`}
               >
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${activeCount > 0 ? 'bg-brand-50 text-brand-600 border border-brand-100' : 'bg-slate-50 text-slate-400 border border-slate-100'}`}>
-                  <Send size={24} className={activeCount > 0 ? "group-hover:-translate-y-1 group-hover:translate-x-1 transition-transform" : ""} />
+                <div className={`w-10 h-10 rounded-md flex items-center justify-center shrink-0 ${activeCount > 0 ? 'bg-brand-100 text-brand-600' : 'bg-slate-100 text-slate-400'}`}>
+                  <Send size={18} />
                 </div>
                 <div className="flex flex-col flex-1 min-w-0">
-                  <span className="font-extrabold text-[15px] truncate">{tr('ارسال لیست پیگیری‌ها', 'Send Follow-up List')}</span>
-                  <span className="text-[12px] font-bold text-slate-500 mt-0.5 line-clamp-2 leading-relaxed">{tr('ارسال امن لیست به مدیر سیستم', 'Securely send list to system manager')}</span>
+                  <span className="font-bold text-sm truncate">{tr('ارسال لیست پیگیری‌ها به مدیر', 'Send Follow-up List')}</span>
+                  <span className="text-[11px] font-medium mt-0.5 opacity-80 line-clamp-1">{tr('اشتراک‌گذاری امن لیست پیگیری‌های فعال', 'Securely share active follow-ups')}</span>
                 </div>
               </button>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={handleDownloadExcel}
-                  className={`flex items-center p-5 bg-white border ${activeCount > 0 ? 'border-slate-200 text-slate-700 hover:border-emerald-500 hover:shadow-md cursor-pointer' : 'border-slate-100 text-slate-400 cursor-not-allowed opacity-80'} rounded-2xl transition-all group gap-4 text-right`}
+                  className={`flex items-center p-3 bg-slate-50 border ${activeCount > 0 ? 'border-slate-200 text-slate-700 hover:border-emerald-300 hover:bg-white' : 'border-slate-100 text-slate-400 cursor-not-allowed'} rounded-md transition-colors gap-3 text-right`}
                 >
-                  <div className={`w-12 h-12 rounded-xl border flex items-center justify-center shrink-0 transition-colors ${activeCount > 0 ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-400 border-slate-100'}`}>
-                    <Download size={24} className={activeCount > 0 ? "group-hover:translate-y-1 transition-transform" : ""} />
+                  <div className={`w-8 h-8 rounded-md flex items-center justify-center shrink-0 ${activeCount > 0 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-slate-100 text-slate-400'}`}>
+                    <Download size={16} />
                   </div>
                   <div className="flex flex-col flex-1 min-w-0">
-                    <span className="font-extrabold text-[15px] truncate">{tr('دانلود اکسل پیگیری‌ها', 'Download Follow-ups Excel')}</span>
-                    <span className="text-[12px] font-bold mt-0.5 text-slate-500 truncate">{activeCount > 0 ? `${activeCount} پیگیری فعال` : 'بدون پیگیری'}</span>
+                    <span className="font-bold text-xs truncate">{tr('دانلود اکسل', 'Download Excel')}</span>
                   </div>
                 </button>
 
                 <button
                   onClick={handleDownloadFollowups}
-                  className={`flex items-center p-5 bg-white border ${activeCount > 0 ? 'border-slate-200 text-slate-700 hover:border-slate-400 hover:shadow-md cursor-pointer' : 'border-slate-100 text-slate-400 cursor-not-allowed opacity-80'} rounded-2xl transition-all group gap-4 text-right`}
+                  className={`flex items-center p-3 bg-slate-50 border ${activeCount > 0 ? 'border-slate-200 text-slate-700 hover:border-slate-400 hover:bg-white' : 'border-slate-100 text-slate-400 cursor-not-allowed'} rounded-md transition-colors gap-3 text-right`}
                 >
-                  <div className={`w-12 h-12 rounded-xl border flex items-center justify-center shrink-0 transition-colors ${activeCount > 0 ? 'bg-slate-50 text-slate-600 border-slate-200' : 'bg-slate-50 text-slate-400 border-slate-100'}`}>
-                    <Download size={24} className={activeCount > 0 ? "group-hover:translate-y-1 transition-transform" : ""} />
+                  <div className={`w-8 h-8 rounded-md flex items-center justify-center shrink-0 ${activeCount > 0 ? 'bg-slate-200/50 text-slate-600' : 'bg-slate-100 text-slate-400'}`}>
+                    <Download size={16} />
                   </div>
                   <div className="flex flex-col flex-1 min-w-0">
-                    <span className="font-extrabold text-[15px] truncate">{tr('دانلود JSON پیگیری‌ها', 'Download Follow-ups JSON')}</span>
-                    <span className="text-[12px] font-bold mt-0.5 text-slate-500 truncate">{activeCount > 0 ? `نسخه خام و ساختاریافته` : 'بدون پیگیری'}</span>
+                    <span className="font-bold text-xs truncate">{tr('دانلود JSON', 'Download JSON')}</span>
                   </div>
                 </button>
               </div>
 
               {lastSent && (
-                <div className="flex flex-col mt-2 p-5 bg-white rounded-2xl border border-slate-200 shadow-sm">
-                  <div className="flex items-center gap-2 text-slate-700 font-extrabold text-[14px] mb-3">
-                    <History size={18} className="text-slate-400" />
-                    <span>{tr('آخرین ارسال من', 'My Last Sent')}</span>
+                <div className="flex flex-col mt-2 p-3 bg-slate-50 rounded-md border border-slate-200">
+                  <div className="flex items-center justify-between mb-2 pb-2 border-b border-slate-200/70">
+                    <div className="flex items-center gap-1.5 text-slate-600 font-bold text-[12px]">
+                      <History size={14} />
+                      <span>{tr('آخرین ارسال', 'Last Sent')}</span>
+                    </div>
+                    <span className="text-[11px] font-medium text-slate-500" dir="ltr">{new Date(lastSent.sent_at).toLocaleString('fa-IR')}</span>
                   </div>
-                  <div className="text-[13px] font-bold text-slate-500 space-y-2">
-                    <div className="flex justify-between items-center bg-slate-50 px-3 py-2 rounded-lg">
-                       <span>به:</span>
-                       <span className="font-black text-slate-800">{activeManagers.find(m => m.id === lastSent.receiver_manager_id)?.name || 'مدیر'}</span>
-                    </div>
-                    <div className="flex justify-between items-center bg-slate-50 px-3 py-2 rounded-lg">
-                       <span>زمان:</span>
-                       <span className="font-black text-slate-800" dir="ltr">{new Date(lastSent.sent_at).toLocaleString('fa-IR')}</span>
-                    </div>
-                    <div className="flex justify-between items-center bg-slate-50 px-3 py-2 rounded-lg">
-                       <span>تعداد:</span>
-                       <span className="font-black text-slate-800">{lastSent.item_count} مورد</span>
-                    </div>
+                  <div className="flex justify-between items-center text-[12px] text-slate-600 font-medium">
+                     <span>به: {activeManagers.find(m => m.id === lastSent.receiver_manager_id)?.name || 'مدیر'}</span>
+                     <span className="font-bold text-slate-800">{lastSent.item_count} مورد</span>
                   </div>
                 </div>
               )}
@@ -484,8 +582,8 @@ export const SettingsView: React.FC = () => {
         </div>
 
         {/* Manager Messages Area */}
-        <div className="w-full mt-6 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm min-w-0">
-          <h3 className="text-lg font-extrabold text-slate-800 flex items-center gap-2 mb-4">
+        <div className="w-full mt-6 bg-white p-5 rounded-lg border border-slate-200 shadow-sm min-w-0">
+          <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 mb-3">
             <MessageSquare size={20} className="text-indigo-500" />
             {tr('پیام‌های مدیر', 'Manager Messages')}
             {messages.filter(m => m.recipient_id === profile?.id && !m.read_at).length > 0 && (
@@ -498,8 +596,8 @@ export const SettingsView: React.FC = () => {
           {messagesLoading ? (
             <div className="flex justify-center py-6"><RefreshCw size={20} className="animate-spin text-slate-300" /></div>
           ) : messages.length === 0 ? (
-             <div className="text-center py-8 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-               <Inbox size={24} className="mx-auto mb-2 text-slate-300" />
+             <div className="flex items-center justify-center py-4 bg-slate-50 rounded-lg border border-slate-200 gap-3">
+               <Inbox size={18} className="text-slate-400" />
                <p className="text-[13px] font-bold text-slate-500">{tr('امروز پیامی ارسال یا دریافت نشده است.', 'No messages today.')}</p>
              </div>
           ) : (

@@ -117,10 +117,10 @@ export const AppHeader = () => {
                       if (currentView !== 'dashboard') setCurrentView('dashboard');
                       setActiveCallTab(tab.id as any);
                     }}
-                    className={`flex flex-row-reverse items-center gap-1.5 px-4 h-9 rounded-full text-[13.5px] transition-all whitespace-nowrap font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:ring-offset-2 ${
+                    className={`flex flex-row-reverse items-center gap-1.5 px-3 h-8 rounded-md text-[13px] transition-all whitespace-nowrap font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:ring-offset-1 ${
                       isActive
-                        ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/25 border border-brand-500'
-                        : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100/80 border border-transparent'
+                        ? 'bg-brand-50 text-brand-600 border border-brand-200'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
                     }`}
                   >
                     {tab.icon}
@@ -139,10 +139,10 @@ export const AppHeader = () => {
                   <button
                     key={item.id}
                     onClick={() => setCurrentView(item.id as any)}
-                    className={`flex flex-row-reverse items-center gap-1.5 px-4 h-9 rounded-full text-[13.5px] transition-all whitespace-nowrap font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:ring-offset-2 ${
+                    className={`flex flex-row-reverse items-center gap-1.5 px-3 h-8 rounded-md text-[13px] transition-all whitespace-nowrap font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:ring-offset-1 ${
                       isActive
-                        ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/25 border border-brand-500'
-                        : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100/80 border border-transparent'
+                        ? 'bg-brand-50 text-brand-600 border border-brand-200'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
                     }`}
                   >
                     <Icon size={14} />
@@ -157,10 +157,10 @@ export const AppHeader = () => {
                   <div className="w-px h-5 bg-border mx-2"></div>
                   <button
                     onClick={() => setCurrentView('admin')}
-                    className={`flex flex-row-reverse items-center gap-1.5 px-4 h-9 rounded-full text-[13.5px] transition-all whitespace-nowrap font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:ring-offset-2 ${
+                    className={`flex flex-row-reverse items-center gap-1.5 px-3 h-8 rounded-md text-[13px] transition-all whitespace-nowrap font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:ring-offset-1 ${
                       currentView === 'admin'
-                        ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/25 border border-brand-500'
-                        : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100/80 border border-transparent'
+                        ? 'bg-brand-50 text-brand-600 border border-brand-200'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
                     }`}
                   >
                     <Settings size={14} />
@@ -176,12 +176,12 @@ export const AppHeader = () => {
           <div className="flex items-center gap-2 shrink-0">
 
             {/* Live Clock */}
-            <div className="hidden lg:flex flex-row items-center justify-center gap-2 px-3 py-1.5 bg-surface-hover rounded-xl border border-border/50 mr-2">
-              <span className="text-[11px] font-medium text-slate-500">
+            <div className="hidden lg:flex flex-row items-center justify-center gap-2 px-3 py-1.5 bg-surface-hover rounded-md border border-border/50 mr-2">
+              <span className="text-xs font-medium text-slate-500">
                 {time.toLocaleDateString('fa-IR', { weekday: 'long', day: 'numeric', month: 'long' })}
               </span>
               <div className="w-px h-3 bg-border"></div>
-              <span className="text-[13px] font-bold text-brand-500 tracking-wider">
+              <span className="text-[13px] font-semibold text-brand-600 tracking-wider">
                 {time.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
               </span>
             </div>
@@ -192,7 +192,7 @@ export const AppHeader = () => {
               type="button"
               onClick={() => setLogoutConfirmOpen(true)}
               title={tr('خروج از حساب', 'Logout')}
-              className="flex items-center justify-center w-9 h-9 rounded-xl text-slate-500 hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-200 transition-all"
+              className="flex items-center justify-center w-8 h-8 rounded-md text-slate-500 hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-200 transition-all"
             >
               <LogOut size={16} />
             </button>

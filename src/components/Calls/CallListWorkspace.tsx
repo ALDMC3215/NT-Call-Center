@@ -2,6 +2,7 @@ import React, { useMemo, useState, useRef } from 'react';
 import { useAppContext } from '../../hooks/useAppContext';
 import { useLocale } from '../../hooks/useLocale';
 import { CallRecord } from '../../types';
+import { CALL_STATUSES, REGISTRATION_STATUSES } from '../../constants';
 import * as Icons from 'lucide-react';
 import { PhoneOff, Phone, PhoneForwarded, Link as LinkIcon, BookOpen, Users, CheckCircle2, FileText, Search, XCircle, Filter, X, Check, Plus, Calendar, Eraser, Trash2, Upload, ChevronDown, Ban } from 'lucide-react';
 import { customToast as toast } from '../UI/toast';
@@ -27,16 +28,15 @@ type Tab = 'home' | 'queue' | 'today' | 'followup' | 'stats' | 'blacklist' | 'co
 
 const getStatusDot = (status: string) => {
   if (status === 'پاسخ داد') return 'bg-teal-500/80';
-  if (['پاسخ نداد', 'در دسترس نیست', 'مشغول بود', 'دستگاه خاموش'].includes(status)) return 'bg-amber-400/80';
-  if (['عدم تمایل قطعی', 'عدم تمایل', 'شماره ناموجود'].includes(status)) return 'bg-rose-400/80';
+  if (status === 'پاسخ نداد') return 'bg-amber-400/80';
+  if (status === 'ناموجود') return 'bg-rose-400/80';
   return 'bg-slate-300';
 };
 
 const getStatusIcon = (status: string) => {
   if (status === 'پاسخ داد') return <Phone size={14} className="text-teal-600/80" />;
-  if (['پاسخ نداد', 'در دسترس نیست', 'دستگاه خاموش'].includes(status)) return <PhoneOff size={14} className="text-slate-500" />;
-  if (status === 'مشغول بود') return <PhoneForwarded size={14} className="text-amber-500/80" />;
-  if (['عدم تمایل', 'عدم تمایل قطعی'].includes(status)) return <PhoneOff size={14} className="text-rose-500/80" />;
+  if (status === 'پاسخ نداد') return <PhoneOff size={14} className="text-amber-500/80" />;
+  if (status === 'ناموجود') return <PhoneOff size={14} className="text-rose-500/80" />;
   return <Phone size={14} className="text-slate-500" />;
 };
 
@@ -320,7 +320,7 @@ export const CallListWorkspace = () => {
              }
           }
           if (phoneStr) {
-             if (blacklist.includes(phoneStr)) {
+             if (blacklist.some(b => b.phone === phoneStr)) {
                skippedPhones.push(phoneStr);
              } else {
                toAdd.push({ phone: phoneStr, fullName: nameStr || '' });
@@ -355,7 +355,7 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
   };
 
   const handleManualAdd = (phone: string, fullName: string) => {
-    if (blacklist.includes(phone)) {
+    if (blacklist.some(b => b.phone === phone)) {
       toast.error(tr('خطا: این شماره در لیست سیاه قرار دارد و نمی‌تواند اضافه شود.', 'Error: This number is blacklisted and cannot be added.'));
       return;
     }
@@ -405,26 +405,55 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
 
   const handleStatusChange = (call: CallRecord, newStatus: string) => {
     if (newStatus !== 'پاسخ داد') {
-      updateCall({ ...call, callStatus: newStatus, courses: [], advisory: undefined, registered: undefined });
+      updateCall({ ...call, callStatus: newStatus, courses: [], advisory: undefined, advisoryDate: undefined, advisoryTime: undefined, registered: undefined });
     } else {
       updateCall({ ...call, callStatus: newStatus });
     }
   };
 
+  // Keep an in-flight ref to prevent double-clicks synchronously
+  const inFlightSubmit = React.useRef<Set<string>>(new Set());
+
   const handleRowSubmit = async (call: CallRecord) => {
+    if (inFlightSubmit.current.has(call.id)) return;
+    inFlightSubmit.current.add(call.id);
     setSubmittingIds(prev => new Set(prev).add(call.id));
+
     try {
-      await recordAttempt(call.id, {
-        fullName: call.fullName || '',
-        callStatus: call.callStatus || '',
-        courses: call.courses || [],
-        advisory: call.advisory || '',
-        advisoryDate: call.advisoryDate || '',
-        advisoryTime: call.advisoryTime || '',
-        registered: call.registered || '',
-        notes: call.notes || ''
-      });
+      const hasNamowjoudAttempt = call.attempts?.some(a => a.callStatus === 'ناموجود');
+      let success = true;
+
+      // Skip attempt creation if we already have a 'ناموجود' attempt but delete failed earlier
+      if (call.callStatus === 'ناموجود' && hasNamowjoudAttempt) {
+        success = true;
+      } else {
+        success = await recordAttempt(call.id, {
+          fullName: call.fullName || '',
+          callStatus: call.callStatus || '',
+          courses: call.courses || [],
+          advisory: call.advisory || '',
+          advisoryDate: call.advisoryDate || '',
+          advisoryTime: call.advisoryTime || '',
+          registered: call.registered || '',
+          notes: call.notes || ''
+        });
+      }
+
+      if (success) {
+        if (call.callStatus === 'ناموجود') {
+          addToBlacklist(call.phone, 'ناموجود بودن شماره');
+          const deleteSuccess = await deleteCall(call.id);
+          if (deleteSuccess) {
+            toast.success(tr('شماره ناموجود بود، در لیست سیاه ثبت و حذف شد.', 'Number unavailable, blacklisted and deleted.'));
+          } else {
+            toast.error(tr('نتیجه ثبت شد، اما حذف شماره انجام نشد. دوباره روی ثبت نتیجه بزنید تا فقط حذف تکمیل شود.', 'Result saved but deletion failed. Press submit again to complete cleanup.'));
+          }
+        } else {
+          toast.success(tr('نتیجه تماس با موفقیت ثبت شد.', 'Call result submitted successfully.'));
+        }
+      }
     } finally {
+      inFlightSubmit.current.delete(call.id);
       setSubmittingIds(prev => {
         const next = new Set(prev);
         next.delete(call.id);
@@ -480,12 +509,12 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
           {callsError}
         </div>
       )}
-      {/* Global Search Bar Under Header */}
-      <div className="pt-4 pb-2 w-full flex justify-center" style={{ paddingLeft: `${layoutMargin}px`, paddingRight: `${layoutMargin}px` }}>
-        <div className="relative flex items-center w-full max-w-4xl gap-3">
-          <div className="relative flex-1 group">
-            <div className="absolute inset-y-0 right-0 flex items-center pr-5 pointer-events-none text-slate-500/60 group-focus-within:text-brand-500 transition-colors">
-              <Search size={18} strokeWidth={2.5} />
+      {/* Unified Operational Toolbar */}
+      <div className="pt-4 pb-3 w-full flex flex-col md:flex-row gap-3 items-center justify-between" style={{ paddingLeft: `${layoutMargin}px`, paddingRight: `${layoutMargin}px` }}>
+        {/* Left side: Search */}
+        <div className="relative flex-1 w-full max-w-md group">
+            <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-slate-500/60 group-focus-within:text-brand-500 transition-colors">
+              <Search size={16} strokeWidth={2.5} />
             </div>
             <input
               type="text"
@@ -493,45 +522,28 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
               onChange={e => setSearchQuery(e.target.value)}
               placeholder={activeTab === 'courses' ? tr('جستجو در دوره‌ها...', 'Search courses...') : tr('جستجو در شماره‌ها و نام‌ها...', 'Search numbers and names...')}
               dir={direction}
-              className="w-full h-12 bg-white border border-slate-200/80 rounded-[1.25rem] pr-12 pl-12 text-[14px] font-medium text-slate-900 placeholder:text-muted outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all shadow-sm hover:border-brand-500/40 hover:shadow-md"
+              className="w-full h-10 bg-white border border-slate-200 rounded-xl pr-10 pl-10 text-[13px] font-medium text-slate-900 placeholder:text-slate-500 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/10 transition-all shadow-sm"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute left-2.5 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-xl bg-slate-50 text-muted hover:text-rose-500 hover:bg-rose-50 transition-all cursor-pointer"
+                className="absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-lg bg-slate-50 text-muted hover:text-rose-500 hover:bg-rose-50 transition-all cursor-pointer"
               >
-                <X size={16} strokeWidth={2.5} />
+                <X size={14} strokeWidth={2.5} />
               </button>
             )}
-          </div>
-          {activeTab === 'queue' && (
-            <button
-              onClick={() => setIsManualAddOpen(true)}
-              className="h-12 px-5 rounded-[1.25rem] bg-brand-50 text-brand-600 flex items-center justify-center hover:bg-brand-100 transition-all font-bold text-[14px] gap-2 shrink-0 border border-brand-200"
-            >
-              <Plus size={18} strokeWidth={2.5} /> {tr('افزودن دستی', 'Add manually')}
-            </button>
-          )}
         </div>
-      </div>
 
-      {/* Main Grid View with Sidebars */}
-      <div className="flex-1 w-full min-h-0 flex items-stretch gap-4 pt-4 pb-4" style={{ paddingLeft: `${layoutMargin}px`, paddingRight: `${layoutMargin}px` }}>
-        {/* Center Grid */}
-        <div className="flex-1 flex flex-col overflow-hidden relative">
-
-        {/* Contextual Toolbar */}
-        {activeTab === 'followup' && (
-          <div className="flex flex-col gap-1 mb-4 px-4 mt-2">
-            <h2 className="text-[17px] font-extrabold text-slate-900 flex items-center gap-2">
-              پیگیری‌های من
-              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-brand-100 text-brand-700">{filteredList.length}</span>
-            </h2>
-            <p className="text-[13px] text-slate-500 font-medium">تماس‌هایی که هنوز نیاز به نتیجه نهایی دارند.</p>
-          </div>
-        )}
-        {activeTab === 'queue' && (
-          <div className="flex items-center gap-2 mb-3 px-2">
+        {/* Right side: Contextual controls */}
+        <div className="flex items-center gap-2 w-full md:w-auto shrink-0 justify-end">
+          {activeTab === 'followup' && (
+            <div className="flex items-center gap-2 bg-white border border-slate-200 px-3 py-2 rounded-xl shadow-sm h-10">
+              <span className="text-[13px] font-extrabold text-slate-800">پیگیری‌های من</span>
+              <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-md bg-brand-100 text-brand-700">{filteredList.length}</span>
+            </div>
+          )}
+          {activeTab === 'queue' && (
+            <>
               <button
                 onClick={() => {
                   setConfirmModalConfig({
@@ -544,12 +556,25 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                     }
                   });
                 }}
-                className="h-9 px-3 mr-auto rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-100 hover:text-rose-700 border border-rose-100 transition-all font-bold text-[12px] gap-2"
+                className="h-10 px-3 rounded-xl bg-white text-rose-600 flex items-center justify-center hover:bg-rose-50 border border-slate-200 hover:border-rose-200 transition-all font-bold text-[13px] gap-1.5 shadow-sm"
               >
-                <Trash2 size={16} /> {tr('حذف همه', 'Delete All')}
+                <Trash2 size={15} /> <span className="hidden sm:inline">{tr('حذف همه', 'Delete All')}</span>
               </button>
-          </div>
-        )}
+              <button
+                onClick={() => setIsManualAddOpen(true)}
+                className="h-10 px-4 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center hover:bg-brand-100 transition-all font-bold text-[13px] gap-1.5 border border-brand-200 shadow-sm"
+              >
+                <Plus size={16} strokeWidth={2.5} /> {tr('افزودن دستی', 'Add manually')}
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Main Grid View */}
+      <div className="flex-1 w-full min-h-0 flex items-stretch gap-4 pb-4" style={{ paddingLeft: `${layoutMargin}px`, paddingRight: `${layoutMargin}px` }}>
+        <div className="flex-1 flex flex-col overflow-hidden relative">
+
         {activeTab === 'blacklist' ? (
           <BlacklistView />
         ) : activeTab === 'stats' ? (
@@ -557,9 +582,9 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
         ) : activeTab === 'courses' ? (
           <CoursesView externalSearchQuery={searchQuery} />
         ) : (
-          <div className="relative h-full bg-white rounded-2xl border border-slate-200 flex flex-col overflow-hidden shadow-sm">
+          <div className="relative h-fit max-h-full bg-white rounded-2xl border border-slate-200 flex flex-col overflow-hidden shadow-sm">
 
-          <div className="flex-1 overflow-x-auto custom-select-scroll relative z-10">
+          <div className="min-h-0 overflow-x-auto overflow-y-auto custom-select-scroll relative z-10">
             {/* Compact Table View */}
             <table className="w-full text-center border-collapse table-fixed min-w-[950px]">
               <colgroup>
@@ -571,18 +596,18 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                 <col className="w-[150px]" /> {/* Date/Time */}
                 <col className="w-[110px]" /> {/* Actions */}
               </colgroup>
-              <thead className="sticky top-0 bg-slate-50 border-b border-slate-200 z-20">
+              <thead className="sticky top-0 bg-slate-100 border-b-2 border-slate-200 z-20">
                 <tr>
-                  <th className="py-3 px-2 text-[11px] font-bold text-slate-500 tracking-wide whitespace-nowrap">{tr('شماره تماس', 'Phone')}</th>
-                  <th className="py-3 px-2 text-[11px] font-bold text-slate-500 tracking-wide whitespace-nowrap">{tr('وضعیت تماس', 'Call Status')}</th>
-                  <th className="py-3 px-2 text-[11px] font-bold text-slate-500 tracking-wide whitespace-nowrap">{tr('دوره‌ها', 'Courses')}</th>
-                  <th className="py-3 px-2 text-[11px] font-bold text-slate-500 tracking-wide whitespace-nowrap">{tr('مشاوره حضوری', 'Consultation')}</th>
-                  <th className="py-3 px-2 text-[11px] font-bold text-slate-500 tracking-wide whitespace-nowrap">{tr('ثبت‌نام', 'Registration')}</th>
-                  <th className="py-3 px-2 text-[11px] font-bold text-slate-500 tracking-wide whitespace-nowrap">{tr('تاریخ و ساعت', 'Date & Time')}</th>
-                  <th className="py-3 px-2 text-[11px] font-bold text-slate-500 tracking-wide">{tr('عملیات', 'Actions')}</th>
+                  <th className="py-2.5 px-2 text-[12px] font-extrabold text-slate-800 tracking-wide whitespace-nowrap">{tr('شماره تماس', 'Phone')}</th>
+                  <th className="py-2.5 px-2 text-[12px] font-extrabold text-slate-800 tracking-wide whitespace-nowrap">{tr('وضعیت تماس', 'Call Status')}</th>
+                  <th className="py-2.5 px-2 text-[12px] font-extrabold text-slate-800 tracking-wide whitespace-nowrap">{tr('دوره‌ها', 'Courses')}</th>
+                  <th className="py-2.5 px-2 text-[12px] font-extrabold text-slate-800 tracking-wide whitespace-nowrap">{tr('مشاوره حضوری', 'Consultation')}</th>
+                  <th className="py-2.5 px-2 text-[12px] font-extrabold text-slate-800 tracking-wide whitespace-nowrap">{tr('ثبت‌نام', 'Registration')}</th>
+                  <th className="py-2.5 px-2 text-[12px] font-extrabold text-slate-800 tracking-wide whitespace-nowrap">{tr('تاریخ و ساعت', 'Date & Time')}</th>
+                  <th className="py-2.5 px-2 text-[12px] font-extrabold text-slate-800 tracking-wide">{tr('عملیات', 'Actions')}</th>
                 </tr>
               </thead>
-              <tbody className="text-[13px] font-medium text-slate-700 relative z-0">
+              <tbody className="text-[13px] font-medium text-slate-800 relative z-0">
                 {filteredList.map((c, i) => {
                   const fuStatus = activeTab === 'followup' ? getFollowUpStatus(c.nextFollowUpAt) : null;
                   return (
@@ -591,15 +616,15 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                     className={`border-b border-slate-100 hover:bg-slate-50 transition-colors duration-300 group ${fuStatus ? `border-r-4 ${fuStatus.borderCls}` : ''}`}
                   >
                     {/* Phone */}
-                    <td className="p-3 relative whitespace-nowrap">
+                    <td className="py-2 px-1.5 relative whitespace-nowrap">
                        <div className="flex flex-col items-center justify-center w-full px-2">
-                          <span dir="ltr" className="font-extrabold text-[15px] tracking-wider text-slate-900 group-hover:text-cyan-600 transition-colors">{c.phone}</span>
+                          <span dir="ltr" className="font-black text-[15px] tracking-wider text-slate-900 group-hover:text-cyan-600 transition-colors">{c.phone}</span>
                           <input
                             type="text"
                             value={c.fullName || ''}
                             onChange={e => handleFieldChange(c, 'fullName', e.target.value)}
                             placeholder={tr('نام شخص...', 'Name...')}
-                            className="text-[12px] font-medium text-slate-700 text-center bg-transparent border-b border-transparent hover:border-slate-200 focus:border-cyan-500 outline-none w-32 mt-1 transition-colors"
+                            className="text-[12px] font-medium text-slate-700 text-center bg-transparent border-b border-transparent hover:border-slate-200 focus:border-cyan-500 outline-none w-32 mt-1 transition-colors placeholder:text-slate-500"
                           />
                           {fuStatus && (
                             <div className={`mt-1.5 text-[10px] font-bold px-2 py-0.5 rounded-md border ${fuStatus.bgCls}`}>
@@ -610,20 +635,20 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                     </td>
 
                     {/* Call Status */}
-                    <td className="p-3 relative whitespace-nowrap">
+                    <td className="py-2 px-1.5 relative whitespace-nowrap">
                        <div className="flex items-center justify-center gap-1.5">
                           {getStatusIcon(c.callStatus || '')}
                           <TableDropdown
                             value={c.callStatus || ''}
                             onChange={(val) => handleStatusChange(c, val)}
-                            options={['پاسخ داد', 'پاسخ نداد', 'در دسترس نیست', 'مشغول بود', 'دستگاه خاموش', 'عدم تمایل قطعی', 'شماره ناموجود', 'پیگیری مجدد در هفته آینده'].map(s => ({ value: s, label: valueLabel(s) }))}
+                            options={CALL_STATUSES.map(s => ({ value: s, label: valueLabel(s) }))}
                             placeholder={tr('وضعیت تماس', 'Status')}
                           />
                        </div>
                     </td>
 
                     {/* Courses */}
-                    <td className="p-3 relative whitespace-nowrap">
+                    <td className="py-2 px-1.5 relative whitespace-nowrap">
                        <div className="flex items-center justify-center gap-1.5">
                           <BookOpen size={14} className="text-muted shrink-0" />
                           <div className="flex-1 min-w-0">
@@ -638,7 +663,7 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                     </td>
 
                     {/* Consultation */}
-                    <td className="p-3 relative whitespace-nowrap">
+                    <td className="py-2 px-1.5 relative whitespace-nowrap">
                        <div className="flex items-center justify-center gap-1.5">
                           <Users size={14} className="text-muted shrink-0" />
                           <TableDropdown
@@ -652,27 +677,25 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                     </td>
 
                     {/* Registration */}
-                    <td className="p-3 relative whitespace-nowrap">
-                       <div className="flex items-center justify-center gap-1.5">
-                          {c.registered === 'ثبت نام کرد' || c.registered === 'قصد دارد' ? (
-                            <CheckCircle2 size={14} className="text-teal-500/80 shrink-0" />
-                          ) : c.registered === 'قصد ندارد' ? (
-                            <XCircle size={14} className="text-rose-400/80 shrink-0" />
+                    <td className="py-2 px-1.5 relative whitespace-nowrap">
+                       <div className="flex items-center gap-1.5 w-[140px] justify-center">
+                          {c.registered === 'ثبت نام کرد' ? (
+                            <CheckCircle2 size={16} className="text-emerald-500 shrink-0" />
                           ) : (
-                            <CheckCircle2 size={14} className="text-slate-400 shrink-0" />
+                            <FileText size={16} className="text-slate-400 shrink-0" />
                           )}
                           <TableDropdown
                             value={c.registered || ''}
                             onChange={(val) => handleFieldChange(c, 'registered', val)}
                             disabled={c.callStatus !== 'پاسخ داد'}
-                            options={['ثبت نام کرد', 'ثبت نام نکرد', 'نامشخص', 'قصد دارد', 'در آینده', 'احتمالا', 'قصد ندارد'].map(s => ({ value: s, label: valueLabel(s) }))}
+                            options={REGISTRATION_STATUSES.map(s => ({ value: s, label: s }))}
                             placeholder={tr('ثبت‌نام', 'Registration')}
                           />
                        </div>
                     </td>
 
                     {/* Date & Time */}
-                    <td className="p-3 relative whitespace-nowrap">
+                    <td className="py-2 px-1.5 relative whitespace-nowrap">
                        <div className="flex items-center justify-center">
                           {c.advisory === 'بله' ? (
                              <button
@@ -699,7 +722,7 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                     </td>
 
                     {/* Actions */}
-                    <td className="p-3 relative">
+                    <td className="py-2 px-1.5 relative">
                        <div className="flex items-center justify-center gap-1.5">
                            <button
                              onClick={() => handleRowSubmit(c)}
@@ -723,7 +746,7 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                                   }
                                 });
                              }}
-                             className="w-9 h-9 rounded-lg flex items-center justify-center transition-all bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-800 hover:text-white hover:border-slate-800 tooltip-trigger shrink-0"
+                             className="w-8 h-8 rounded-lg flex items-center justify-center transition-all bg-transparent text-slate-500 hover:bg-slate-200 hover:text-slate-800 tooltip-trigger shrink-0"
                              title={tr('افزودن به لیست سیاه', 'Add to blacklist')}
                            >
                               <Ban size={16} />
@@ -740,7 +763,7 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                                   }
                                 });
                              }}
-                             className="w-9 h-9 rounded-lg flex items-center justify-center transition-all bg-slate-50 text-rose-600 border border-slate-200 hover:bg-rose-500/20 hover:text-rose-700 hover:border-rose-400/50 tooltip-trigger shrink-0"
+                             className="w-8 h-8 rounded-lg flex items-center justify-center transition-all bg-transparent text-slate-500 hover:bg-rose-100 hover:text-rose-600 tooltip-trigger shrink-0"
                              title={tr('حذف شماره', 'Delete number')}
                            >
                               <Trash2 size={16} />
@@ -805,7 +828,11 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
         onSave={(date, time) => {
           if (advisoryModalCall) {
              const scheduledAdvisory = date && time ? jalaliDateTimeToIso(date, time) : undefined;
-             const needsFollowUp = ['پاسخ نداد', 'در دسترس نیست', 'مشغول بود', 'بعداً تماس بگیرید', 'نیازمند پیگیری'].includes(advisoryModalCall.callStatus || '') || advisoryModalCall.advisory === 'هماهنگی بعدا';
+             const s = advisoryModalCall.callStatus;
+             const r = advisoryModalCall.registered;
+             let needsFollowUp = false;
+             if (s === 'پاسخ نداد') needsFollowUp = true;
+             else if (s === 'پاسخ داد' && r !== 'ثبت نام کرد') needsFollowUp = true;
 
              let newFollowUpAt = advisoryModalCall.nextFollowUpAt;
              if (scheduledAdvisory) {

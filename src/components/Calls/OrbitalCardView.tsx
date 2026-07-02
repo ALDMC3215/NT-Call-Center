@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Phone, Link as LinkIcon, BookOpen, Users, CheckCircle2, ChevronRight, UserCircle2 } from 'lucide-react';
 import { useAppContext } from '../../hooks/useAppContext';
 import { useLocale } from '../../hooks/useLocale';
+import { CALL_STATUSES, REGISTRATION_STATUSES } from '../../constants';
 import { CallRecord } from '../../types';
 import { customToast as toast } from '../UI/toast';
 import Select from '../UI/Select';
@@ -60,10 +61,10 @@ export const OrbitalCardView: React.FC<{ calls: CallRecord[] }> = ({ calls }) =>
   const getOptionsForNode = (id: string) => {
     const rawOptions = (() => {
       switch (id) {
-        case 'callStatus': return ['پاسخ داد', 'پاسخ نداد', 'در دسترس نیست', 'مشغول بود', 'دستگاه خاموش', 'عدم تمایل قطعی', 'شماره ناموجود', 'پیگیری مجدد در هفته آینده'];
+        case 'callStatus': return CALL_STATUSES;
         case 'courses': return ['برنامه نویسی', 'طراحی وبسایت', 'هوش مصنوعی', 'اپلیکیشن نویسی', 'طراحی UI/UX'];
         case 'advisory': return ['بله', 'خیر', 'هماهنگی بعدا'];
-        case 'registered': return ['ثبت نام کرد', 'ثبت نام نکرد', 'نامشخص', 'قصد دارد', 'در آینده', 'احتمالا', 'قصد ندارد'];
+        case 'registered': return REGISTRATION_STATUSES;
         default: return [];
       }
     })();

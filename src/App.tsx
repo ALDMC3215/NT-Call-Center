@@ -8,6 +8,7 @@ import { useAuth } from './hooks/useAuth';
 import { useAppContext } from './hooks/useAppContext';
 import { ToastProvider, customToast as toast } from './components/UI/toast';
 import { supabase } from './lib/supabase';
+import { isActiveFollowup } from './utils/followups';
 
 const ProfileView        = React.lazy(() => import('./components/Profile/ProfileView').then(m => ({ default: m.ProfileView })));
 const SettingsView       = React.lazy(() => import('./components/Settings/SettingsView').then(m => ({ default: m.SettingsView })));
@@ -32,15 +33,7 @@ const FollowupReminder = () => {
   const { calls } = useAppContext();
   React.useEffect(() => {
     const timer = setInterval(() => {
-      const followups = calls.filter(c => {
-        if (!c.attempts || c.attempts.length === 0) return false;
-        const lastAttempt = c.attempts[c.attempts.length - 1];
-        const s = lastAttempt.callStatus;
-        const adv = lastAttempt.advisory;
-        return s === 'عدم تمایل' || s === 'پاسخ نداد' || s === 'نامشخص' ||
-               s === 'پیگیری مجدد در هفته آینده' || adv === 'بله' || adv === 'خیر' ||
-               adv === 'قصد دارد' || adv === 'در آینده' || adv === 'احتمالا';
-      });
+      const followups = calls.filter(isActiveFollowup);
       if (followups.length > 0) {
         toast.info(`یادآوری: شما ${followups.length} شماره در لیست پیگیری دارید که نیازمند تماس مجدد هستند.`, { duration: 8000 });
       }
@@ -57,11 +50,11 @@ const AdminTriedAgentPanel = () => {
   const { signOut, setLoginMode } = useAuth();
   return (
     <div className="flex w-full min-h-[100vh] items-center justify-center bg-slate-50" dir="rtl">
-      <div className="bg-white rounded-[2rem] border border-indigo-200 p-10 shadow-xl max-w-md text-center">
-        <div className="w-16 h-16 rounded-2xl bg-indigo-50 border border-indigo-200 flex items-center justify-center mx-auto mb-5">
-          <Shield size={32} className="text-indigo-600" />
+      <div className="bg-white rounded-lg border border-indigo-200 p-6 shadow-sm max-w-md text-center">
+        <div className="w-12 h-12 rounded-md bg-indigo-50 border border-indigo-200 flex items-center justify-center mx-auto mb-4">
+          <Shield size={24} className="text-indigo-600" />
         </div>
-        <h2 className="text-xl font-extrabold text-slate-900 mb-3">حساب شما مدیر است</h2>
+        <h2 className="text-lg font-bold text-slate-900 mb-2">حساب شما مدیر است</h2>
         <p className="text-sm text-slate-600 font-medium leading-relaxed mb-6">
           شما با یک حساب مدیریت وارد شده‌اید. لطفاً از پنل مدیریت استفاده کنید.
         </p>
@@ -80,11 +73,11 @@ const AgentTriedManagerPanel = () => {
   const { signOut, setLoginMode } = useAuth();
   return (
     <div className="flex w-full min-h-[100vh] items-center justify-center bg-slate-50" dir="rtl">
-      <div className="bg-white rounded-[2rem] border border-red-200 p-10 shadow-xl max-w-md text-center">
-        <div className="w-16 h-16 rounded-2xl bg-red-50 border border-red-200 flex items-center justify-center mx-auto mb-5">
-          <UserCheck size={32} className="text-red-500" />
+      <div className="bg-white rounded-lg border border-red-200 p-6 shadow-sm max-w-md text-center">
+        <div className="w-12 h-12 rounded-md bg-red-50 border border-red-200 flex items-center justify-center mx-auto mb-4">
+          <UserCheck size={24} className="text-red-500" />
         </div>
-        <h2 className="text-xl font-extrabold text-slate-900 mb-3">این حساب مدیر نیست</h2>
+        <h2 className="text-lg font-bold text-slate-900 mb-2">این حساب مدیر نیست</h2>
         <p className="text-sm text-slate-600 font-medium leading-relaxed mb-6">
           حساب شما از نوع کارشناس است و به پنل مدیریت دسترسی ندارد.<br />
           اگر فکر می‌کنید این اشتباه است، با مدیر سیستم تماس بگیرید.
@@ -246,7 +239,7 @@ export default function App() {
                     <FollowupReminder />
                     <SessionManager />
                     <div className="w-full pointer-events-auto shrink-0 z-20"><AppHeader /></div>
-                    <div className="flex-1 w-full min-h-0 overflow-auto pointer-events-auto bg-transparent relative z-10">
+                    <div className="flex-1 w-full min-h-0 overflow-auto pointer-events-auto bg-transparent relative z-10 px-3 md:px-4 lg:px-5 pb-4">
                       <AnimatePresence mode="wait">
                         <motion.div key={currentView} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.3, ease: 'easeOut' }} className="w-full h-full flex flex-col overflow-hidden bg-transparent">
                           <React.Suspense fallback={<LoadingSpinner />}>
