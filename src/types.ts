@@ -44,6 +44,10 @@ export interface CallRecord {
   attempts?: CallAttempt[];
   /** زمان میلادی پیگیری بعدی؛ برای مقایسه دقیق با ساعت سیستم */
   nextFollowUpAt?: string;
+  /** Manual work list properties */
+  workList?: 'none' | 'today' | 'followup';
+  workListDate?: string | null;
+  workListUpdatedAt?: string | null;
 }
 
 export interface CallAttempt {

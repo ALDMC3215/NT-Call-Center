@@ -258,7 +258,8 @@ export const CallListWorkspace = () => {
     bulkAddCalls,
     profile,
     blacklist,
-    layoutMargin
+    layoutMargin,
+    setContactWorkList
   } = useAppContext();
   const { tr, valueLabel, direction } = useLocale();
   const [searchQuery, setSearchQuery] = useState('');
@@ -608,7 +609,19 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                 </tr>
               </thead>
               <tbody className="text-[13px] font-medium text-slate-800 relative z-0">
-                {filteredList.map((c, i) => {
+                {filteredList.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="py-16 text-center text-slate-500 min-h-[220px]">
+                      <div className="flex flex-col items-center justify-center min-h-[160px]">
+                        <p className="font-bold text-[14px]">{tr('هنوز شمارهای در این لیست نیست.', 'No numbers in this list yet.')}</p>
+                        {activeTab === 'all' && (
+                          <p className="text-[12px] mt-2 opacity-80">{tr('برای شروع، شمارهها را دستی اضافه کنید یا فایل Excel / CSV وارد کنید.', 'To start, add numbers manually or import an Excel/CSV file.')}</p>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                filteredList.map((c, i) => {
                   const fuStatus = activeTab === 'followup' ? getFollowUpStatus(c.nextFollowUpAt) : null;
                   return (
                   <React.Fragment key={c.id}>
@@ -774,7 +787,8 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
 
                   </React.Fragment>
                   );
-                })}
+                })
+              )}
               </tbody>
             </table>
 

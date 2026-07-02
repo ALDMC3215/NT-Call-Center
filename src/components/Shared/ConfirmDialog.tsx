@@ -37,20 +37,20 @@ export const ConfirmDialog = ({ isOpen, title, message, confirmText = 'بله، 
              <AlertDialogDescription className="text-center mt-2">{message}</AlertDialogDescription>
            </AlertDialogHeader>
         </div>
-        <AlertDialogFooter className="sm:justify-center w-full flex-row gap-3">
+        <div className={`mt-6 w-full flex flex-row gap-3 ${direction === 'rtl' ? 'justify-start' : 'justify-end'}`}>
           <AlertDialogAction
             onClick={() => {
               onConfirm();
               onCancel();
             }}
-            className={`flex-1 mt-0 font-bold ${destructive ? 'bg-rose-500 hover:bg-rose-600 text-white border-transparent shadow-sm shadow-rose-500/20' : 'bg-brand-500 hover:bg-brand-600 text-white border-transparent shadow-sm shadow-brand-500/20'}`}
+            className={`mt-0 font-bold ${destructive ? 'bg-rose-500 hover:bg-rose-600 text-white border-transparent shadow-sm shadow-rose-500/20' : 'bg-brand-500 hover:bg-brand-600 text-white border-transparent shadow-sm shadow-brand-500/20'}`}
           >
             {!isFa && confirmText === 'بله، تایید' ? 'Confirm' : confirmText}
           </AlertDialogAction>
-          <AlertDialogCancel onClick={onCancel} className="flex-1 mt-0 font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 border-slate-200">
+          <AlertDialogCancel onClick={onCancel} className="mt-0 font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 border-slate-200">
             {tr('لغو', 'Cancel')}
           </AlertDialogCancel>
-        </AlertDialogFooter>
+        </div>
       </AlertDialogContent>
     </AlertDialog>
   );

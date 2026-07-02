@@ -10,6 +10,7 @@ import * as xlsx from 'xlsx';
 import { getActiveFollowups, buildFollowUpSnapshot } from '../../utils/followups';
 import { exportFollowupsToExcel } from '../../utils/followupExcel';
 import { supabase } from '../../lib/supabase';
+import { parseContactsFile } from '../../utils/contactFileImport';
 import { motion, AnimatePresence } from 'motion/react';
 
 export const SettingsView: React.FC = () => {
@@ -187,79 +188,36 @@ export const SettingsView: React.FC = () => {
     toast.success(tr('به‌روزرسانی قیمت دوره‌ها با موفقیت انجام شد.', 'Course prices updated successfully.'));
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.currentTarget;
+    const file = input.files?.[0] ?? null;
+    input.value = '';
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      try {
-        const bstr = evt.target?.result;
-        const wb = xlsx.read(bstr, { type: 'binary' });
-        const wsname = wb.SheetNames[0];
-        const ws = wb.Sheets[wsname];
-        const data = xlsx.utils.sheet_to_json(ws, { header: 1 }) as any[][];
+    try {
+      const result = await parseContactsFile(file, { isBlacklisted });
 
-        let count = 0;
-        let skippedPhones: string[] = [];
-        const toAdd: any[] = [];
-
-        data.forEach((row: any[]) => {
-          if (!row || row.length === 0) return;
-          const phoneRegex = /(09\d{9})|(\+989\d{9})|(9\d{9})/;
-          let phoneStr = '';
-          let nameStr = '';
-
-          for (let i = 0; i < row.length; i++) {
-             const rawValue = row[i];
-             if (rawValue === undefined || rawValue === null) continue;
-
-             const cellValue = String(rawValue);
-             const noSpaceStr = cellValue.replace(/\s+/g, '');
-
-             if (!phoneStr && phoneRegex.test(noSpaceStr)) {
-                const match = noSpaceStr.match(phoneRegex);
-                if (match) {
-                   let p = match[0];
-                   if (p.startsWith('+98')) p = '0' + p.substring(3);
-                   else if (p.length === 10 && p.startsWith('9')) p = '0' + p;
-                   phoneStr = p;
-                }
-             } else if (typeof rawValue === 'string' && rawValue.length > 2 && !rawValue.match(/\d/) && !nameStr) {
-                nameStr = rawValue.trim();
-             }
-          }
-          if (phoneStr) {
-             if (isBlacklisted(phoneStr)) {
-               skippedPhones.push(phoneStr);
-             } else {
-               toAdd.push({ phone: phoneStr, fullName: nameStr || '' });
-               count++;
-             }
-          }
-        });
-
-        if (toAdd.length > 0) {
-          bulkAddCalls(toAdd);
-        }
-
-        if (skippedPhones.length > 0) {
-          toast.error(tr(`تعداد ${skippedPhones.length} شماره به دلیل قرار داشتن در لیست سیاه حذف شدند:\n${skippedPhones.join(' ، ')}`, `${skippedPhones.length} numbers skipped due to blacklist:\n${skippedPhones.join(', ')}`), { duration: 8000 });
-        }
-
-        if (count > 0) {
-          toast.success(tr(`تعداد ${count} شماره با موفقیت از اکسل اضافه شد.`, `${count} numbers added from Excel.`));
-        } else if (skippedPhones.length > 0) {
-          // Already shown error
-        } else {
-          toast.error(tr('شماره معتبری یافت نشد.', 'No valid number found.'));
-        }
-      } catch (error) {
-        toast.error(tr('خطا در خواندن فایل اکسل.', 'Error reading excel file.'));
+      if (result.contacts.length === 0) {
+        return toast.error(tr('شماره معتبری یافت نشد.', 'No valid number found.'));
       }
-    };
-    reader.readAsBinaryString(file);
-    if (fileInputRef.current) fileInputRef.current.value = '';
+
+      try {
+        await bulkAddCalls(result.contacts);
+
+        const skipped = result.duplicateCount + result.blacklistedCount;
+        if (skipped > 0) {
+          toast.success(tr(`تعداد ${result.contacts.length} شماره اضافه شد و ${skipped} شماره تکراری یا در لیست سیاه نادیده گرفته شد.`, `${result.contacts.length} added, ${skipped} skipped.`));
+        } else {
+          toast.success(tr(`تعداد ${result.contacts.length} شماره با موفقیت از اکسل اضافه شد.`, `${result.contacts.length} numbers added from Excel.`));
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error(tr('شمارهها از فایل خوانده شدند، اما ثبت آنها در سامانه انجام نشد. دوباره تلاش کنید.', 'Numbers read, but cloud import failed. Try again.'));
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error(tr('خطا در خواندن فایل اکسل.', 'Error reading excel file.'));
+    }
   };
 
   const handleDownloadExcel = async () => {
@@ -432,16 +390,7 @@ export const SettingsView: React.FC = () => {
                 </div>
               </button>
 
-              <div className="grid grid-cols-2 gap-3">
-                <button onClick={() => { setActiveCallTab('today'); setCurrentView('dashboard'); }} className="flex items-center p-3 bg-slate-50 border border-slate-200 text-slate-700 rounded-md hover:bg-white hover:border-indigo-300 transition-colors gap-3 text-right">
-                  <div className="w-8 h-8 rounded-md bg-indigo-100/50 text-indigo-600 flex items-center justify-center shrink-0">
-                    <Calendar size={16} />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="font-bold text-xs">{tr('فعالیت امروز', "Today's Activity")}</span>
-                  </div>
-                </button>
-
+              <div className="flex flex-col gap-3">
                 <button onClick={() => setCurrentView('blacklist')} className="flex items-center p-3 bg-slate-50 border border-slate-200 text-slate-700 rounded-md hover:bg-white hover:border-slate-300 transition-colors gap-3 text-right">
                   <div className="w-8 h-8 rounded-md bg-slate-200/50 text-slate-600 flex items-center justify-center shrink-0">
                     <PhoneOff size={16} />
@@ -609,7 +558,17 @@ export const SettingsView: React.FC = () => {
                  </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {Array.from(new Set(messages.map(m => m.sender_id === profile?.id ? m.recipient_id : m.sender_id))).map(managerId => {
+                  {Array.from(
+                    new Set<string>(
+                      messages
+                        .map((message) =>
+                          message.sender_id === profile?.id
+                            ? message.recipient_id
+                            : message.sender_id,
+                        )
+                        .filter((id): id is string => typeof id === 'string' && id.length > 0),
+                    ),
+                  ).map(managerId => {
                     const threadMessages = messages.filter(m => m.sender_id === managerId || m.recipient_id === managerId);
                     const unreadCount = threadMessages.filter(m => m.recipient_id === profile?.id && !m.read_at).length;
                     const managerName = threadMessages.find(m => m.sender_id === managerId)?.sender_name || threadMessages.find(m => m.recipient_id === managerId)?.recipient_name || 'مدیر';

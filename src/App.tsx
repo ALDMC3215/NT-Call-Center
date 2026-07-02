@@ -18,6 +18,7 @@ const AboutView          = React.lazy(() => import('./components/About/AboutView
 const AuthScreen         = React.lazy(() => import('./components/Auth/AuthScreen').then(m => ({ default: m.AuthScreen })));
 const PendingScreen      = React.lazy(() => import('./components/Auth/PendingScreen').then(m => ({ default: m.PendingScreen })));
 const ManagerDashboard   = React.lazy(() => import('./components/Manager/ManagerDashboard').then(m => ({ default: m.ManagerDashboard })));
+const HomeView           = React.lazy(() => import('./components/Home/HomeView').then(m => ({ default: m.HomeView })));
 
 import { LoadingSpinner } from './components/Shared/LoadingSpinner';
 import { AnimatePresence, motion } from 'motion/react';
@@ -243,6 +244,7 @@ export default function App() {
                       <AnimatePresence mode="wait">
                         <motion.div key={currentView} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.3, ease: 'easeOut' }} className="w-full h-full flex flex-col overflow-hidden bg-transparent">
                           <React.Suspense fallback={<LoadingSpinner />}>
+                            {currentView === 'home'      && <HomeView />}
                             {currentView === 'dashboard' && <CallListWorkspace />}
                             {currentView === 'profile'   && <ProfileView />}
                             {currentView === 'settings'  && <SettingsView />}

@@ -21,7 +21,7 @@ const reportMeaningfulActivity = (userId: string) => {
   })();
 };
 
-export type ViewType = 'dashboard' | 'profile' | 'settings' | 'stats' | 'admin' | 'blacklist' | 'reports' | 'experts' | 'managers' | 'about';
+export type ViewType = 'home' | 'dashboard' | 'profile' | 'settings' | 'stats' | 'admin' | 'blacklist' | 'reports' | 'experts' | 'managers' | 'about';
 
 interface AppContextType {
   profile: Profile | null;
@@ -48,6 +48,7 @@ interface AppContextType {
   removeFromBlacklist: (phone: string) => void;
   isBlacklisted: (phone: string) => boolean;
   restoreBackup: (p: Profile, importedCalls: CallRecord[], importedBlacklist: BlacklistEntry[]) => void;
+  setContactWorkList: (contactId: string, destination: 'none' | 'today' | 'followup') => Promise<boolean>;
   recordAttempt: (id: string, values: Pick<CallRecord, 'fullName' | 'callStatus' | 'courses' | 'advisory' | 'advisoryDate' | 'advisoryTime' | 'registered' | 'notes'>) => Promise<boolean>;
   enableFluid: boolean;
   setEnableFluid: (val: boolean) => void;
@@ -212,7 +213,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       console.error("Error updating followups map", e);
     }
   }, []);
-  const [currentView, setCurrentView] = useState<ViewType>('dashboard');
+  const [currentView, setCurrentView] = useState<ViewType>('home');
   const [activeCallTab, setActiveCallTab] = useState<'cards' | 'queue' | 'today' | 'followup' | 'stats' | 'blacklist' | 'courses'>('queue');
   const [enableFluid, setEnableFluidState] = useState<boolean>(() => {
     const saved = localStorage.getItem('fluid_enabled');
@@ -380,24 +381,36 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [profile, calls]);
 
-  const recordAttempt = useCallback(async (id: string, values: Pick<CallRecord, 'fullName' | 'callStatus' | 'courses' | 'advisory' | 'advisoryDate' | 'advisoryTime' | 'registered' | 'notes'>): Promise<boolean> => {
+  const setContactWorkList = useCallback(async (contactId: string, destination: 'none' | 'today' | 'followup'): Promise<boolean> => {
     if (!profile) return false;
     reportMeaningfulActivity(profile.sessionId);
 
+    try {
+      const { error } = await supabase.rpc('set_contact_work_list', {
+        p_contact_id: contactId,
+        p_work_list: destination
+      });
+
+      if (error) {
+        console.error('Error in setContactWorkList:', error);
+        return false;
+      }
+
+      setCallsRefreshCounter(prev => prev + 1);
+      return true;
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
+  }, [profile]);
+
+  const recordAttempt = useCallback(async (id: string, values: Pick<CallRecord, 'fullName' | 'callStatus' | 'courses' | 'advisory' | 'advisoryDate' | 'advisoryTime' | 'registered' | 'notes'>): Promise<boolean> => {
+    if (!profile) return false;
+    reportMeaningfulActivity(profile.sessionId);
     const s = values.callStatus;
     const r = values.registered;
 
     let needsFollowUp = false;
-
-    if (s === 'پاسخ نداد') {
-      needsFollowUp = true;
-    } else if (s === 'ناموجود') {
-      needsFollowUp = false;
-    } else if (s === 'پاسخ داد' && r === 'ثبت نام کرد') {
-      needsFollowUp = false;
-    } else if (s === 'پاسخ داد') {
-      needsFollowUp = true;
-    }
 
     const now = new Date();
     const jalaliTime = nowJalali();
@@ -492,8 +505,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const contextValue = React.useMemo(() => ({
-    profile, calls, isLoadingCalls, callsError, blacklist, currentView, setCurrentView, activeCallTab, setActiveCallTab, setProfile, logout, addCall, updateCall, deleteCall, clearAllCalls, bulkAddCalls, importData, wipeAllData, importedData, setImportedData, addToBlacklist, removeFromBlacklist, restoreBackup, recordAttempt, enableFluid, setEnableFluid, accentColor, setAccentColor, layoutMargin, setLayoutMargin, sparkColor, setSparkColor
-  }), [profile, calls, isLoadingCalls, callsError, blacklist, currentView, setCurrentView, activeCallTab, setActiveCallTab, setProfile, logout, addCall, updateCall, deleteCall, clearAllCalls, bulkAddCalls, importData, wipeAllData, importedData, setImportedData, addToBlacklist, removeFromBlacklist, restoreBackup, recordAttempt, enableFluid, setEnableFluid, accentColor, setAccentColor, layoutMargin, setLayoutMargin, sparkColor, setSparkColor]);
+    profile, calls, isLoadingCalls, callsError, blacklist, currentView, setCurrentView, activeCallTab, setActiveCallTab, setProfile, logout, addCall, updateCall, deleteCall, clearAllCalls, bulkAddCalls, importData, wipeAllData, importedData, setImportedData, addToBlacklist, removeFromBlacklist, isBlacklisted, restoreBackup, setContactWorkList, recordAttempt, enableFluid, setEnableFluid, accentColor, setAccentColor, layoutMargin, setLayoutMargin, sparkColor, setSparkColor
+  }), [profile, calls, isLoadingCalls, callsError, blacklist, currentView, setCurrentView, activeCallTab, setActiveCallTab, setProfile, logout, addCall, updateCall, deleteCall, clearAllCalls, bulkAddCalls, importData, wipeAllData, importedData, setImportedData, addToBlacklist, removeFromBlacklist, isBlacklisted, restoreBackup, setContactWorkList, recordAttempt, enableFluid, setEnableFluid, accentColor, setAccentColor, layoutMargin, setLayoutMargin, sparkColor, setSparkColor]);
 
   return (
     <AppContext.Provider value={contextValue}>

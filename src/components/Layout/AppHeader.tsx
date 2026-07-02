@@ -67,11 +67,13 @@ export const AppHeader = () => {
     { id: 'about', icon: Info, label: tr('راهنما', 'Guide') },
   ];
 
-  // ─── Dashboard tabs: call-related only, no blacklist (it's a separate page) ─
-  const callTabs: { id: CallTab; label: string; icon: React.ReactNode }[] = [
-    { id: 'followup', label: tr('پیگیری ها', 'Follow-ups'), icon: <PhoneForwarded size={14} /> },
-    { id: 'queue',    label: tr('شماره ها',  'Numbers'),    icon: <Phone size={14} /> },
-    { id: 'courses',  label: tr('دوره ها',   'Courses'),    icon: <BookOpen size={14} /> },
+  // 🔘🔘🔘 Dashboard tabs: call-related only, no blacklist (it's a separate page) 🔘
+  const callTabs: { id: string; label: string; icon: React.ReactNode }[] = [
+    { id: 'home',     label: tr('خانه', 'Home'), icon: <Monitor size={14} /> },
+    { id: 'queue',    label: tr('شمارهها',  'Numbers'),    icon: <Phone size={14} /> },
+    { id: 'followup', label: tr('پیگیریهای من', 'Follow-ups'), icon: <PhoneForwarded size={14} /> },
+    { id: 'today',    label: tr('فعالیت امروز', 'Today'), icon: <Calendar size={14} /> },
+    { id: 'courses',  label: tr('دوره‌ها',   'Courses'),    icon: <BookOpen size={14} /> },
   ];
 
   const viewLabels: Record<string, string> = {
@@ -95,8 +97,8 @@ export const AppHeader = () => {
       <header className="w-full shrink-0 z-30 bg-white/80 backdrop-blur-xl border-b border-slate-200 shadow-sm">
         <div className="flex items-center justify-between w-full h-14 px-4 md:px-6 relative" dir="ltr">
 
-          {/* ── LEFT: Logo ─────────────────────────── */}
-          <div className="flex items-center gap-2 shrink-0 group">
+          {/* 🔘🔘 LEFT: Logo 🔘🔘🔘🔘🔘🔘🔘🔘🔘🔘🔘🔘🔘🔘🔘🔘🔘🔘🔘🔘🔘🔘🔘🔘🔘🔘🔘 */}
+          <div className="flex items-center gap-2 shrink-0 group cursor-pointer" onClick={() => setCurrentView('home')}>
             <div className="w-8 h-8 flex items-center justify-center transition-colors">
               <img src={NTLogo} alt="Novin Tech Logo" className="w-full h-full object-contain" />
             </div>
@@ -112,13 +114,17 @@ export const AppHeader = () => {
 
               {/* Call Tabs */}
               {callTabs.map(tab => {
-                const isActive = currentView === 'dashboard' && activeCallTab === tab.id;
+                const isActive = tab.id === 'home' ? currentView === 'home' : (currentView === 'dashboard' && activeCallTab === tab.id);
                 return (
                   <button
                     key={tab.id}
                     onClick={() => {
-                      if (currentView !== 'dashboard') setCurrentView('dashboard');
-                      setActiveCallTab(tab.id as any);
+                      if (tab.id === 'home') {
+                        setCurrentView('home');
+                      } else {
+                        if (currentView !== 'dashboard') setCurrentView('dashboard');
+                        setActiveCallTab(tab.id as any);
+                      }
                     }}
                     className={`flex flex-row-reverse items-center gap-1.5 px-3 h-8 rounded-md text-[13px] transition-all whitespace-nowrap font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:ring-offset-1 ${
                       isActive

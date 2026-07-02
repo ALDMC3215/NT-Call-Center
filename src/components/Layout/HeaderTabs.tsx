@@ -11,13 +11,15 @@ import { useLocale } from '../../hooks/useLocale';
 import { isActiveFollowup } from '../../utils/followups';
 
 interface TabItem {
-  id: 'dashboard' | 'profile' | 'settings' | 'stats' | 'admin' | 'blacklist';
+  id: 'home' | 'today' | 'dashboard' | 'profile' | 'settings' | 'stats' | 'admin' | 'blacklist';
   label: string;
   icon: React.ElementType;
 }
 
 const TABS: TabItem[] = [
+  { id: 'home', label: 'خانه', icon: Blocks },
   { id: 'dashboard', label: 'شماره ها', icon: LayoutDashboard },
+  { id: 'today', label: 'فعالیت امروز', icon: CalendarIcon },
   { id: 'blacklist', label: 'لیست سیاه', icon: ShieldBan },
   { id: 'stats', label: 'آمار', icon: BarChart3 },
   { id: 'admin', label: 'مدیریت', icon: Shield },
@@ -237,7 +239,7 @@ export const HeaderTabs = () => {
             : 'text-[#7089a9] border-transparent hover:border-[#aadb9f] bg-transparent'
         }`}
       >
-        <span className={`hidden whitespace-nowrap pt-0.5 text-[13px] tracking-wide md:inline ${isActive ? 'font-extrabold' : 'font-medium'}`}>{isFa ? tab.label : ({ dashboard: 'Calls', blacklist: 'Blacklist', stats: 'Statistics', admin: 'Admin' }[tab.id] || tab.label)}</span>
+        <span className={`hidden whitespace-nowrap pt-0.5 text-[13px] tracking-wide md:inline ${isActive ? 'font-extrabold' : 'font-medium'}`}>{isFa ? tab.label : ({ home: 'Home', dashboard: 'Calls', today: 'Today', blacklist: 'Blacklist', stats: 'Statistics', admin: 'Admin' }[tab.id] || tab.label)}</span>
         <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
       </motion.button>
     );
@@ -339,15 +341,25 @@ export const HeaderTabs = () => {
           {isMenuOpen && (
             <div className="absolute top-12 right-0 w-[260px] md:w-[290px] max-w-[calc(100vw-24px))] bg-surface  rounded-xl border border-border z-50 flex flex-col overflow-hidden" dir={direction}>
                 <div className="flex flex-col p-1">
-                  <button onClick={() => { setCurrentView('profile'); setIsMenuOpen(false); }} className="flex items-center gap-3 px-3 py-2.5 hover:bg-surface-hover border border-transparent hover:border-border rounded-xl w-full text-right transition-all duration-150 ease-out justify-between">
-                    <span className="text-[14px] font-medium text-secondary">{tr('پروفایل', 'Profile')}</span>
-                    <User size={16} strokeWidth={2} className="text-secondary shrink-0" />
-                  </button>
-                  <button onClick={() => { setCurrentView('settings'); setIsMenuOpen(false); }} className="flex items-center gap-3 px-3 py-2.5 hover:bg-brand-50 border border-transparent hover:border-brand-100 rounded-xl w-full text-right transition-all duration-150 ease-out justify-between">
-                    <span className="text-[14px] font-medium text-secondary">{tr('تنظیمات', 'Settings')}</span>
-                    <Settings size={16} strokeWidth={2} className="text-brand-600 shrink-0" />
-                  </button>
-                  <div className="px-2 py-2"></div>
+                  {TABS.map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => {
+                        if (tab.id === 'today') {
+                           setCurrentView('dashboard');
+                           setActiveTab('today');
+                        } else {
+                           setCurrentView(tab.id as any);
+                        }
+                        setIsMenuOpen(false);
+                      }}
+                      className="flex items-center gap-3 px-3 py-2.5 hover:bg-surface-hover border border-transparent hover:border-border rounded-xl w-full text-right transition-all duration-150 ease-out justify-between"
+                    >
+                      <span className="text-[14px] font-medium text-secondary">{tab.label}</span>
+                      <tab.icon size={16} strokeWidth={2} className="text-secondary shrink-0" />
+                    </button>
+                  ))}
+
                   <div className="h-px bg-surface-hover my-1 mx-2" />
                   
                   <button onClick={() => { fileInputRef.current?.click(); setIsMenuOpen(false); }} className="flex items-center gap-3 px-3 py-2.5 hover:bg-surface-hover border border-transparent hover:border-border rounded-xl w-full text-right transition-all duration-150 ease-out justify-between">
