@@ -19,8 +19,10 @@ import {
   Sun,
   Moon,
   Monitor,
+  Route,
 } from 'lucide-react';
 import { ConfirmDialog } from '../Shared/ConfirmDialog';
+import { LearningPathsModal } from '../Shared/LearningPathsModal';
 import NTLogo from '../../NT Logo.svg';
 
 type CallTab = 'queue' | 'today' | 'followup' | 'blacklist' | 'courses';
@@ -32,6 +34,7 @@ export const AppHeader = () => {
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [learningPathsOpen, setLearningPathsOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
 
   const isDashboard = currentView === 'dashboard';
@@ -106,7 +109,7 @@ export const AppHeader = () => {
           {/* ── CENTER: Unified Navigation ─────────── */}
           <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center pointer-events-auto z-10 w-auto">
             <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar px-2 py-1">
-              
+
               {/* Call Tabs */}
               {callTabs.map(tab => {
                 const isActive = currentView === 'dashboard' && activeCallTab === tab.id;
@@ -150,6 +153,20 @@ export const AppHeader = () => {
                   </button>
                 );
               })}
+
+              {/* Expert: Learning Paths */}
+              {profile?.role !== 'admin' && (
+                <>
+                  <div className="w-px h-5 bg-border mx-2"></div>
+                  <button
+                    onClick={() => setLearningPathsOpen(true)}
+                    className="flex flex-row-reverse items-center gap-1.5 px-3 h-8 rounded-md text-[13px] transition-all whitespace-nowrap font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:ring-offset-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent"
+                  >
+                    <Route size={14} />
+                    <span className="hidden xl:inline">{tr('مسیرهای یادگیری', 'Learning Paths')}</span>
+                  </button>
+                </>
+              )}
 
               {/* Admin */}
               {profile?.role === 'admin' && (
@@ -209,6 +226,11 @@ export const AppHeader = () => {
         title={tr('خروج از حساب', 'Logout')}
         message={tr('آیا مطمئن هستید که می‌خواهید از حساب کاربری خود خارج شوید؟', 'Are you sure you want to logout?')}
         confirmText={tr('خروج', 'Logout')}
+      />
+
+      <LearningPathsModal
+        isOpen={learningPathsOpen}
+        onClose={() => setLearningPathsOpen(false)}
       />
     </>
   );

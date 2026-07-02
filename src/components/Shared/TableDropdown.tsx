@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronDown, Check } from 'lucide-react';
 
 interface Option {
@@ -16,11 +17,53 @@ interface TableDropdownProps {
 
 export const TableDropdown = ({ value, onChange, options, placeholder, disabled }: TableDropdownProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [coords, setCoords] = useState({ top: 0, right: 0, direction: 'down' as 'down' | 'up' });
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const updatePosition = useCallback(() => {
+    if (wrapperRef.current) {
+      const rect = wrapperRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+
+      const dropdownHeight = 250;
+      const direction = spaceBelow < dropdownHeight && spaceAbove > spaceBelow ? 'up' : 'down';
+
+      setCoords({
+        right: window.innerWidth - rect.right,
+        top: direction === 'down' ? rect.bottom + 4 : rect.top - 4,
+        direction
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      updatePosition();
+
+      const handleScroll = (e: Event) => {
+        if (dropdownRef.current && dropdownRef.current.contains(e.target as Node)) return;
+        setIsOpen(false);
+      };
+      const handleResize = () => setIsOpen(false);
+
+      window.addEventListener('scroll', handleScroll, true);
+      window.addEventListener('resize', handleResize);
+
+      return () => {
+        window.removeEventListener('scroll', handleScroll, true);
+        window.removeEventListener('resize', handleResize);
+      };
+    }
+  }, [isOpen, updatePosition]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
+      if (
+        wrapperRef.current && !wrapperRef.current.contains(event.target as Node) &&
+        dropdownRef.current && !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
@@ -33,7 +76,7 @@ export const TableDropdown = ({ value, onChange, options, placeholder, disabled 
   const selected = options.find(o => o.value === value);
 
   return (
-    <div ref={ref} className="relative inline-flex items-center text-right">
+    <div ref={wrapperRef} className="inline-flex items-center text-right">
       <button
         disabled={disabled}
         onClick={() => setIsOpen(!isOpen)}
@@ -46,8 +89,17 @@ export const TableDropdown = ({ value, onChange, options, placeholder, disabled 
         <ChevronDown size={14} className={`text-slate-500 shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
-      {isOpen && (
-        <div className="absolute top-full mt-1 right-0 w-max min-w-[140px] bg-surface border border-border rounded-xl shadow-xl z-50 overflow-hidden py-1">
+      {isOpen && createPortal(
+        <div
+          ref={dropdownRef}
+          style={{
+            position: 'fixed',
+            top: coords.direction === 'down' ? coords.top : 'auto',
+            bottom: coords.direction === 'up' ? window.innerHeight - coords.top : 'auto',
+            right: coords.right,
+          }}
+          className="min-w-[140px] w-max bg-surface border border-border rounded-xl shadow-xl z-[99999] overflow-hidden py-1"
+        >
           <div className="max-h-60 overflow-y-auto custom-select-scroll">
             {options.map(opt => (
               <button
@@ -62,7 +114,8 @@ export const TableDropdown = ({ value, onChange, options, placeholder, disabled 
               </button>
             ))}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
