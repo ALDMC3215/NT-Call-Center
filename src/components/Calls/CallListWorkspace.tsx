@@ -1,7 +1,9 @@
 import React, { useMemo, useState, useRef } from 'react';
 import { useAppContext } from '../../hooks/useAppContext';
 import { useLocale } from '../../hooks/useLocale';
-import { CallRecord } from '../../types';
+import { CallRecord, ContactTask, ContactTaskType } from '../../types';
+import { CallResultActionModal } from './CallResultActionModal';
+import { ContactTaskEditorModal } from './ContactTaskEditorModal';
 import { CALL_STATUSES, REGISTRATION_STATUSES } from '../../constants';
 import * as Icons from 'lucide-react';
 import { PhoneOff, Phone, PhoneForwarded, Link as LinkIcon, BookOpen, Users, CheckCircle2, FileText, Search, XCircle, Filter, X, Check, Plus, Calendar, Eraser, Trash2, Upload, ChevronDown, Ban } from 'lucide-react';
@@ -259,12 +261,48 @@ export const CallListWorkspace = () => {
     profile,
     blacklist,
     layoutMargin,
-    setContactWorkList
+    setContactWorkList,
+    getMyContactTasks,
+    recordCallAttemptWithTask,
+    updateContactTaskDetails
   } = useAppContext();
   const { tr, valueLabel, direction } = useLocale();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const [tasks, setTasks] = useState<ContactTask[]>([]);
+  const [isLoadingTasks, setIsLoadingTasks] = useState(false);
+  const [actionModalCall, setActionModalCall] = useState<CallRecord | null>(null);
+  const [editModalTask, setEditModalTask] = useState<ContactTask | null>(null);
+
+  const loadTasks = React.useCallback(async () => {
+    setIsLoadingTasks(true);
+    try {
+      const data = await getMyContactTasks({ status: 'pending' });
+      setTasks(data);
+    } catch (err) {
+      console.error('Error fetching tasks', err);
+    } finally {
+      setIsLoadingTasks(false);
+    }
+  }, [getMyContactTasks]);
+
+  React.useEffect(() => { loadTasks(); }, [loadTasks]);
+
+  React.useEffect(() => {
+    if (tasks.length > 0) {
+      const tehranToday = (new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Tehran' }))).toISOString().split('T')[0];
+      const consultationTasks = tasks.filter(t => t.task_type === 'consultation_reminder' && t.scheduled_date === tehranToday && t.status === 'pending');
+      if (consultationTasks.length > 0) {
+        const dismissKey = `consultation_reminder_dismissed_${tehranToday}`;
+        if (!localStorage.getItem(dismissKey)) {
+          toast.success(`امروز ${consultationTasks.length} مشاوره داری؛ پیگیریشون کن.`, { duration: 8000, icon: '🗓️' });
+          localStorage.setItem(dismissKey, 'true');
+        }
+      }
+    }
+  }, [tasks]);
 
 
   const hasAnyFieldSelected = (c: CallRecord) => {
@@ -417,42 +455,73 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
 
   const handleRowSubmit = async (call: CallRecord) => {
     if (inFlightSubmit.current.has(call.id)) return;
-    inFlightSubmit.current.add(call.id);
-    setSubmittingIds(prev => new Set(prev).add(call.id));
 
-    try {
-      const hasNamowjoudAttempt = call.attempts?.some(a => a.callStatus === 'ناموجود');
-      let success = true;
-
-      // Skip attempt creation if we already have a 'ناموجود' attempt but delete failed earlier
-      if (call.callStatus === 'ناموجود' && hasNamowjoudAttempt) {
-        success = true;
-      } else {
-        success = await recordAttempt(call.id, {
-          fullName: call.fullName || '',
-          callStatus: call.callStatus || '',
-          courses: call.courses || [],
-          advisory: call.advisory || '',
-          advisoryDate: call.advisoryDate || '',
-          advisoryTime: call.advisoryTime || '',
-          registered: call.registered || '',
-          notes: call.notes || ''
+    const hasNamowjoudAttempt = call.attempts?.some(a => a.callStatus === 'ناموجود');
+    if (call.callStatus === 'ناموجود' && hasNamowjoudAttempt) {
+      inFlightSubmit.current.add(call.id);
+      setSubmittingIds(prev => new Set(prev).add(call.id));
+      try {
+        addToBlacklist(call.phone, 'ناموجود بودن شماره');
+        const deleteSuccess = await deleteCall(call.id);
+        if (deleteSuccess) {
+          toast.success(tr('شماره ناموجود بود، در لیست سیاه ثبت و حذف شد.', 'Number unavailable, blacklisted and deleted.'));
+        } else {
+          toast.error(tr('نتیجه ثبت شد، اما حذف شماره انجام نشد. دوباره روی ثبت نتیجه بزنید تا فقط حذف تکمیل شود.', 'Result saved but deletion failed. Press submit again to complete cleanup.'));
+        }
+      } finally {
+        inFlightSubmit.current.delete(call.id);
+        setSubmittingIds(prev => {
+          const next = new Set(prev);
+          next.delete(call.id);
+          return next;
         });
       }
+      return;
+    }
 
-      if (success) {
-        if (call.callStatus === 'ناموجود') {
-          addToBlacklist(call.phone, 'ناموجود بودن شماره');
-          const deleteSuccess = await deleteCall(call.id);
-          if (deleteSuccess) {
-            toast.success(tr('شماره ناموجود بود، در لیست سیاه ثبت و حذف شد.', 'Number unavailable, blacklisted and deleted.'));
-          } else {
-            toast.error(tr('نتیجه ثبت شد، اما حذف شماره انجام نشد. دوباره روی ثبت نتیجه بزنید تا فقط حذف تکمیل شود.', 'Result saved but deletion failed. Press submit again to complete cleanup.'));
-          }
+    setActionModalCall(call);
+  };
+
+  const handleActionModalSubmit = async (taskData: { taskType: ContactTaskType, scheduledDate?: string, scheduledTime?: string, followupNote?: string }) => {
+    if (!actionModalCall) return;
+    const call = actionModalCall;
+    
+    inFlightSubmit.current.add(call.id);
+    setSubmittingIds(prev => new Set(prev).add(call.id));
+    
+    try {
+      await recordCallAttemptWithTask({
+        contactId: call.id,
+        fullName: call.fullName || '',
+        callStatus: call.callStatus || '',
+        courses: call.courses || [],
+        advisory: call.advisory || '',
+        advisoryDate: call.advisoryDate || '',
+        advisoryTime: call.advisoryTime || '',
+        registered: call.registered || '',
+        notes: call.notes || '',
+        taskType: taskData.taskType,
+        scheduledDate: taskData.scheduledDate,
+        scheduledTime: taskData.scheduledTime,
+        followupNote: taskData.followupNote
+      });
+
+      if (call.callStatus === 'ناموجود') {
+        addToBlacklist(call.phone, 'ناموجود بودن شماره');
+        const deleteSuccess = await deleteCall(call.id);
+        if (deleteSuccess) {
+          toast.success(tr('شماره ناموجود بود، در لیست سیاه ثبت و حذف شد.', 'Number unavailable, blacklisted and deleted.'));
         } else {
-          toast.success(tr('نتیجه تماس با موفقیت ثبت شد.', 'Call result submitted successfully.'));
+          toast.error(tr('نتیجه ثبت شد، اما حذف شماره انجام نشد. دوباره روی ثبت نتیجه بزنید تا فقط حذف تکمیل شود.', 'Result saved but deletion failed. Press submit again to complete cleanup.'));
         }
+      } else {
+        toast.success(tr('نتیجه تماس با موفقیت ثبت شد.', 'Call result submitted successfully.'));
+        loadTasks();
       }
+      setActionModalCall(null);
+    } catch (err) {
+      console.error(err);
+      toast.error(tr('خطا در ثبت نتیجه. لطفاً دوباره تلاش کنید.', 'Error submitting result. Please try again.'));
     } finally {
       inFlightSubmit.current.delete(call.id);
       setSubmittingIds(prev => {
@@ -463,12 +532,31 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
     }
   };
 
+  const handleEditTaskSubmit = async (taskId: string, data: any) => {
+     try {
+        await updateContactTaskDetails({
+           taskId,
+           taskType: data.taskType,
+           scheduledDate: data.scheduledDate,
+           scheduledTime: data.scheduledTime,
+           followupNote: data.followupNote
+        });
+        toast.success('پیگیری با موفقیت ویرایش شد.');
+        setEditModalTask(null);
+        loadTasks();
+     } catch(err) {
+        toast.error('خطا در ویرایش پیگیری');
+     }
+  };
+
   const filteredList = useMemo(() => {
     let list = calls;
     const limits = getDayLimits();
+    const tehranToday = (new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tehran" }))).toISOString().split('T')[0];
 
     if (activeTab === 'today') {
-      list = list.filter(c => c.attempts?.some(a => (a.createdAt || " ").split('T')[0] === limits.today));
+      const todayContactIds = new Set(tasks.filter(t => t.task_type === 'daily_activity' && t.scheduled_date === tehranToday).map(t => t.contact_id));
+      list = list.filter(c => todayContactIds.has(c.id));
     } else if (activeTab === 'queue') {
       list = list.filter(c => {
          const hasAttemptToday = c.attempts?.some(a => (a.createdAt || " ").split('T')[0] === limits.today);
@@ -478,14 +566,14 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
          return !hasAnyAttempt;
       });
     } else if (activeTab === 'followup') {
-      list = list.filter(isActiveFollowup);
+      return [];
     }
 
     if (searchQuery.trim()) {
       list = list.filter(c => (c.phone || '').includes(searchQuery) || (c.fullName || '').includes(searchQuery));
     }
     return list.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
-  }, [calls, activeTab, searchQuery]);
+  }, [calls, activeTab, searchQuery, tasks]);
 
   if (isLoadingCalls && !hasInitialCallsLoaded) {
     return (
@@ -582,6 +670,66 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
           <StatsView />
         ) : activeTab === 'courses' ? (
           <CoursesView externalSearchQuery={searchQuery} />
+        ) : activeTab === 'followup' ? (
+          <div className="relative h-fit max-h-full bg-white rounded-2xl border border-slate-200 flex flex-col overflow-hidden shadow-sm">
+             <div className="w-full flex-1 overflow-auto px-4 custom-scrollbar py-2">
+               <table className="w-full text-right border-separate border-spacing-y-2 min-w-[700px]">
+                 <thead>
+                   <tr className="text-slate-500 text-[11px] font-bold pb-2">
+                     <th className="px-3 pb-2 w-[150px]">شماره تماس</th>
+                     <th className="px-3 pb-2 min-w-[150px]">نام</th>
+                     <th className="px-3 pb-2 w-[150px] text-center">برچسب پیگیری</th>
+                     <th className="px-3 pb-2 w-[200px] text-center">تاریخ و ساعت</th>
+                     <th className="px-3 pb-2 w-[100px] text-center">عملیات</th>
+                   </tr>
+                 </thead>
+                 <tbody>
+                   {tasks.filter(t => ['retry_call', 'consultation_reminder', 'other_followup'].includes(t.task_type) && t.status === 'pending').sort((a, b) => (a.scheduled_date || '').localeCompare(b.scheduled_date || '')).map(task => {
+                     const contact = calls.find(c => c.id === task.contact_id);
+                     if (!contact) return null;
+                     let tagColor = 'bg-slate-100 text-slate-700';
+                     let tagLabel = 'سایر';
+                     if (task.task_type === 'retry_call') { tagColor = 'bg-amber-100 text-amber-700 border border-amber-200'; tagLabel = 'تماس مجدد'; }
+                     else if (task.task_type === 'consultation_reminder') { tagColor = 'bg-blue-100 text-blue-700 border border-blue-200'; tagLabel = 'تماس مشاوره'; }
+                     else if (task.task_type === 'other_followup') { tagColor = 'bg-purple-100 text-purple-700 border border-purple-200'; tagLabel = 'سایر'; }
+
+                     return (
+                       <tr key={task.id} className="bg-white hover:bg-slate-50 border border-slate-200 rounded-xl overflow-hidden shadow-sm transition-colors group">
+                         <td className="px-3 py-3 rounded-r-xl border-y border-r border-slate-200 font-medium" dir="ltr">{contact.phone}</td>
+                         <td className="px-3 py-3 border-y border-slate-200">
+                           <div className="flex flex-col gap-1">
+                             <span className="font-medium text-slate-800">{contact.fullName || '-'}</span>
+                             {task.followup_note && <span className="text-xs text-slate-500 truncate max-w-[200px]" title={task.followup_note}>{task.followup_note}</span>}
+                           </div>
+                         </td>
+                         <td className="px-3 py-3 border-y border-slate-200 text-center">
+                           <span className={`px-2 py-1 text-[11px] font-bold rounded-lg ${tagColor}`}>{tagLabel}</span>
+                         </td>
+                         <td className="px-3 py-3 border-y border-slate-200 text-center text-[12px] text-slate-600 font-medium">
+                           {task.scheduled_date} {task.scheduled_time && `- ${task.scheduled_time}`}
+                         </td>
+                         <td className="px-3 py-3 rounded-l-xl border-y border-l border-slate-200 text-center">
+                            <div className="flex items-center justify-center gap-1.5">
+                              <button onClick={() => setEditModalTask(task)} className="p-1.5 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors inline-flex justify-center" title="ویرایش پیگیری">
+                                <Icons.Edit3 size={16} />
+                              </button>
+                              <button onClick={() => handleRowSubmit(contact)} className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors inline-flex justify-center" title="ثبت نتیجه">
+                                <Icons.Check size={18} strokeWidth={2.5} />
+                              </button>
+                            </div>
+                         </td>
+                       </tr>
+                     );
+                   })}
+                   {tasks.filter(t => ['retry_call', 'consultation_reminder', 'other_followup'].includes(t.task_type) && t.status === 'pending').length === 0 && (
+                     <tr>
+                       <td colSpan={5} className="text-center py-8 text-slate-500 font-medium bg-white rounded-xl border border-slate-200">پیگیری یافت نشد</td>
+                     </tr>
+                   )}
+                 </tbody>
+               </table>
+             </div>
+          </div>
         ) : (
           <div className="relative h-fit max-h-full bg-white rounded-2xl border border-slate-200 flex flex-col overflow-hidden shadow-sm">
 
@@ -827,6 +975,15 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
         )}
       </div>
       </div>
+      <CallResultActionModal 
+        isOpen={!!actionModalCall} 
+        onClose={() => setActionModalCall(null)} 
+        onSubmit={handleActionModalSubmit} 
+        isSubmitting={submittingIds.has(actionModalCall?.id || '')} 
+        call={actionModalCall}
+        activeTab={activeTab}
+      />
+      {editModalTask && <ContactTaskEditorModal isOpen={!!editModalTask} onClose={() => setEditModalTask(null)} task={editModalTask} onSubmit={handleEditTaskSubmit} isSubmitting={false} />}
       <NotesModal
         call={notesModalCall}
         isOpen={!!notesModalCall}

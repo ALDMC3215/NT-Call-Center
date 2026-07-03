@@ -1,6 +1,15 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, GraduationCap, Code, ShieldCheck, Gamepad2, Brain, Smartphone, Route, AlertCircle } from 'lucide-react';
+import { X, Route, Brain, ShieldCheck, Gamepad2, Code, Smartphone, Terminal } from 'lucide-react';
+import { RoadmapCanvas } from './RoadmapCanvas';
+import {
+  AI_NODES, AI_EDGES,
+  NETWORK_NODES, NETWORK_EDGES,
+  KIDS_NODES, KIDS_EDGES,
+  BOT_NODES, BOT_EDGES,
+  API_NODES, API_EDGES,
+  MOBILE_NODES, MOBILE_EDGES
+} from '../../data/roadmaps';
 
 interface Props {
   isOpen: boolean;
@@ -9,6 +18,7 @@ interface Props {
 
 export const LearningPathsModal = ({ isOpen, onClose }: Props) => {
   const modalRef = useRef<HTMLDivElement>(null);
+  const [activeTab, setActiveTab] = useState<'ai' | 'network' | 'kids' | 'bot' | 'api' | 'mobile'>('ai');
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -61,173 +71,66 @@ export const LearningPathsModal = ({ isOpen, onClose }: Props) => {
           </button>
         </div>
 
+        {/* Tab Selector */}
+        <div className="flex px-5 pt-3 bg-slate-50/50 border-b border-slate-100 gap-6 shrink-0 overflow-x-auto hide-scrollbar whitespace-nowrap">
+          <button
+            onClick={() => setActiveTab('ai')}
+            className={`pb-3 text-[14px] font-bold border-b-2 transition-colors flex items-center gap-2 ${
+              activeTab === 'ai' ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <Brain size={16} /> هوش مصنوعی
+          </button>
+          <button
+            onClick={() => setActiveTab('network')}
+            className={`pb-3 text-[14px] font-bold border-b-2 transition-colors flex items-center gap-2 ${
+              activeTab === 'network' ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <ShieldCheck size={16} /> شبکه و امنیت
+          </button>
+          <button
+            onClick={() => setActiveTab('kids')}
+            className={`pb-3 text-[14px] font-bold border-b-2 transition-colors flex items-center gap-2 ${
+              activeTab === 'kids' ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <Gamepad2 size={16} /> کودک و نوجوان
+          </button>
+          <button
+            onClick={() => setActiveTab('bot')}
+            className={`pb-3 text-[14px] font-bold border-b-2 transition-colors flex items-center gap-2 ${
+              activeTab === 'bot' ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <Terminal size={16} /> مبانی و ربات
+          </button>
+          <button
+            onClick={() => setActiveTab('api')}
+            className={`pb-3 text-[14px] font-bold border-b-2 transition-colors flex items-center gap-2 ${
+              activeTab === 'api' ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <Code size={16} /> API و بک‌اند
+          </button>
+          <button
+            onClick={() => setActiveTab('mobile')}
+            className={`pb-3 text-[14px] font-bold border-b-2 transition-colors flex items-center gap-2 ${
+              activeTab === 'mobile' ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <Smartphone size={16} /> برنامه‌نویسی موبایل
+          </button>
+        </div>
+
         {/* Content */}
-        <div className="p-5 md:p-6 overflow-y-auto hide-scrollbar flex-1 bg-white">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-
-            {/* Card 1 */}
-            <div className="rounded-xl border border-slate-200 p-5 hover:border-blue-300 hover:shadow-md transition-all flex flex-col h-full bg-white">
-              <div className="flex items-center gap-2 mb-4 text-blue-700">
-                <Brain size={18} />
-                <h3 className="font-bold text-[15px]">هوش مصنوعی و تحلیل داده</h3>
-              </div>
-              <div className="mb-4">
-                <div className="text-[13px] font-semibold text-slate-700 mb-2">مسیر:</div>
-                <div className="text-[13px] text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-100 leading-relaxed font-medium">
-                  پایتون ← دیتابیس ← تحلیل داده ← یادگیری عمیق
-                </div>
-              </div>
-              <div className="mb-4">
-                <div className="text-[13px] font-semibold text-slate-700 mb-2">تخصص‌ها:</div>
-                <ul className="text-[13px] text-slate-600 list-disc list-inside space-y-1">
-                  <li>بینایی ماشین</li>
-                  <li>شبکه‌های عصبی بازگشتی</li>
-                </ul>
-              </div>
-              <div className="mt-auto pt-3 border-t border-slate-100">
-                <div className="flex gap-2 items-start text-[12px] text-slate-500">
-                  <AlertCircle size={14} className="shrink-0 mt-0.5 text-blue-500" />
-                  <p className="leading-relaxed">جاوا در این مسیر اختیاری و مکمل است؛ برای شروع هوش مصنوعی، پایتون مهم‌ترین پیش‌نیاز است.</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Card 2 */}
-            <div className="rounded-xl border border-slate-200 p-5 hover:border-blue-300 hover:shadow-md transition-all flex flex-col h-full bg-white">
-              <div className="flex items-center gap-2 mb-4 text-blue-700">
-                <ShieldCheck size={18} />
-                <h3 className="font-bold text-[15px]">شبکه و امنیت</h3>
-              </div>
-              <div className="mb-4">
-                <div className="text-[13px] font-semibold text-slate-700 mb-2">مسیر:</div>
-                <div className="text-[13px] text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-100 leading-relaxed font-medium">
-                  Network+ ← Linux LPIC-1 ← Linux LPIC-2 ← پایتون برای اتوماسیون ← امنیت و تست نفوذ مجاز
-                </div>
-              </div>
-              <div className="mt-auto pt-3 border-t border-slate-100">
-                <div className="flex gap-2 items-start text-[12px] text-slate-500">
-                  <AlertCircle size={14} className="shrink-0 mt-0.5 text-blue-500" />
-                  <p className="leading-relaxed">برای ورود جدی به امنیت، یادگیری لینوکس و پایتون ضروری است.</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Card 3 */}
-            <div className="rounded-xl border border-slate-200 p-5 hover:border-blue-300 hover:shadow-md transition-all flex flex-col h-full bg-white">
-              <div className="flex items-center gap-2 mb-4 text-blue-700">
-                <Gamepad2 size={18} />
-                <h3 className="font-bold text-[15px]">کودک و نوجوان</h3>
-              </div>
-              <div className="mb-4">
-                <div className="text-[13px] font-semibold text-slate-700 mb-1.5">برای سنین ۶ تا ۸ سال:</div>
-                <div className="text-[13px] text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-100 font-medium">
-                  Scratch ← بازی‌سازی مقدماتی
-                </div>
-              </div>
-              <div className="mb-4">
-                <div className="text-[13px] font-semibold text-slate-700 mb-1.5">برای نوجوانان:</div>
-                <div className="text-[13px] text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-100 font-medium">
-                  پایتون نوجوان ← برنامه‌نویسی شی‌گرا ← بازی‌سازی
-                </div>
-              </div>
-              <div className="mt-auto pt-3 border-t border-slate-100">
-                <div className="flex gap-2 items-start text-[12px] text-slate-500">
-                  <AlertCircle size={14} className="shrink-0 mt-0.5 text-blue-500" />
-                  <p className="leading-relaxed">Scratch فقط برای کودکان ۶ تا ۸ سال پیشنهاد می‌شود.</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Card 4 */}
-            <div className="rounded-xl border border-slate-200 p-5 hover:border-blue-300 hover:shadow-md transition-all flex flex-col h-full bg-white">
-              <div className="flex items-center gap-2 mb-4 text-blue-700">
-                <Code size={18} />
-                <h3 className="font-bold text-[15px]">مبانی برنامه‌نویسی و ربات تلگرام</h3>
-              </div>
-              <div className="mb-4">
-                <div className="text-[13px] font-semibold text-slate-700 mb-1.5">برنامه‌نویسی پایه خصوصی:</div>
-                <ul className="text-[13px] text-slate-600 list-disc list-inside bg-slate-50 p-2 rounded-lg border border-slate-100">
-                  <li>C++</li>
-                  <li>C#</li>
-                </ul>
-                <div className="text-[11px] text-slate-500 mt-1 mr-1">این دو دوره فقط به‌صورت خصوصی برگزار می‌شوند.</div>
-              </div>
-              <div className="mb-4">
-                <div className="text-[13px] font-semibold text-slate-700 mb-1.5">ربات تلگرام عمومی:</div>
-                <div className="text-[13px] text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-100 font-medium">
-                  پایتون ← ربات‌نویسی تلگرام
-                </div>
-              </div>
-              <div className="mb-4">
-                <div className="text-[13px] font-semibold text-slate-700 mb-1.5">ربات تلگرام تحلیلی یا مالی:</div>
-                <div className="text-[13px] text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-100 font-medium">
-                  پایتون ← دیتابیس ← تحلیل داده ← یادگیری عمیق
-                </div>
-              </div>
-              <div className="mt-auto pt-3 border-t border-slate-100">
-                <div className="flex gap-2 items-start text-[12px] text-slate-500">
-                  <AlertCircle size={14} className="shrink-0 mt-0.5 text-blue-500" />
-                  <p className="leading-relaxed">برای ربات‌های ساده، یادگیری پایتون کافی است. تحلیل داده و یادگیری عمیق فقط برای ربات‌های مالی، تحلیلی یا پیش‌بینی‌محور لازم می‌شوند.</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Card 5 */}
-            <div className="rounded-xl border border-slate-200 p-5 hover:border-blue-300 hover:shadow-md transition-all flex flex-col h-full bg-white">
-              <div className="flex items-center gap-2 mb-4 text-blue-700">
-                <Code size={18} />
-                <h3 className="font-bold text-[15px]">API نویسی و بک‌اند</h3>
-              </div>
-              <div className="mb-4">
-                <div className="text-[13px] font-semibold text-slate-700 mb-2">مسیر:</div>
-                <div className="text-[13px] text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-100 leading-relaxed font-medium">
-                  پایتون ← دیتابیس ← Django ← Django REST Framework (DRF)
-                </div>
-              </div>
-              <div className="mt-auto pt-3 border-t border-slate-100">
-                <div className="flex gap-2 items-start text-[12px] text-slate-500">
-                  <AlertCircle size={14} className="shrink-0 mt-0.5 text-blue-500" />
-                  <p className="leading-relaxed">بعد از این مسیر، دانشجو می‌تواند API و بک‌اند پروژه‌های واقعی را توسعه دهد.</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Card 6 */}
-            <div className="rounded-xl border border-slate-200 p-5 hover:border-blue-300 hover:shadow-md transition-all flex flex-col h-full bg-white">
-              <div className="flex items-center gap-2 mb-4 text-blue-700">
-                <Smartphone size={18} />
-                <h3 className="font-bold text-[15px]">برنامه‌نویسی موبایل</h3>
-              </div>
-              <div className="mb-4">
-                <div className="text-[13px] font-semibold text-slate-700 mb-2">مسیر:</div>
-                <div className="text-[13px] text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-100 leading-relaxed font-medium">
-                  برنامه‌نویسی موبایل جامع ← اپلیکیشن‌نویسی پروژه‌محور
-                </div>
-              </div>
-              <div className="mt-auto pt-3 border-t border-slate-100">
-                <div className="flex gap-2 items-start text-[12px] text-slate-500">
-                  <AlertCircle size={14} className="shrink-0 mt-0.5 text-blue-500" />
-                  <p className="leading-relaxed">هدف این مسیر، ساخت و انتشار اپلیکیشن‌های واقعی است.</p>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-          {/* Final guidance strip */}
-          <div className="mt-6 bg-blue-50/50 border border-blue-100 rounded-xl p-5">
-            <h4 className="font-bold text-[14px] text-blue-800 mb-3 flex items-center gap-2">
-              <GraduationCap size={18} />
-              راهنمای انتخاب مسیر
-            </h4>
-            <ul className="text-[13px] text-slate-700 space-y-2 font-medium list-disc list-inside">
-              <li>مسیر مناسب براساس سن، سطح فعلی و هدف دانشجو انتخاب می‌شود.</li>
-              <li>هر مرحله، پیش‌نیاز مرحله بعدی است.</li>
-              <li>شروع مسیر بدون گذراندن پیش‌نیازها توصیه نمی‌شود.</li>
-              <li>برای انتخاب دقیق‌تر، ابتدا سطح دانشجو بررسی شود.</li>
-            </ul>
-          </div>
-
+        <div className="flex-1 bg-white p-4 md:p-5 flex flex-col h-full min-h-[500px] overflow-hidden rounded-b-2xl">
+          {activeTab === 'ai' && <RoadmapCanvas nodes={AI_NODES} edges={AI_EDGES} rootIcon={<Brain size={28} />} />}
+          {activeTab === 'network' && <RoadmapCanvas nodes={NETWORK_NODES} edges={NETWORK_EDGES} rootIcon={<ShieldCheck size={28} />} />}
+          {activeTab === 'kids' && <RoadmapCanvas nodes={KIDS_NODES} edges={KIDS_EDGES} rootIcon={<Gamepad2 size={28} />} />}
+          {activeTab === 'bot' && <RoadmapCanvas nodes={BOT_NODES} edges={BOT_EDGES} rootIcon={<Terminal size={28} />} />}
+          {activeTab === 'api' && <RoadmapCanvas nodes={API_NODES} edges={API_EDGES} rootIcon={<Code size={28} />} />}
+          {activeTab === 'mobile' && <RoadmapCanvas nodes={MOBILE_NODES} edges={MOBILE_EDGES} rootIcon={<Smartphone size={28} />} />}
         </div>
       </div>
     </div>,

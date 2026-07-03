@@ -26,3 +26,9 @@ export function jalaliDateTimeToIso(date: string, time: string) {
   const gregorian = jalaali.toGregorian(jy, jm, jd);
   return new Date(gregorian.gy, gregorian.gm - 1, gregorian.gd, hour, minute).toISOString();
 }
+
+export function jalaliToGregorianString(jalaliDate: string): string {
+  const [jy, jm, jd] = jalaliDate.split(/[-/]/).map(Number);
+  const gregorian = jalaali.toGregorian(jy, jm, jd);
+  return `${gregorian.gy}-${String(gregorian.gm).padStart(2, '0')}-${String(gregorian.gd).padStart(2, '0')}`;
+}

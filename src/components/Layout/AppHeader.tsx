@@ -62,18 +62,15 @@ export const AppHeader = () => {
   // Profile has its own icon button → removed from here
   // Dashboard is reached via logo click → removed from here
   // Blacklist as a full page lives here (not as a dashboard tab)
-  const menuItems = [
-    { id: 'settings', icon: Settings, label: tr('تنظیمات', 'Settings') },
-    { id: 'about', icon: Info, label: tr('راهنما', 'Guide') },
-  ];
-
-  // 🔘🔘🔘 Dashboard tabs: call-related only, no blacklist (it's a separate page) 🔘
-  const callTabs: { id: string; label: string; icon: React.ReactNode }[] = [
-    { id: 'home',     label: tr('خانه', 'Home'), icon: <Monitor size={14} /> },
-    { id: 'queue',    label: tr('شمارهها',  'Numbers'),    icon: <Phone size={14} /> },
-    { id: 'followup', label: tr('پیگیریهای من', 'Follow-ups'), icon: <PhoneForwarded size={14} /> },
-    { id: 'today',    label: tr('فعالیت امروز', 'Today'), icon: <Calendar size={14} /> },
-    { id: 'courses',  label: tr('دوره‌ها',   'Courses'),    icon: <BookOpen size={14} /> },
+  // 🔘🔘 Unified Header Items 🔘🔘
+  const headerItems = [
+    { id: 'today',    label: tr('فعالیت امروز', 'Today'), icon: <Calendar size={14} />, type: 'tab' },
+    { id: 'followup', label: tr('پیگیری ها', 'Follow-ups'), icon: <PhoneForwarded size={14} />, type: 'tab' },
+    { id: 'courses',  label: tr('دوره ها',   'Courses'),    icon: <BookOpen size={14} />, type: 'tab' },
+    { id: 'queue',    label: tr('شماره ها',  'Numbers'),    icon: <Phone size={14} />, type: 'tab' },
+    { id: 'settings', label: tr('تنظیمات', 'Settings'), icon: <Settings size={14} />, type: 'menu' },
+    { id: 'about',    label: tr('راهنما', 'Guide'), icon: <Info size={14} />, type: 'menu' },
+    { id: 'home',     label: tr('خانه', 'Home'), icon: <Monitor size={14} />, type: 'home' },
   ];
 
   const viewLabels: Record<string, string> = {
@@ -107,77 +104,27 @@ export const AppHeader = () => {
             </span>
           </div>
 
-          {/* ── CENTER: Universal Navigation ─────────── */}
           {/* ── CENTER: Unified Navigation ─────────── */}
           <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center pointer-events-auto z-10 w-auto">
             <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar px-2 py-1">
 
-              {/* Call Tabs */}
-              {callTabs.map(tab => {
-                const isActive = tab.id === 'home' ? currentView === 'home' : (currentView === 'dashboard' && activeCallTab === tab.id);
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => {
-                      if (tab.id === 'home') {
-                        setCurrentView('home');
-                      } else {
-                        if (currentView !== 'dashboard') setCurrentView('dashboard');
-                        setActiveCallTab(tab.id as any);
-                      }
-                    }}
-                    className={`flex flex-row-reverse items-center gap-1.5 px-3 h-8 rounded-md text-[13px] transition-all whitespace-nowrap font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:ring-offset-1 ${
-                      isActive
-                        ? 'bg-brand-50 text-brand-600 border border-brand-200'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
-                    }`}
-                  >
-                    {tab.icon}
-                    <span className="hidden xl:inline">{tab.label}</span>
-                  </button>
-                );
-              })}
-
-              <div className="w-px h-5 bg-border mx-2"></div>
-
-              {/* Menu Items */}
-              {menuItems.map(item => {
-                const isActive = currentView === item.id;
-                const Icon = item.icon;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => setCurrentView(item.id as any)}
-                    className={`flex flex-row-reverse items-center gap-1.5 px-3 h-8 rounded-md text-[13px] transition-all whitespace-nowrap font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:ring-offset-1 ${
-                      isActive
-                        ? 'bg-brand-50 text-brand-600 border border-brand-200'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
-                    }`}
-                  >
-                    <Icon size={14} />
-                    <span className="hidden xl:inline">{item.label}</span>
-                  </button>
-                );
-              })}
-
               {/* Expert: Learning Paths */}
               {profile?.role !== 'admin' && (
                 <>
-                  <div className="w-px h-5 bg-border mx-2"></div>
                   <button
                     onClick={() => setLearningPathsOpen(true)}
                     className="flex flex-row-reverse items-center gap-1.5 px-3 h-8 rounded-md text-[13px] transition-all whitespace-nowrap font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:ring-offset-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent"
                   >
                     <Route size={14} />
-                    <span className="hidden xl:inline">{tr('مسیرهای یادگیری', 'Learning Paths')}</span>
+                    <span className="hidden xl:inline">{tr('مسیرها', 'Learning Paths')}</span>
                   </button>
+                  <div className="w-px h-5 bg-border mx-2"></div>
                 </>
               )}
 
               {/* Admin */}
               {profile?.role === 'admin' && (
                 <>
-                  <div className="w-px h-5 bg-border mx-2"></div>
                   <button
                     onClick={() => setCurrentView('admin')}
                     className={`flex flex-row-reverse items-center gap-1.5 px-3 h-8 rounded-md text-[13px] transition-all whitespace-nowrap font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:ring-offset-1 ${
@@ -189,12 +136,47 @@ export const AppHeader = () => {
                     <Settings size={14} />
                     <span className="hidden xl:inline">{tr('مدیریت', 'Admin')}</span>
                   </button>
+                  <div className="w-px h-5 bg-border mx-2"></div>
                 </>
               )}
 
+              {headerItems.map(item => {
+                let isActive = false;
+                if (item.type === 'home') {
+                  isActive = currentView === 'home';
+                } else if (item.type === 'menu') {
+                  isActive = currentView === item.id;
+                } else if (item.type === 'tab') {
+                  isActive = currentView === 'dashboard' && activeCallTab === item.id;
+                }
+
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      if (item.type === 'home') {
+                        setCurrentView('home');
+                      } else if (item.type === 'menu') {
+                        setCurrentView(item.id as any);
+                      } else if (item.type === 'tab') {
+                        if (currentView !== 'dashboard') setCurrentView('dashboard');
+                        setActiveCallTab(item.id as any);
+                      }
+                    }}
+                    className={`flex flex-row-reverse items-center gap-1.5 px-3 h-8 rounded-md text-[13px] transition-all whitespace-nowrap font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:ring-offset-1 ${
+                      isActive
+                        ? 'bg-brand-50 text-brand-600 border border-brand-200'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
+                    }`}
+                  >
+                    {item.icon}
+                    <span className="hidden xl:inline">{item.label}</span>
+                  </button>
+                );
+              })}
+
             </div>
           </div>
-
           {/* ── RIGHT: Profile + Time + Logout ─────────────────── */}
           <div className="flex items-center gap-2 shrink-0">
 

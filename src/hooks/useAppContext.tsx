@@ -1,5 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { CallAttempt, CallRecord, Profile, BlacklistEntry, BlacklistReason } from '../types';
+import {
+  CallAttempt, CallRecord, Profile, BlacklistEntry, BlacklistReason,
+  ContactTask, ContactTaskSummary, ContactTaskType, ContactTaskStatus,
+  CreateContactTaskInput, RescheduleContactTaskInput,
+  CreateContactTaskWithDetailsInput, UpdateContactTaskDetailsInput,
+  RecordCallAttemptWithTaskInput, RecordCallAttemptWithTaskResult
+} from '../types';
 import { storage } from '../utils/storage';
 import { v4 as uuidv4 } from 'uuid';
 import { jalaliDateTimeToIso, nowJalali } from '../utils/jalali';
@@ -58,6 +64,15 @@ interface AppContextType {
   setLayoutMargin: (margin: number) => void;
   sparkColor: string;
   setSparkColor: (color: string) => void;
+  getMyContactTasks: (filters?: { scheduledDate?: string; status?: ContactTaskStatus; taskType?: ContactTaskType }) => Promise<ContactTask[]>;
+  createContactTask: (input: CreateContactTaskInput) => Promise<ContactTask>;
+  createContactTaskWithDetails: (input: CreateContactTaskWithDetailsInput) => Promise<ContactTask>;
+  updateContactTaskDetails: (input: UpdateContactTaskDetailsInput) => Promise<ContactTask>;
+  rescheduleContactTask: (input: RescheduleContactTaskInput) => Promise<ContactTask>;
+  completeContactTask: (taskId: string) => Promise<ContactTask>;
+  cancelContactTask: (taskId: string) => Promise<ContactTask>;
+  getMyContactTaskSummary: (targetDate?: string) => Promise<ContactTaskSummary>;
+  recordCallAttemptWithTask: (input: RecordCallAttemptWithTaskInput) => Promise<RecordCallAttemptWithTaskResult>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -161,7 +176,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             createdAt: c.created_at,
             queueOrder: c.queue_order,
             attempts: contactAttempts,
-            nextFollowUpAt: followUpMap[c.id]
+            nextFollowUpAt: followUpMap[c.id],
+            workList: c.work_list || 'none',
+            workListDate: c.work_list_date || null,
+            workListUpdatedAt: c.work_list_updated_at || null
           };
         });
 
@@ -504,9 +522,213 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     // Note: restoring cloud calls from backup file is not fully supported locally anymore
   }, []);
 
+  const getMyContactTasks = useCallback(async (filters?: { scheduledDate?: string; status?: ContactTaskStatus; taskType?: ContactTaskType }): Promise<ContactTask[]> => {
+    if (!profile) return [];
+
+    let query = supabase.from('contact_tasks').select('*');
+
+    if (filters?.scheduledDate) {
+      query = query.eq('scheduled_date', filters.scheduledDate);
+    }
+    if (filters?.status) {
+      query = query.eq('status', filters.status);
+    }
+    if (filters?.taskType) {
+      query = query.eq('task_type', filters.taskType);
+    }
+
+    query = query
+      .order('scheduled_date', { ascending: true })
+      .order('scheduled_time', { ascending: true })
+      .order('created_at', { ascending: true });
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error("Error fetching tasks:", error);
+      throw error;
+    }
+
+    return data as ContactTask[];
+  }, [profile]);
+
+  const createContactTask = useCallback(async (input: CreateContactTaskInput): Promise<ContactTask> => {
+    if (!profile) throw new Error("Not authenticated");
+
+    const { data, error } = await supabase.rpc('create_contact_task', {
+      p_contact_id: input.contactId,
+      p_task_type: input.taskType,
+      p_scheduled_date: input.scheduledDate,
+      p_scheduled_time: input.scheduledTime || null,
+      p_source_attempt_id: input.sourceAttemptId || null
+    }).single();
+
+    if (error) {
+      console.error("Error creating contact task:", error);
+      throw error;
+    }
+    if (!data) throw new Error("No data returned");
+
+    return data as unknown as ContactTask;
+  }, [profile]);
+
+  const recordCallAttemptWithTask = useCallback(async (input: RecordCallAttemptWithTaskInput): Promise<RecordCallAttemptWithTaskResult> => {
+    if (!profile) throw new Error("Not authenticated");
+    reportMeaningfulActivity(profile.sessionId);
+    
+    const jalaliTime = nowJalali();
+
+    const { data, error } = await supabase.rpc('record_call_attempt_with_task', {
+      p_contact_id: input.contactId,
+      p_jalali_date_time: jalaliTime,
+      p_full_name: input.fullName || null,
+      p_call_status: input.callStatus || null,
+      p_courses: input.courses || [],
+      p_advisory: input.advisory || null,
+      p_advisory_date: input.advisoryDate || null,
+      p_advisory_time: input.advisoryTime || null,
+      p_registered: input.registered || null,
+      p_notes: input.notes || null,
+      p_task_type: input.taskType,
+      p_scheduled_date: input.scheduledDate || null,
+      p_scheduled_time: input.scheduledTime || null,
+      p_followup_note: input.followupNote || null
+    });
+
+    if (error) {
+      console.error("record_call_attempt_with_task failed", error);
+      throw error;
+    }
+    if (!data) throw new Error("No data returned");
+
+    const result = data as unknown as RecordCallAttemptWithTaskResult;
+
+    setCallsState(prev => prev.map(call => call.id === input.contactId ? {
+      ...call,
+      fullName: input.fullName || call.fullName,
+      callStatus: input.callStatus || call.callStatus,
+      courses: input.courses || call.courses,
+      advisory: input.advisory || call.advisory,
+      advisoryDate: input.advisoryDate || call.advisoryDate,
+      advisoryTime: input.advisoryTime || call.advisoryTime,
+      registered: input.registered || call.registered,
+      notes: input.notes || call.notes,
+      attempts: [...(call.attempts || []), result.attempt],
+    } : call));
+
+    return result;
+  }, [profile]);
+
+  const createContactTaskWithDetails = useCallback(async (input: CreateContactTaskWithDetailsInput): Promise<ContactTask> => {
+    if (!profile) throw new Error("Not authenticated");
+
+    const { data, error } = await supabase.rpc('create_contact_task_with_details', {
+      p_contact_id: input.contactId,
+      p_task_type: input.taskType,
+      p_scheduled_date: input.scheduledDate,
+      p_scheduled_time: input.scheduledTime || null,
+      p_source_attempt_id: input.sourceAttemptId || null,
+      p_followup_note: input.followupNote || null
+    }).single();
+
+    if (error) {
+      console.error("Error creating contact task with details:", error);
+      throw error;
+    }
+    if (!data) throw new Error("No data returned");
+
+    return data as unknown as ContactTask;
+  }, [profile]);
+
+  const updateContactTaskDetails = useCallback(async (input: UpdateContactTaskDetailsInput): Promise<ContactTask> => {
+    if (!profile) throw new Error("Not authenticated");
+
+    const { data, error } = await supabase.rpc('update_contact_task_details', {
+      p_task_id: input.taskId,
+      p_task_type: input.taskType,
+      p_scheduled_date: input.scheduledDate,
+      p_scheduled_time: input.scheduledTime || null,
+      p_followup_note: input.followupNote || null
+    }).single();
+
+    if (error) {
+      console.error("Error updating contact task details:", error);
+      throw error;
+    }
+    if (!data) throw new Error("No data returned");
+
+    return data as unknown as ContactTask;
+  }, [profile]);
+
+  const rescheduleContactTask = useCallback(async (input: RescheduleContactTaskInput): Promise<ContactTask> => {
+    if (!profile) throw new Error("Not authenticated");
+
+    const { data, error } = await supabase.rpc('reschedule_contact_task', {
+      p_task_id: input.taskId,
+      p_new_date: input.newDate,
+      p_new_time: input.newTime || null
+    }).single();
+
+    if (error) {
+      console.error("Error rescheduling contact task:", error);
+      throw error;
+    }
+    if (!data) throw new Error("No data returned");
+
+    return data as unknown as ContactTask;
+  }, [profile]);
+
+  const completeContactTask = useCallback(async (taskId: string): Promise<ContactTask> => {
+    if (!profile) throw new Error("Not authenticated");
+
+    const { data, error } = await supabase.rpc('complete_contact_task', {
+      p_task_id: taskId
+    }).single();
+
+    if (error) {
+      console.error("Error completing contact task:", error);
+      throw error;
+    }
+    if (!data) throw new Error("No data returned");
+
+    return data as unknown as ContactTask;
+  }, [profile]);
+
+  const cancelContactTask = useCallback(async (taskId: string): Promise<ContactTask> => {
+    if (!profile) throw new Error("Not authenticated");
+
+    const { data, error } = await supabase.rpc('cancel_contact_task', {
+      p_task_id: taskId
+    }).single();
+
+    if (error) {
+      console.error("Error cancelling contact task:", error);
+      throw error;
+    }
+    if (!data) throw new Error("No data returned");
+
+    return data as unknown as ContactTask;
+  }, [profile]);
+
+  const getMyContactTaskSummary = useCallback(async (targetDate?: string): Promise<ContactTaskSummary> => {
+    if (!profile) throw new Error("Not authenticated");
+
+    const { data, error } = await supabase.rpc('get_my_contact_task_summary', {
+      p_target_date: targetDate || null
+    });
+
+    if (error) {
+      console.error("Error fetching task summary:", error);
+      throw error;
+    }
+
+    return data as unknown as ContactTaskSummary;
+  }, [profile]);
+
   const contextValue = React.useMemo(() => ({
-    profile, calls, isLoadingCalls, callsError, blacklist, currentView, setCurrentView, activeCallTab, setActiveCallTab, setProfile, logout, addCall, updateCall, deleteCall, clearAllCalls, bulkAddCalls, importData, wipeAllData, importedData, setImportedData, addToBlacklist, removeFromBlacklist, isBlacklisted, restoreBackup, setContactWorkList, recordAttempt, enableFluid, setEnableFluid, accentColor, setAccentColor, layoutMargin, setLayoutMargin, sparkColor, setSparkColor
-  }), [profile, calls, isLoadingCalls, callsError, blacklist, currentView, setCurrentView, activeCallTab, setActiveCallTab, setProfile, logout, addCall, updateCall, deleteCall, clearAllCalls, bulkAddCalls, importData, wipeAllData, importedData, setImportedData, addToBlacklist, removeFromBlacklist, isBlacklisted, restoreBackup, setContactWorkList, recordAttempt, enableFluid, setEnableFluid, accentColor, setAccentColor, layoutMargin, setLayoutMargin, sparkColor, setSparkColor]);
+    profile, calls, isLoadingCalls, callsError, blacklist, currentView, setCurrentView, activeCallTab, setActiveCallTab, setProfile, logout, addCall, updateCall, deleteCall, clearAllCalls, bulkAddCalls, importData, wipeAllData, importedData, setImportedData, addToBlacklist, removeFromBlacklist, isBlacklisted, restoreBackup, setContactWorkList, recordAttempt, enableFluid, setEnableFluid, accentColor, setAccentColor, layoutMargin, setLayoutMargin, sparkColor, setSparkColor,
+    getMyContactTasks, createContactTask, createContactTaskWithDetails, updateContactTaskDetails, rescheduleContactTask, completeContactTask, cancelContactTask, getMyContactTaskSummary, recordCallAttemptWithTask
+  }), [profile, calls, isLoadingCalls, callsError, blacklist, currentView, setCurrentView, activeCallTab, setActiveCallTab, setProfile, logout, addCall, updateCall, deleteCall, clearAllCalls, bulkAddCalls, importData, wipeAllData, importedData, setImportedData, addToBlacklist, removeFromBlacklist, isBlacklisted, restoreBackup, setContactWorkList, recordAttempt, enableFluid, setEnableFluid, accentColor, setAccentColor, layoutMargin, setLayoutMargin, sparkColor, setSparkColor, getMyContactTasks, createContactTask, createContactTaskWithDetails, updateContactTaskDetails, rescheduleContactTask, completeContactTask, cancelContactTask, getMyContactTaskSummary, recordCallAttemptWithTask]);
 
   return (
     <AppContext.Provider value={contextValue}>
