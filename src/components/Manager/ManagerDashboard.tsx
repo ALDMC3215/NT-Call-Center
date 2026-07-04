@@ -11,9 +11,11 @@ import { SupabaseProfile } from '../../types';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Shield, Users, Clock, CheckCircle2, Ban, LogOut,
-  RefreshCw, AlertCircle, Activity, Inbox, Download, FileText, X, MessageSquare, Send, Lock
+  RefreshCw, AlertCircle, Activity, Inbox, Download, FileText, X, MessageSquare, Send, Lock, Trash2, Award, User
 } from 'lucide-react';
 import { customToast as toast } from '../UI/toast';
+import * as XLSX from 'xlsx';
+import { toJalali } from '../../utils/jalali';
 
 const DUTY_LABELS: Record<string, string> = {
   early_week: 'مدیر اول هفته',
@@ -69,6 +71,12 @@ export const ManagerDashboard: React.FC = () => {
   const [dailyStats, setDailyStats] = useState<any[]>([]);
   const [statsLoading, setStatsLoading] = useState(true);
   const [statsError, setStatsError] = useState(false);
+  const [viewingDailyStats, setViewingDailyStats] = useState<any>(null);
+  const [dailyStatsDetails, setDailyStatsDetails] = useState<any[]>([]);
+  const [loadingDailyStatsDetails, setLoadingDailyStatsDetails] = useState(false);
+  const [dailyScore, setDailyScore] = useState<number | ''>('');
+  const [isScoring, setIsScoring] = useState(false);
+  const [isDeletingDaily, setIsDeletingDaily] = useState(false);
 
   // ---------------------------------------------------------------------------
   // Data Fetching
@@ -114,21 +122,22 @@ export const ManagerDashboard: React.FC = () => {
   const fetchStats = useCallback(async () => {
     if (profiles.length === 0) return;
     setStatsLoading(true);
-    const { data, error } = await supabase.from('call_attempts').select('expert_id, contact_id, created_at, jalali_date_time');
+    const { data, error } = await supabase.from('call_attempts').select('id, expert_id, contact_id, created_at');
     if (error) setStatsError(true);
     else if (data) {
       setStatsError(false);
-      const grouped = new Map<string, { expertId: string, dateStr: string, contactIds: Set<string>, attemptsCount: number, minTime: Date, maxTime: Date }>();
+      const grouped = new Map<string, { expertId: string, dateStr: string, contactIds: Set<string>, attemptIds: string[], attemptsCount: number, minTime: Date, maxTime: Date }>();
       for (const row of data) {
         const rowDate = new Date(row.created_at);
-        const dayStr = rowDate.toLocaleDateString('fa-IR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+        const dayStr = toJalali(rowDate);
         const key = `${row.expert_id}_${dayStr}`;
         let group = grouped.get(key);
         if (!group) {
-          group = { expertId: row.expert_id, dateStr: dayStr, contactIds: new Set(), attemptsCount: 0, minTime: rowDate, maxTime: rowDate };
+          group = { expertId: row.expert_id, dateStr: dayStr, contactIds: new Set(), attemptIds: [], attemptsCount: 0, minTime: rowDate, maxTime: rowDate };
           grouped.set(key, group);
         }
         group.contactIds.add(row.contact_id);
+        group.attemptIds.push(row.id);
         group.attemptsCount++;
         if (rowDate < group.minTime) group.minTime = rowDate;
         if (rowDate > group.maxTime) group.maxTime = rowDate;
@@ -149,6 +158,36 @@ export const ManagerDashboard: React.FC = () => {
     }
     setStatsLoading(false);
   }, [profiles]);
+
+  const loadDailyStatsDetails = useCallback(async (stat: any) => {
+    setLoadingDailyStatsDetails(true);
+    setDailyScore('');
+    
+    // Fetch attempts using precise IDs
+    const { data: callsData, error: callsError } = await supabase.from('call_attempts')
+      .select('*')
+      .in('id', stat.attemptIds)
+      .order('created_at', { ascending: false });
+      
+    if (!callsError && callsData) {
+      setDailyStatsDetails(callsData);
+    } else {
+      setDailyStatsDetails([]);
+      toast.error('خطا در دریافت جزئیات.');
+    }
+    
+    // Fetch score
+    const { data: scoreData, error: scoreError } = await supabase.rpc('get_expert_daily_score', {
+      p_expert_id: stat.expertId,
+      p_jalali_date: stat.dateStr
+    });
+    
+    if (!scoreError && scoreData && scoreData.length > 0) {
+      setDailyScore(scoreData[0].score);
+    }
+    
+    setLoadingDailyStatsDetails(false);
+  }, []);
 
   useEffect(() => {
     loadProfiles(); loadShares(); loadExperts(); loadMessages(); fetchPresence();
@@ -203,6 +242,19 @@ export const ManagerDashboard: React.FC = () => {
     }
   };
 
+  const handleDeleteShare = async (shareId: string) => {
+    if (!confirm('آیا از حذف این لیست پیگیری مطمئن هستید؟')) return;
+    setIsReviewing(true);
+    const { error } = await supabase.rpc('delete_followup_share', { p_share_id: shareId });
+    setIsReviewing(false);
+    if (error) toast.error('خطا در حذف لیست.');
+    else {
+      toast.success('لیست پیگیری حذف شد.');
+      setViewingShare(null);
+      await loadShares();
+    }
+  };
+
   const handleSendMessage = async () => {
     if (!selectedExpertId || !messageBody.trim()) return;
     setIsSendingMsg(true);
@@ -236,6 +288,71 @@ export const ManagerDashboard: React.FC = () => {
       toast.success('رمز عبور تغییر کرد.');
       setCurrentPassword(''); setNewPassword(''); setConfirmPassword('');
     }
+  };
+
+  const handleSaveDailyScore = async () => {
+    if (!viewingDailyStats) return;
+    if (dailyScore === '' || Number(dailyScore) < 0 || Number(dailyScore) > 100) return toast.error('امتیاز باید بین ۰ تا ۱۰۰ باشد.');
+    
+    setIsScoring(true);
+    const { error } = await supabase.rpc('set_expert_daily_score', {
+      p_expert_id: viewingDailyStats.expertId,
+      p_jalali_date: viewingDailyStats.dateStr,
+      p_score: Number(dailyScore)
+    });
+    setIsScoring(false);
+    
+    if (error) toast.error('خطا در ثبت امتیاز.');
+    else toast.success('امتیاز ثبت شد.');
+  };
+
+  const handleDeleteDailyStats = async () => {
+    if (!viewingDailyStats || !viewingDailyStats.attemptIds) return;
+    if (!confirm(`آیا از حذف تمام گزارش کارهای ${viewingDailyStats.expertName} در تاریخ ${viewingDailyStats.dateStr} مطمئن هستید؟ این عمل غیرقابل بازگشت است!`)) return;
+    
+    setIsDeletingDaily(true);
+    const { data, error } = await supabase.rpc('delete_call_attempts_by_ids', {
+      p_ids: viewingDailyStats.attemptIds
+    });
+    
+    setIsDeletingDaily(false);
+    
+    if (error) {
+      console.error('Error deleting records:', error);
+      toast.error('خطا در حذف داده‌ها.');
+    } else {
+      toast.success(`${data || 0} رکورد با موفقیت حذف شد.`);
+      setViewingDailyStats(null);
+      fetchStats();
+    }
+  };
+
+  const exportDailyStatsToExcel = () => {
+    if (!viewingDailyStats || dailyStatsDetails.length === 0) return toast.error('داده‌ای برای خروجی وجود ندارد.');
+    const worksheetData = dailyStatsDetails.map(item => ({
+      'نام و نام خانوادگی': item.full_name || '—',
+      'زمان تماس': item.jalali_date_time ? item.jalali_date_time.split(' ')[1] : '—',
+      'وضعیت تماس': item.call_status || '—',
+      'وضعیت ثبت‌نام': item.registered || '—',
+      'دوره‌ها': item.courses ? item.courses.join('، ') : '—',
+      'مشاوره حضوری': item.advisory === 'بله' ? 'دارد' : 'ندارد',
+      'تاریخ مشاوره': item.advisory_date || '—',
+      'ساعت مشاوره': item.advisory_time || '—',
+      'یادداشت‌ها': item.notes || '—',
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+    // Adjust column widths roughly
+    worksheet['!cols'] = [
+      { wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 25 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 40 }
+    ];
+    worksheet['!dir'] = 'rtl'; // Try to set RTL
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'گزارش روزانه');
+    
+    const fileName = `گزارش_${viewingDailyStats.expertName.replace(/\s+/g, '_')}_${viewingDailyStats.dateStr.replace(/\//g, '-')}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
   };
 
   // ---------------------------------------------------------------------------
@@ -456,20 +573,24 @@ export const ManagerDashboard: React.FC = () => {
                {presenceLoading && presenceList.length === 0 ? <div className="py-8 flex justify-center"><RefreshCw size={18} className="animate-spin text-slate-300" /></div> : presenceError && presenceList.length === 0 ? <p className="text-xs text-red-500 text-center font-bold py-8">خطا در دریافت وضعیت</p> : presenceList.length === 0 ? <p className="text-xs text-slate-400 text-center py-8 font-bold">کارشناسی آنلاین نیست</p> : (
                  <div className="flex flex-col gap-3">
                    {[...presenceList].sort((a,b) => (a.status==='online'?0:a.status==='idle'?1:2) - (b.status==='online'?0:b.status==='idle'?1:2)).map(p => (
-                     <div key={p.expert_id} className={`p-3 rounded-xl border flex items-center justify-between gap-2 shadow-sm transition-colors ${p.status === 'online' ? 'bg-white border-emerald-200' : p.status === 'idle' ? 'bg-amber-50/50 border-amber-200' : 'bg-slate-50 border-slate-200 opacity-80'}`}>
+                     <div key={p.expert_id} className={`p-3.5 rounded-2xl border flex items-center justify-between gap-3 shadow-sm transition-all hover:shadow-md ${p.status === 'online' ? 'bg-white border-emerald-100 hover:border-emerald-200' : p.status === 'idle' ? 'bg-white border-amber-100 hover:border-amber-200' : 'bg-slate-50/50 border-slate-100 hover:border-slate-200'}`}>
                        <div className="flex items-center gap-3 min-w-0">
                          <div className="relative shrink-0">
-                           <div className={`w-9 h-9 rounded-full flex items-center justify-center font-extrabold text-[12px] ${p.status === 'online' ? 'bg-emerald-100 text-emerald-700' : p.status === 'idle' ? 'bg-amber-200 text-amber-800' : 'bg-slate-200 text-slate-500'}`}>{p.full_name.charAt(0)}</div>
-                           {p.status === 'online' && <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full"></span>}
+                           <div className={`w-10 h-10 rounded-full flex items-center justify-center ${p.status === 'online' ? 'bg-emerald-50 text-emerald-600' : p.status === 'idle' ? 'bg-amber-50 text-amber-600' : 'bg-indigo-50 text-indigo-400'}`}><User size={20} strokeWidth={2.5} /></div>
+                           {p.status === 'online' && <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></span>}
                          </div>
                          <div className="flex flex-col min-w-0">
-                           <span className="font-extrabold text-[12px] text-slate-900 truncate">{p.full_name}</span>
-                           <span className="text-[10px] font-bold text-slate-500 truncate mt-0.5" dir="ltr">{formatTime(p.login_time)} - {formatTime(p.last_activity_time)}</span>
+                           <span className="font-extrabold text-[13px] text-slate-900 truncate">{p.full_name}</span>
+                           <div className="flex items-center gap-1 mt-0.5 justify-start">
+                             <span className="text-[10px] font-bold text-slate-500" dir="ltr">{formatTime(p.login_time)}</span>
+                             <span className="text-[10px] font-bold text-slate-400">-</span>
+                             <span className="text-[10px] font-bold text-slate-500" dir="ltr">{formatTime(p.last_activity_time)}</span>
+                           </div>
                          </div>
                        </div>
-                       <div className="flex flex-col items-end shrink-0 gap-1">
-                         <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md ${p.status === 'online' ? 'bg-emerald-50 text-emerald-700' : p.status === 'idle' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-500'}`}>{p.status === 'online' ? 'آنلاین' : p.status === 'idle' ? 'بیکار' : 'آفلاین'}</span>
-                         {p.has_active_alert && <AlertCircle size={12} className="text-rose-500" />}
+                       <div className="flex flex-col items-end shrink-0 gap-1.5">
+                         <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-lg ${p.status === 'online' ? 'bg-emerald-50 text-emerald-700' : p.status === 'idle' ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>{p.status === 'online' ? 'آنلاین' : p.status === 'idle' ? 'بیکار' : 'آفلاین'}</span>
+                         {p.has_active_alert && <AlertCircle size={14} className="text-rose-500" />}
                        </div>
                      </div>
                    ))}
@@ -503,8 +624,11 @@ export const ManagerDashboard: React.FC = () => {
                            <span className="font-black text-[14px] text-brand-700 mt-0.5">{row.attemptsCount}</span>
                          </div>
                        </div>
-                       <div className="flex justify-between items-center text-[10px] font-bold text-slate-400 mt-1" dir="ltr">
-                         <span>{row.minTimeStr}</span> - <span>{row.maxTimeStr}</span>
+                       <div className="flex justify-between items-center mt-1">
+                         <div className="flex text-[10px] font-bold text-slate-400" dir="ltr">
+                           <span>{row.minTimeStr}</span> - <span>{row.maxTimeStr}</span>
+                         </div>
+                         <button onClick={() => { setViewingDailyStats(row); loadDailyStatsDetails(row); }} className="bg-brand-100 text-brand-700 hover:bg-brand-200 text-[10px] font-bold px-3 py-1.5 rounded-lg transition-colors shadow-sm">مشاهده جزئیات</button>
                        </div>
                      </div>
                    ))}
@@ -518,8 +642,8 @@ export const ManagerDashboard: React.FC = () => {
 
       {/* Share Modal */}
       {viewingShare && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => !isReviewing && setViewingShare(null)}>
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-5xl flex flex-col overflow-hidden max-h-[90vh]" dir="rtl" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[60] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => !isReviewing && setViewingShare(null)}>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-[95vw] flex flex-col overflow-hidden max-h-[90vh]" dir="rtl" onClick={e => e.stopPropagation()}>
             <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 shrink-0">
               <div className="flex items-center gap-3">
                  <div className="w-10 h-10 rounded-xl bg-brand-100 text-brand-600 flex items-center justify-center"><FileText size={20} /></div>
@@ -535,27 +659,36 @@ export const ManagerDashboard: React.FC = () => {
                  <table className="w-full text-right text-[12px]">
                    <thead className="bg-slate-50 text-slate-500 font-extrabold border-b border-slate-200 whitespace-nowrap">
                      <tr>
-                       <th className="p-3">نام</th><th className="p-3">شماره تماس</th><th className="p-3">وضعیت تماس</th><th className="p-3">وضعیت ثبت‌نام</th><th className="p-3">دوره‌ها</th><th className="p-3">مشاوره حضوری</th><th className="p-3">تاریخ و ساعت مشاوره</th><th className="p-3">پیگیری بعدی</th><th className="p-3">یادداشت‌ها</th><th className="p-3">آخرین تلاش</th>
+                       <th className="p-3">نام</th>
+                       <th className="p-3">شماره تماس</th>
+                       <th className="p-3">وضعیت تماس</th>
+                       <th className="p-3">وضعیت ثبت‌نام</th>
+                       <th className="p-3">دوره‌ها</th>
+                       <th className="p-3">مشاوره حضوری</th>
+                       <th className="p-3">تاریخ و ساعت مشاوره</th>
+                       <th className="p-3">پیگیری بعدی</th>
+                       <th className="p-3">یادداشت‌ها</th>
+                       <th className="p-3">آخرین تلاش</th>
                      </tr>
                    </thead>
                    <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
                      {Array.isArray(viewingShare.payload_json) ? viewingShare.payload_json.map((item: any, idx: number) => {
-                       const cDate = item.consultationDate ? new Date(item.consultationDate).toLocaleDateString('fa-IR') : '';
-                       const advisoryStr = cDate && item.consultationTime ? `${cDate} - ${item.consultationTime}` : cDate || item.consultationTime || '—';
-                       const fDate = item.nextFollowUpDate ? new Date(item.nextFollowUpDate).toLocaleDateString('fa-IR') : '';
-                       const followUpStr = fDate && item.nextFollowUpTime ? `${fDate} - ${item.nextFollowUpTime}` : fDate || item.nextFollowUpTime || '—';
+                       const cDate = item.advisoryDate ? new Date(item.advisoryDate).toLocaleDateString('fa-IR') : '';
+                       const advisoryStr = cDate && item.advisoryTime ? `${cDate} - ${item.advisoryTime}` : cDate || item.advisoryTime || '—';
+                       const fDate = item.nextFollowUpAt ? new Date(item.nextFollowUpAt).toLocaleDateString('fa-IR') : '';
+                       const followUpStr = fDate ? `${fDate} - ${new Date(item.nextFollowUpAt).toLocaleTimeString('fa-IR', {hour: '2-digit', minute:'2-digit'})}` : '—';
                        return (
                          <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
                            <td className="p-3 font-extrabold whitespace-nowrap text-slate-900">{item.fullName || '—'}</td>
                            <td className="p-3 whitespace-nowrap" dir="ltr">{item.phone || '—'}</td>
                            <td className="p-3 whitespace-nowrap"><span className="bg-slate-100 px-2 py-1 rounded-md text-[10px] font-bold">{item.callStatus || '—'}</span></td>
-                           <td className="p-3 whitespace-nowrap"><span className="bg-slate-100 px-2 py-1 rounded-md text-[10px] font-bold">{item.registrationStatus || '—'}</span></td>
-                           <td className="p-3 min-w-[140px]">{item.interestedCourses && item.interestedCourses.length > 0 ? <div className="flex flex-wrap gap-1">{item.interestedCourses.map((c:string, i:number) => <span key={i} className="bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap">{c}</span>)}</div> : '—'}</td>
-                           <td className="p-3 whitespace-nowrap">{item.inPersonAdvisory ? <CheckCircle2 size={16} className="text-emerald-500"/> : '—'}</td>
+                           <td className="p-3 whitespace-nowrap"><span className="bg-slate-100 px-2 py-1 rounded-md text-[10px] font-bold">{item.registered || '—'}</span></td>
+                           <td className="p-3 min-w-[140px]">{item.courses && item.courses.length > 0 ? <div className="flex flex-wrap gap-1">{item.courses.map((c:string, i:number) => <span key={i} className="bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap">{c}</span>)}</div> : '—'}</td>
+                           <td className="p-3 whitespace-nowrap">{item.advisory === 'بله' ? <CheckCircle2 size={16} className="text-emerald-500"/> : '—'}</td>
                            <td className="p-3 whitespace-nowrap" dir="ltr">{advisoryStr}</td>
                            <td className="p-3 whitespace-nowrap" dir="ltr">{followUpStr}</td>
                            <td className="p-3 min-w-[180px] leading-relaxed text-[11px]">{item.notes || '—'}</td>
-                           <td className="p-3 whitespace-nowrap text-[10px] font-bold text-slate-400" dir="ltr">{item.lastAttemptTime ? new Date(item.lastAttemptTime).toLocaleString('fa-IR') : '—'}</td>
+                           <td className="p-3 whitespace-nowrap text-[10px] font-bold text-slate-400" dir="ltr">{item.latestAttemptAt ? new Date(item.latestAttemptAt).toLocaleString('fa-IR') : '—'}</td>
                          </tr>
                        )
                      }) : <tr><td colSpan={10} className="text-center p-6 text-sm font-bold text-slate-400">داده نامعتبر است</td></tr>}
@@ -567,11 +700,26 @@ export const ManagerDashboard: React.FC = () => {
                <div className="flex gap-3">
                  <span className="text-[12px] font-extrabold text-slate-700 bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm">مجموع: {viewingShare.item_count} مورد</span>
                  <button disabled={isReviewing} onClick={() => {
-                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(viewingShare.payload_json, null, 2));
-                    const a = document.createElement('a'); a.href = dataStr;
-                    a.download = `followups-${viewingShare.senderName}-${new Date(viewingShare.sent_at).toISOString().split('T')[0]}.json`;
-                    a.click();
-                 }} className="flex items-center gap-1.5 bg-white border border-slate-200 px-4 py-2 rounded-xl text-[12px] font-bold text-slate-700 hover:bg-slate-100 shadow-sm transition-colors"><Download size={14}/> دانلود فایل JSON</button>
+                    const worksheetData = Array.isArray(viewingShare.payload_json) ? viewingShare.payload_json.map((item: any) => ({
+                      'نام': item.fullName || '—',
+                      'شماره تماس': item.phone || '—',
+                      'وضعیت تماس': item.callStatus || '—',
+                      'وضعیت ثبت‌نام': item.registered || '—',
+                      'دوره‌ها': item.courses ? item.courses.join('، ') : '—',
+                      'مشاوره حضوری': item.advisory === 'بله' ? 'دارد' : 'ندارد',
+                      'تاریخ و ساعت مشاوره': (item.advisoryDate || '') + ' ' + (item.advisoryTime || ''),
+                      'پیگیری بعدی': item.nextFollowUpAt ? new Date(item.nextFollowUpAt).toLocaleString('fa-IR') : '—',
+                      'یادداشت‌ها': item.notes || '—',
+                      'آخرین تلاش': item.latestAttemptAt ? new Date(item.latestAttemptAt).toLocaleString('fa-IR') : '—'
+                    })) : [];
+                    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+                    worksheet['!cols'] = [{ wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 25 }, { wch: 15 }, { wch: 20 }, { wch: 20 }, { wch: 40 }, { wch: 20 }];
+                    worksheet['!dir'] = 'rtl';
+                    const workbook = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(workbook, worksheet, 'لیست پیگیری');
+                    XLSX.writeFile(workbook, `followups-${viewingShare.senderName}-${new Date(viewingShare.sent_at).toISOString().split('T')[0]}.xlsx`);
+                 }} className="flex items-center gap-1.5 bg-white border border-slate-200 px-4 py-2 rounded-xl text-[12px] font-bold text-slate-700 hover:bg-slate-100 shadow-sm transition-colors"><Download size={14}/> دانلود اکسل</button>
+                 <button disabled={isReviewing} onClick={() => handleDeleteShare(viewingShare.id)} className="flex items-center gap-1.5 bg-rose-50 border border-rose-200 px-4 py-2 rounded-xl text-[12px] font-bold text-rose-700 hover:bg-rose-100 shadow-sm transition-colors"><Trash2 size={14}/> حذف لیست</button>
                </div>
                {!viewingShare.reviewed_at ? (
                  <button disabled={isReviewing} onClick={() => handleReviewShare(viewingShare.id)} className="flex items-center gap-2 bg-brand-600 hover:bg-brand-500 disabled:opacity-70 text-white px-6 py-2.5 rounded-xl text-[13px] font-bold shadow-md shadow-brand-500/20 transition-all">
@@ -580,6 +728,101 @@ export const ManagerDashboard: React.FC = () => {
                ) : (
                  <span className="flex items-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-200 px-6 py-2.5 rounded-xl text-[13px] font-bold"><CheckCircle2 size={16}/> لیست بررسی شده است</span>
                )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Daily Stats Detailed Modal */}
+      {viewingDailyStats && (
+        <div className="fixed inset-0 z-[60] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setViewingDailyStats(null)}>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-5xl flex flex-col overflow-hidden max-h-[90vh]" dir="rtl" onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 shrink-0">
+              <div className="flex items-center gap-3">
+                 <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center"><Activity size={20} /></div>
+                 <div>
+                   <h3 className="font-extrabold text-slate-900 text-[15px]">جزئیات کارکرد روزانه - {viewingDailyStats.expertName}</h3>
+                   <span className="text-[11px] font-bold text-slate-500" dir="ltr">{viewingDailyStats.dateStr}</span>
+                 </div>
+              </div>
+              <button onClick={() => setViewingDailyStats(null)} className="w-9 h-9 flex justify-center items-center rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"><X size={16}/></button>
+            </div>
+            
+            {/* Toolbar */}
+            <div className="px-5 py-3 border-b border-slate-100 bg-white flex flex-wrap gap-4 items-center justify-between shrink-0">
+              <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-200 shadow-sm">
+                <span className="text-[11px] font-bold text-slate-500 px-2">امتیاز مدیر:</span>
+                <input 
+                  type="number" 
+                  min="0" max="100" 
+                  value={dailyScore} 
+                  onChange={(e) => setDailyScore(e.target.value ? Number(e.target.value) : '')}
+                  className="w-16 h-8 text-center text-[12px] font-bold border border-slate-200 rounded-lg outline-none focus:border-brand-500 hide-arrows" 
+                  placeholder="0-100"
+                />
+                <button 
+                  onClick={handleSaveDailyScore} 
+                  disabled={isScoring || dailyScore === ''}
+                  className="h-8 px-3 bg-brand-600 hover:bg-brand-500 disabled:bg-slate-300 text-white rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition-colors"
+                >
+                  {isScoring ? <RefreshCw size={12} className="animate-spin" /> : <Award size={12} />} ثبت امتیاز
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button onClick={exportDailyStatsToExcel} disabled={loadingDailyStatsDetails || dailyStatsDetails.length === 0} className="flex items-center gap-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 px-4 py-2 rounded-xl text-[12px] font-bold shadow-sm transition-colors">
+                  <Download size={14}/> خروجی اکسل
+                </button>
+                <button onClick={handleDeleteDailyStats} disabled={isDeletingDaily} className="flex items-center gap-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 px-4 py-2 rounded-xl text-[12px] font-bold shadow-sm transition-colors">
+                  {isDeletingDaily ? <RefreshCw size={14} className="animate-spin" /> : <Trash2 size={14}/>} حذف داده‌های این روز
+                </button>
+              </div>
+            </div>
+
+            {/* Content Table */}
+            <div className="p-5 overflow-y-auto flex-1 hide-scrollbar bg-slate-50/50">
+               <div className="border border-slate-200 rounded-xl overflow-x-auto shadow-sm bg-white">
+                 <table className="w-full text-right text-[12px]">
+                   <thead className="bg-slate-50 text-slate-500 font-extrabold border-b border-slate-200 whitespace-nowrap">
+                     <tr>
+                       <th className="p-3">زمان تماس</th>
+                       <th className="p-3">نام</th>
+                       <th className="p-3">وضعیت تماس</th>
+                       <th className="p-3">وضعیت ثبت‌نام</th>
+                       <th className="p-3">دوره‌ها</th>
+                       <th className="p-3">مشاوره حضوری</th>
+                       <th className="p-3">تاریخ و ساعت مشاوره</th>
+                       <th className="p-3">یادداشت‌ها</th>
+                     </tr>
+                   </thead>
+                   <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                     {loadingDailyStatsDetails ? (
+                       <tr><td colSpan={8} className="text-center p-8"><RefreshCw size={24} className="animate-spin mx-auto text-slate-300" /></td></tr>
+                     ) : dailyStatsDetails.length === 0 ? (
+                       <tr><td colSpan={8} className="text-center p-8 text-sm font-bold text-slate-400">داده‌ای یافت نشد</td></tr>
+                     ) : dailyStatsDetails.map((item: any, idx: number) => {
+                       const advisoryStr = item.advisory_date && item.advisory_time ? `${item.advisory_date} - ${item.advisory_time}` : item.advisory_date || item.advisory_time || '—';
+                       return (
+                         <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
+                           <td className="p-3 whitespace-nowrap text-[10px] font-bold text-slate-500" dir="ltr">{item.jalali_date_time ? item.jalali_date_time.split(' ')[1] : '—'}</td>
+                           <td className="p-3 font-extrabold whitespace-nowrap text-slate-900">{item.full_name || '—'}</td>
+                           <td className="p-3 whitespace-nowrap"><span className="bg-slate-100 px-2 py-1 rounded-md text-[10px] font-bold">{item.call_status || '—'}</span></td>
+                           <td className="p-3 whitespace-nowrap"><span className="bg-slate-100 px-2 py-1 rounded-md text-[10px] font-bold">{item.registered || '—'}</span></td>
+                           <td className="p-3 min-w-[140px]">{item.courses && item.courses.length > 0 ? <div className="flex flex-wrap gap-1">{item.courses.map((c:string, i:number) => <span key={i} className="bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap">{c}</span>)}</div> : '—'}</td>
+                           <td className="p-3 whitespace-nowrap">{item.advisory === 'بله' ? <CheckCircle2 size={16} className="text-emerald-500"/> : '—'}</td>
+                           <td className="p-3 whitespace-nowrap" dir="ltr">{advisoryStr}</td>
+                           <td className="p-3 min-w-[180px] leading-relaxed text-[11px]">{item.notes || '—'}</td>
+                         </tr>
+                       )
+                     })}
+                   </tbody>
+                 </table>
+               </div>
+            </div>
+            
+            <div className="p-4 border-t border-slate-100 flex justify-between items-center bg-slate-50 shrink-0">
+               <span className="text-[12px] font-extrabold text-slate-700 bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm">تعداد کل رکوردها: {dailyStatsDetails.length}</span>
             </div>
           </div>
         </div>
