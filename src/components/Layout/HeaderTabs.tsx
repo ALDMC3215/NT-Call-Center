@@ -19,7 +19,7 @@ interface TabItem {
 const TABS: TabItem[] = [
   { id: 'home', label: 'خانه', icon: Blocks },
   { id: 'dashboard', label: 'شماره ها', icon: LayoutDashboard },
-  { id: 'today', label: 'فعالیت امروز', icon: CalendarIcon },
+  { id: 'today', label: 'فعالیت روزانه', icon: CalendarIcon },
   { id: 'blacklist', label: 'لیست سیاه', icon: ShieldBan },
   { id: 'stats', label: 'آمار', icon: BarChart3 },
   { id: 'admin', label: 'مدیریت', icon: Shield },

@@ -198,10 +198,10 @@ const AgentPanel: React.FC = () => {
   };
 
   return (
-    <div className="w-full bg-white rounded-[24px] border border-slate-200/80 shadow-2xl shadow-slate-200/40 overflow-hidden flex flex-col min-h-[520px]" style={{ maxHeight: 'calc(100vh - 48px)' }}>
+    <div className="w-full bg-white rounded-[24px] border border-slate-200/80 shadow-2xl shadow-slate-200/40 overflow-hidden flex flex-col min-h-[460px] sm:min-h-[520px]" style={{ maxHeight: 'calc(100dvh - 32px)' }}>
 
       {/* Card header */}
-      <div className="px-8 pt-8 pb-5 shrink-0 border-b border-slate-100/80">
+      <div className="px-5 sm:px-8 pt-6 sm:pt-8 pb-4 sm:pb-5 shrink-0 border-b border-slate-100/80">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-sky-50 border border-sky-100 flex items-center justify-center">
             <UserCheck size={18} strokeWidth={2} className="text-sky-600" />
@@ -215,7 +215,7 @@ const AgentPanel: React.FC = () => {
 
       {/* Tabs */}
       {mode !== 'signup_done' && (
-        <div className="px-8 pt-6 shrink-0">
+        <div className="px-5 sm:px-8 pt-5 sm:pt-6 shrink-0">
           <div className="flex gap-1 p-1 bg-slate-50 border border-slate-100 rounded-xl">
             {(['signin', 'signup'] as const).map(m => (
               <button
@@ -237,7 +237,7 @@ const AgentPanel: React.FC = () => {
       )}
 
       {/* Scrollable form body */}
-      <div className="flex-1 overflow-y-auto px-8 py-6">
+      <div className="flex-1 overflow-y-auto px-5 sm:px-8 py-5 sm:py-6">
         <AnimatePresence mode="wait">
 
           {/* Sign In */}
@@ -354,10 +354,9 @@ const ManagerPanel: React.FC = () => {
   };
 
   return (
-    <div className="w-full bg-white rounded-[24px] border border-indigo-100 shadow-2xl shadow-indigo-100/40 overflow-hidden flex flex-col min-h-[520px]" style={{ maxHeight: 'calc(100vh - 48px)' }}>
-
+    <div className="w-full bg-white rounded-[24px] border border-indigo-100 shadow-2xl shadow-indigo-100/40 overflow-hidden flex flex-col min-h-[380px] sm:min-h-[400px]" style={{ maxHeight: 'calc(100dvh - 32px)' }}>
       {/* Card header */}
-      <div className="px-8 pt-8 pb-5 shrink-0 border-b border-indigo-50">
+      <div className="px-5 sm:px-8 pt-6 sm:pt-8 pb-4 sm:pb-5 shrink-0 border-b border-indigo-50">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center">
             <Shield size={18} strokeWidth={2} className="text-indigo-600" />
@@ -370,7 +369,7 @@ const ManagerPanel: React.FC = () => {
       </div>
 
       {/* Form */}
-      <div className="flex-1 overflow-y-auto px-8 py-6">
+      <div className="flex-1 overflow-y-auto px-5 sm:px-8 py-5 sm:py-6">
         <form onSubmit={handleSignIn} className="flex flex-col gap-4" noValidate>
         <Field label="ایمیل مدیر" id="mgr-email" type="email" value={email} onChange={setEmail}
           placeholder="manager@novintech.ir" error={errors.email} direction={direction}
@@ -517,7 +516,7 @@ export const AuthScreen: React.FC = () => {
         </div>
 
         {/* ── Form column ─────────────────────────────────────────── */}
-        <div className="w-full lg:w-7/12 flex flex-col justify-center items-center px-4 sm:px-8 lg:px-12 xl:px-16 py-16 lg:py-10">
+        <div className="w-full lg:w-7/12 flex flex-col justify-center items-center px-4 sm:px-8 lg:px-12 xl:px-16 py-8 sm:py-16 lg:py-10">
 
           {/* Mobile logo — visible only on small screens */}
           <div className="lg:hidden flex items-center gap-2.5 mb-8 self-start">

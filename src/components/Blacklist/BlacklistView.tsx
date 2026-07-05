@@ -39,7 +39,7 @@ export const BlacklistView = () => {
   };
 
   return (
-    <div className="w-full h-full overflow-y-auto pt-4 pb-32 font-sans text-start hide-scrollbar bg-slate-50" dir={direction} style={{ paddingLeft: `${layoutMargin}px`, paddingRight: `${layoutMargin}px` }}>
+    <div className="w-full h-full overflow-y-auto pt-4 md:pt-6 pb-32 px-4 md:px-8 font-sans text-start hide-scrollbar bg-slate-50" dir={direction}>
 
       <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between rounded-3xl border border-rose-200 bg-white p-6 shadow-sm">
         <div>

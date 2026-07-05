@@ -265,10 +265,10 @@ export default function App() {
                     <SessionManager />
                     {/* macOS-style Floating Home Button for internal pages */}
                     {currentView !== 'home' && (
-                      <div className="w-full flex justify-end p-4 pb-0 z-50 shrink-0 pointer-events-none">
+                      <div className="absolute top-4 left-4 z-50 pointer-events-none">
                         <button 
                           onClick={() => setCurrentView('home')}
-                          className="pointer-events-auto flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 backdrop-blur-xl border border-slate-200 shadow-[0_4px_20px_rgb(0,0,0,0.05)] text-slate-700 hover:text-brand-600 hover:bg-white hover:scale-105 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300"
+                          className="pointer-events-auto flex items-center gap-2 px-4 py-2 rounded-full bg-white/90 backdrop-blur-xl border border-slate-200 shadow-md text-slate-700 hover:text-brand-600 hover:bg-white hover:scale-105 transition-all duration-300"
                           title="بازگشت به مرکز فرماندهی (Esc / Alt + ⬅)"
                         >
                           <Home size={18} />

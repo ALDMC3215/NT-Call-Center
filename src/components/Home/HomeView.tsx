@@ -34,7 +34,7 @@ export const HomeView = () => {
       items: [
         {
           id: 'queue',
-          title: tr('شماره‌های جدید', 'New Numbers'),
+          title: tr('لیست شماره', 'Numbers List'),
           description: tr('مدیریت شماره‌های تماس جدید و بررسی نشده', 'Manage new and pending contact numbers'),
           icon: Phone,
           count: counts.totalCount,
@@ -45,8 +45,8 @@ export const HomeView = () => {
         },
         {
           id: 'today',
-          title: tr('فعالیت امروز', 'Today'),
-          description: tr('شماره‌های منتقل شده به لیست فعالیت‌های امروز', 'Numbers transferred to today activity list'),
+          title: tr('فعالیت روزانه', 'Daily Activity'),
+          description: tr('شماره‌های منتقل شده به لیست فعالیت‌های روزانه', 'Numbers transferred to daily activity list'),
           icon: Calendar,
           count: counts.todayCount,
           onClick: () => { setCurrentView('dashboard'); setActiveCallTab('today'); },
@@ -56,7 +56,7 @@ export const HomeView = () => {
         },
         {
           id: 'followup',
-          title: tr('پیگیری‌های من', 'Follow-ups'),
+          title: tr('پیگیری ها', 'Follow-ups'),
           description: tr('پیگیری‌های زمان‌بندی شده برای تماس مجدد', 'Scheduled follow-ups for call backs'),
           icon: PhoneForwarded,
           count: counts.followupCount,
@@ -166,18 +166,18 @@ export const HomeView = () => {
         <div className="absolute top-[30%] right-[20%] w-[40%] h-[40%] bg-teal-200/30 rounded-full blur-[100px]"></div>
       </div>
 
-      <div className="relative z-10 w-full max-w-6xl mx-auto flex flex-col pt-12 pb-24 px-6 md:px-8">
+      <div className="relative z-10 w-full max-w-6xl mx-auto flex flex-col pt-8 md:pt-12 pb-24 px-4 sm:px-6 md:px-8">
         
         {/* Welcome Header - Glassmorphic */}
-        <div className="mb-14 flex items-center justify-between">
+        <div className="mb-8 md:mb-14 flex flex-col md:flex-row md:items-center justify-between gap-6">
            <div>
-             <span className="inline-block px-3 py-1 bg-white/50 backdrop-blur-md border border-white/60 rounded-full text-xs font-bold tracking-widest text-slate-500 uppercase mb-4 shadow-sm">
+             <span className="inline-block px-3 py-1 bg-white/50 backdrop-blur-md border border-white/60 rounded-full text-[10px] sm:text-xs font-bold tracking-widest text-slate-500 uppercase mb-3 sm:mb-4 shadow-sm">
                Command Center
              </span>
-             <h2 className="text-3xl md:text-5xl font-extrabold text-slate-800 tracking-tight mb-3">
+             <h2 className="text-2xl sm:text-3xl md:text-5xl font-extrabold text-slate-800 tracking-tight mb-2 sm:mb-3">
                {tr('سلام،', 'Hello,')} <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-indigo-600">{profile?.name}</span>
              </h2>
-             <p className="text-slate-500 font-medium text-lg max-w-xl">
+             <p className="text-slate-500 font-medium text-sm sm:text-lg max-w-xl">
                {tr('به پنل کارشناسی نوین تک خوش اومدی ✨', 'Welcome to NovinTech Operator Panel ✨')}
              </p>
            </div>
@@ -197,46 +197,42 @@ export const HomeView = () => {
                 <div className="flex-1 h-px bg-gradient-to-l from-transparent via-slate-200 to-transparent"></div>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {section.items.map((card: any) => {
                   const Icon = card.icon;
                   return (
-                    <button
+                      <button
                       key={card.id}
                       onClick={card.onClick}
-                      className="group relative flex flex-col text-right items-start p-6 sm:p-7 bg-white/50 backdrop-blur-xl rounded-[2rem] border border-white/70 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] hover:-translate-y-1.5 transition-all duration-400 ease-out overflow-hidden aspect-video"
+                      className="group relative flex flex-col text-right items-start p-5 sm:p-6 bg-white/50 backdrop-blur-xl rounded-[1.5rem] border border-white/70 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] hover:-translate-y-1.5 transition-all duration-400 ease-out overflow-hidden"
                     >
                       {/* Top Gradient Highlight */}
                       <div className={`absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r ${card.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
                       
-                      <div className="w-full flex items-start justify-between mb-auto">
-                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${card.iconBg} ${card.iconColor} shadow-sm group-hover:scale-110 transition-transform duration-500`}>
-                          <Icon size={26} strokeWidth={2} />
+                      <div className="w-full flex items-center justify-between mb-4">
+                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${card.iconBg} ${card.iconColor} shadow-sm group-hover:scale-110 transition-transform duration-500`}>
+                          <Icon size={24} strokeWidth={2} />
                         </div>
                         {card.count !== null && (
-                          <div className="flex flex-col items-end justify-center min-h-[56px] bg-white/60 px-3 py-1.5 rounded-xl border border-white/80 shadow-sm">
-                            <span className="text-[10px] font-bold text-slate-400 tracking-wider mb-0.5">{tr('تعداد', 'Count')}</span>
-                            <span className={`text-xl font-black ${card.count > 0 ? 'text-slate-800' : 'text-slate-300'}`}>
+                          <div className="flex flex-col items-center justify-center min-h-[40px] bg-white/60 px-2.5 py-1 rounded-xl border border-white/80 shadow-sm">
+                            <span className="text-[9px] font-bold text-slate-400 tracking-wider mb-0.5">{tr('تعداد', 'Count')}</span>
+                            <span className={`text-base font-black leading-none ${card.count > 0 ? 'text-slate-800' : 'text-slate-300'}`}>
                               {card.count}
                             </span>
                           </div>
                         )}
                       </div>
                       
-                      <div className="w-full pt-6 pl-14">
-                        <h3 className="font-extrabold text-[18px] text-slate-800 group-hover:text-brand-600 transition-colors mb-2.5">
+                      <div className="w-full pl-10">
+                        <h3 className="font-extrabold text-[16px] text-slate-800 group-hover:text-brand-600 transition-colors">
                           {card.title}
                         </h3>
-                        
-                        <p className="text-[13px] font-medium text-slate-500 leading-relaxed line-clamp-2">
-                          {card.description}
-                        </p>
                       </div>
 
                       {/* Hover Arrow Overlay */}
-                      <div className="absolute bottom-6 left-6 opacity-0 group-hover:opacity-100 transform translate-x-4 group-hover:translate-x-0 transition-all duration-400">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center bg-white shadow-md ${card.iconColor}`}>
-                          <ArrowLeft size={18} strokeWidth={2.5} />
+                      <div className="absolute bottom-5 left-5 opacity-0 group-hover:opacity-100 transform translate-x-4 group-hover:translate-x-0 transition-all duration-400">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center bg-white shadow-md ${card.iconColor}`}>
+                          <ArrowLeft size={16} strokeWidth={2.5} />
                         </div>
                       </div>
                     </button>

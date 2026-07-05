@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Settings, RefreshCw, Calendar, PhoneOff, Upload, User, Briefcase, MapPin, Clock, Download, Send, History, X, MessageSquare, Inbox, Lock } from 'lucide-react';
+import { Settings, RefreshCw, PhoneOff, Upload, Briefcase, Download, Send, History, X, MessageSquare, Inbox, Lock } from 'lucide-react';
 import { COURSE_CATEGORIES } from '../../data/courses';
 import { fetchCourseDataDynamic } from '../../utils/scraper';
 import { useAppContext } from '../../hooks/useAppContext';
@@ -255,72 +255,32 @@ export const SettingsView: React.FC = () => {
   }, [isMessagesModalOpen]);
 
   return (
-    <div className="w-full h-full pt-4 pb-32 overflow-y-auto hide-scrollbar bg-slate-100" style={{ paddingLeft: `${layoutMargin}px`, paddingRight: `${layoutMargin}px` }}>
-      <div className="w-full flex flex-col px-3 md:px-5 lg:px-6 xl:px-8 max-w-full" dir={direction}>
-
-        {/* Title */}
-        <div className="w-full flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-slate-800 shadow-sm border border-slate-200 shrink-0">
-             <Settings size={20} className="text-indigo-600" />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-slate-900 tracking-tight">{tr('ابزارها و عملیات کارشناس', 'Expert Tools & Operations')}</h2>
-            <p className="text-[12px] text-slate-500 font-medium">{tr('دسترسی سریع به عملیات روزانه، مدیریت داده‌ها و تبادل پیگیری‌ها', 'Quick access to daily operations, data management and follow-up exchange')}</p>
-          </div>
+    <div className="w-full h-full overflow-y-auto hide-scrollbar flex flex-col items-center pt-4 pb-32 bg-slate-50 px-4 md:px-8" dir={direction}>
+      
+      {/* Title */}
+      <div className="w-full flex flex-col items-center mb-12 text-center mt-6">
+        <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center text-slate-800 mb-6 shadow-sm border border-slate-200">
+           <Settings size={40} className="text-indigo-600" />
         </div>
+        <h1 className="text-4xl font-extrabold text-slate-900 mb-3 tracking-tight">{tr('ابزارها و تنظیمات', 'Tools & Settings')}</h1>
+        <p className="text-base text-slate-600 max-w-2xl leading-relaxed">{tr('مدیریت داده‌ها، به‌روزرسانی سیستم و تبادل پیگیری‌ها در این بخش انجام می‌شود.', 'Data management, system update and follow-up exchange is done here.')}</p>
+      </div>
 
-        {/* Compact Profile Strip */}
-        {profile && (
-          <div className="w-full bg-white rounded-lg border border-slate-200 p-3 shadow-sm mb-4 flex flex-col lg:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-md bg-slate-50 flex items-center justify-center text-cyan-600 border border-slate-100 shrink-0">
-                <User size={18} />
-              </div>
-              <div className="flex flex-col">
-                <h3 className="text-sm font-bold text-slate-900 leading-tight">{profile.name}</h3>
-                <div className="flex items-center gap-1.5 text-[11px] text-slate-500 font-medium mt-0.5">
-                  <Briefcase size={10} />
-                  <span>{tr('اپراتور سیستم', 'System Operator')}</span>
-                </div>
-              </div>
-            </div>
+      <div className="w-full max-w-5xl flex flex-col gap-6">
 
-            <div className="hidden lg:block w-px h-6 bg-slate-100"></div>
 
-            <div className="flex items-center justify-end flex-1 gap-2">
-              <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-md border border-slate-100">
-                <Calendar size={14} className="text-indigo-500 shrink-0" />
-                <span className="text-[11px] font-semibold text-slate-700" dir="ltr">{profile.date}</span>
-              </div>
-
-              <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-md border border-slate-100">
-                <Clock size={14} className="text-amber-500 shrink-0" />
-                <span className="text-[11px] font-semibold text-slate-700">
-                  {profile.shift === 'Morning' ? tr('صبح', 'Morning') : profile.shift === 'Evening' ? tr('عصر', 'Evening') : profile.shift.includes('to') ? profile.shift.replace('to', tr('تا', 'to')) : profile.shift}
-                </span>
-              </div>
-
-              <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-md border border-slate-100">
-                <MapPin size={14} className="text-rose-500 shrink-0" />
-                <span className="text-[11px] font-semibold text-slate-700">
-                  {profile.branch === 'Pardis' ? tr('پردیس', 'Pardis') : profile.branch === 'Zargari' ? tr('زرگری', 'Zargari') : profile.branch}
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* --- ROW 1 --- */}
-        <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-4 items-start mb-4">
+        <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
           {/* Main quick-actions area */}
-          <div className="lg:col-span-8 flex flex-col gap-3">
-            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-              <Briefcase size={16} className="text-indigo-500" />
+          <div className="lg:col-span-8 flex flex-col gap-4">
+            <h3 className="text-base sm:text-lg font-extrabold text-slate-800 flex items-center gap-2">
+              <Briefcase size={20} className="text-indigo-500" />
               {tr('ابزارهای کاری', 'Working Tools')}
             </h3>
 
-            <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm flex flex-col gap-3">
+            <div className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border border-slate-200 shadow-sm flex flex-col gap-4 hover:shadow-md transition-shadow">
               <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept=".xlsx, .xls, .csv" className="hidden" />
               <button onClick={() => fileInputRef.current?.click()} className="flex items-center p-3 bg-brand-50 border border-brand-200 text-brand-700 rounded-md hover:bg-brand-100 transition-colors w-full gap-3 text-right group">
                 <div className="w-10 h-10 bg-brand-600 text-white rounded-md flex items-center justify-center shrink-0">
@@ -358,13 +318,13 @@ export const SettingsView: React.FC = () => {
           </div>
 
           {/* Follow-up Exchange Area */}
-          <div className="lg:col-span-4 flex flex-col gap-3">
-            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-              <Send size={16} className="text-brand-500" />
+          <div className="lg:col-span-4 flex flex-col gap-4">
+            <h3 className="text-base sm:text-lg font-extrabold text-slate-800 flex items-center gap-2">
+              <Send size={20} className="text-brand-500" />
               {tr('تبادل پیگیری‌ها', 'Follow-up Exchange')}
             </h3>
 
-            <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm flex flex-col gap-3 h-full">
+            <div className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border border-slate-200 shadow-sm flex flex-col gap-4 h-full hover:shadow-md transition-shadow">
               <button
                 onClick={() => {
                   if (activeCount > 0) setIsShareModalOpen(true);
@@ -427,21 +387,21 @@ export const SettingsView: React.FC = () => {
         </div>
 
         {/* --- ROW 2 --- */}
-        <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+        <div className="w-full grid grid-cols-1 gap-6 items-start">
 
           {/* Manager Messages Area */}
-          <div className="lg:col-span-7 flex flex-col gap-3 min-w-0">
-            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-              <MessageSquare size={16} className="text-indigo-500" />
+          <div className="flex flex-col gap-4 min-w-0">
+            <h3 className="text-base sm:text-lg font-extrabold text-slate-800 flex items-center gap-2">
+              <MessageSquare size={20} className="text-indigo-500" />
               {tr('پیام‌های مدیر', 'Manager Messages')}
               {messages.filter(m => m.recipient_id === profile?.id && !m.read_at).length > 0 && (
-                <span className="bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full text-xs font-bold mr-2">
+                <span className="bg-rose-100 text-rose-700 px-3 py-1 rounded-full text-xs font-bold mr-2">
                   {messages.filter(m => m.recipient_id === profile?.id && !m.read_at).length} {tr('جدید', 'New')}
                 </span>
               )}
             </h3>
 
-            <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm flex flex-col h-full">
+            <div className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border border-slate-200 shadow-sm flex flex-col h-full hover:shadow-md transition-shadow">
               {messagesLoading ? (
                 <div className="flex justify-center py-6 h-full items-center"><RefreshCw size={20} className="animate-spin text-slate-300" /></div>
               ) : messages.length === 0 ? (

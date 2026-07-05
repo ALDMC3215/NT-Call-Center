@@ -1,15 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Route, Brain, ShieldCheck, Gamepad2, Code, Smartphone, Terminal } from 'lucide-react';
-import { RoadmapCanvas } from './RoadmapCanvas';
-import {
-  AI_NODES, AI_EDGES,
-  NETWORK_NODES, NETWORK_EDGES,
-  KIDS_NODES, KIDS_EDGES,
-  BOT_NODES, BOT_EDGES,
-  API_NODES, API_EDGES,
-  MOBILE_NODES, MOBILE_EDGES
-} from '../../data/roadmaps';
+import { X, Route } from 'lucide-react';
+import { LearningPathMap } from '../Courses/LearningPathMap';
 
 interface Props {
   isOpen: boolean;
@@ -18,7 +10,6 @@ interface Props {
 
 export const LearningPathsModal = ({ isOpen, onClose }: Props) => {
   const modalRef = useRef<HTMLDivElement>(null);
-  const [activeTab, setActiveTab] = useState<'ai' | 'network' | 'kids' | 'bot' | 'api' | 'mobile'>('ai');
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -50,7 +41,7 @@ export const LearningPathsModal = ({ isOpen, onClose }: Props) => {
     >
       <div
         ref={modalRef}
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-full flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-[95vw] xl:max-w-[90vw] h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
       >
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50/50 shrink-0">
@@ -71,69 +62,13 @@ export const LearningPathsModal = ({ isOpen, onClose }: Props) => {
           </button>
         </div>
 
-        {/* Tab Selector */}
-        <div className="flex px-5 pt-3 bg-slate-50/50 border-b border-slate-100 gap-6 shrink-0 overflow-x-auto hide-scrollbar whitespace-nowrap">
-          <button
-            onClick={() => setActiveTab('ai')}
-            className={`pb-3 text-[14px] font-bold border-b-2 transition-colors flex items-center gap-2 ${
-              activeTab === 'ai' ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            <Brain size={16} /> هوش مصنوعی
-          </button>
-          <button
-            onClick={() => setActiveTab('network')}
-            className={`pb-3 text-[14px] font-bold border-b-2 transition-colors flex items-center gap-2 ${
-              activeTab === 'network' ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            <ShieldCheck size={16} /> شبکه و امنیت
-          </button>
-          <button
-            onClick={() => setActiveTab('kids')}
-            className={`pb-3 text-[14px] font-bold border-b-2 transition-colors flex items-center gap-2 ${
-              activeTab === 'kids' ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            <Gamepad2 size={16} /> کودک و نوجوان
-          </button>
-          <button
-            onClick={() => setActiveTab('bot')}
-            className={`pb-3 text-[14px] font-bold border-b-2 transition-colors flex items-center gap-2 ${
-              activeTab === 'bot' ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            <Terminal size={16} /> مبانی و ربات
-          </button>
-          <button
-            onClick={() => setActiveTab('api')}
-            className={`pb-3 text-[14px] font-bold border-b-2 transition-colors flex items-center gap-2 ${
-              activeTab === 'api' ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            <Code size={16} /> API و بک‌اند
-          </button>
-          <button
-            onClick={() => setActiveTab('mobile')}
-            className={`pb-3 text-[14px] font-bold border-b-2 transition-colors flex items-center gap-2 ${
-              activeTab === 'mobile' ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            <Smartphone size={16} /> برنامه‌نویسی موبایل
-          </button>
-        </div>
-
         {/* Content */}
-        <div className="flex-1 bg-white p-4 md:p-5 flex flex-col h-full min-h-[500px] overflow-hidden rounded-b-2xl">
-          {activeTab === 'ai' && <RoadmapCanvas nodes={AI_NODES} edges={AI_EDGES} rootIcon={<Brain size={28} />} />}
-          {activeTab === 'network' && <RoadmapCanvas nodes={NETWORK_NODES} edges={NETWORK_EDGES} rootIcon={<ShieldCheck size={28} />} />}
-          {activeTab === 'kids' && <RoadmapCanvas nodes={KIDS_NODES} edges={KIDS_EDGES} rootIcon={<Gamepad2 size={28} />} />}
-          {activeTab === 'bot' && <RoadmapCanvas nodes={BOT_NODES} edges={BOT_EDGES} rootIcon={<Terminal size={28} />} />}
-          {activeTab === 'api' && <RoadmapCanvas nodes={API_NODES} edges={API_EDGES} rootIcon={<Code size={28} />} />}
-          {activeTab === 'mobile' && <RoadmapCanvas nodes={MOBILE_NODES} edges={MOBILE_EDGES} rootIcon={<Smartphone size={28} />} />}
+        <div className="flex-1 relative w-full h-full bg-slate-50">
+          <LearningPathMap />
         </div>
       </div>
     </div>,
     document.body
   );
 };
+

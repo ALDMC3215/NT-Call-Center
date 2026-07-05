@@ -599,32 +599,9 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
         </div>
       )}
       {/* Unified Operational Toolbar */}
-      <div className="pt-4 pb-3 w-full flex flex-col md:flex-row gap-3 items-center justify-between px-4 md:px-6">
-        {/* Left side: Search */}
-        <div className="relative flex-1 w-full max-w-md group">
-            <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-slate-500/60 group-focus-within:text-brand-500 transition-colors">
-              <Search size={16} strokeWidth={2.5} />
-            </div>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              placeholder={activeTab === 'courses' ? tr('جستجو در دوره‌ها...', 'Search courses...') : tr('جستجو در شماره‌ها و نام‌ها...', 'Search numbers and names...')}
-              dir={direction}
-              className="w-full h-10 bg-white border border-slate-200 rounded-xl pr-10 pl-10 text-[13px] font-medium text-slate-900 placeholder:text-slate-500 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/10 transition-all shadow-sm"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-lg bg-slate-50 text-muted hover:text-rose-500 hover:bg-rose-50 transition-all cursor-pointer"
-              >
-                <X size={14} strokeWidth={2.5} />
-              </button>
-            )}
-        </div>
-
-        {/* Right side: Contextual controls */}
-        <div className="flex items-center gap-2 w-full md:w-auto shrink-0 justify-end">
+      <div className="pt-16 md:pt-4 pb-3 w-full flex flex-col md:flex-row gap-3 items-center justify-between px-4 md:pr-6 md:pl-[170px]">
+        {/* Right side: Contextual controls (Order 2 on mobile, 1 on desktop) */}
+        <div className="order-2 md:order-1 flex items-center gap-3 w-full md:w-[300px] shrink-0 justify-center md:justify-start">
           {activeTab === 'followup' && (
             <div className="flex items-center gap-2 bg-white border border-slate-200 px-3 py-2 rounded-xl shadow-sm h-10">
               <span className="text-[13px] font-extrabold text-slate-800">پیگیری‌های من</span>
@@ -658,6 +635,32 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
             </>
           )}
         </div>
+
+        {/* Center: Search (Order 1 on mobile, 2 on desktop) */}
+        <div className="order-1 md:order-2 relative w-full max-w-md group mx-auto">
+            <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-slate-500/60 group-focus-within:text-brand-500 transition-colors">
+              <Search size={16} strokeWidth={2.5} />
+            </div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder={activeTab === 'courses' ? tr('جستجو در دوره‌ها...', 'Search courses...') : tr('جستجو در شماره‌ها و نام‌ها...', 'Search numbers and names...')}
+              dir={direction}
+              className="w-full h-10 bg-white border border-slate-200 rounded-xl pr-10 pl-10 text-[13px] font-medium text-slate-900 placeholder:text-slate-500 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/10 transition-all shadow-sm"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-lg bg-slate-50 text-muted hover:text-rose-500 hover:bg-rose-50 transition-all cursor-pointer"
+              >
+                <X size={14} strokeWidth={2.5} />
+              </button>
+            )}
+        </div>
+
+        {/* Left side: Spacer for centering */}
+        <div className="hidden md:block order-3 w-[300px]"></div>
       </div>
 
       {/* Main Grid View */}
@@ -759,13 +762,8 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
               <tbody className="text-[13px] font-medium text-slate-800 relative z-0">
                 {filteredList.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-16 text-center text-slate-500 min-h-[220px]">
-                      <div className="flex flex-col items-center justify-center min-h-[160px]">
-                        <p className="font-bold text-[14px]">{tr('هنوز شمارهای در این لیست نیست.', 'No numbers in this list yet.')}</p>
-                        {activeTab === 'all' && (
-                          <p className="text-[12px] mt-2 opacity-80">{tr('برای شروع، شمارهها را دستی اضافه کنید یا فایل Excel / CSV وارد کنید.', 'To start, add numbers manually or import an Excel/CSV file.')}</p>
-                        )}
-                      </div>
+                    <td colSpan={7} className="py-24">
+                      {/* Spacer to give height for the absolute empty state overlay */}
                     </td>
                   </tr>
                 ) : (

@@ -84,7 +84,7 @@ export const ProfileView: React.FC = () => {
       <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-12 gap-5 lg:gap-6 auto-rows-max">
         
         {/* Main User Card */}
-        <div className="md:col-span-8 bg-white rounded-[2rem] border border-slate-200 p-8 shadow-sm flex flex-col justify-between min-h-[220px] hover:shadow-md hover:border-slate-300 transition-all group">
+        <div className="md:col-span-8 bg-white rounded-2xl sm:rounded-[2rem] border border-slate-200 p-5 sm:p-8 shadow-sm flex flex-col justify-between min-h-[220px] hover:shadow-md hover:border-slate-300 transition-all group">
           <div className="flex justify-between items-start">
             <div className="w-16 h-16 rounded-[1.25rem] bg-slate-50 flex items-center justify-center text-cyan-600 mb-6 border border-slate-100 group-hover:scale-110 transition-transform">
               <User size={32} />
@@ -104,7 +104,7 @@ export const ProfileView: React.FC = () => {
         </div>
 
         {/* Date Card */}
-        <div className="md:col-span-4 bg-white rounded-[2rem] border border-slate-200 p-8 shadow-sm flex flex-col min-h-[220px] justify-between hover:shadow-md hover:border-slate-300 transition-all group">
+        <div className="md:col-span-4 bg-white rounded-2xl sm:rounded-[2rem] border border-slate-200 p-5 sm:p-8 shadow-sm flex flex-col min-h-[220px] justify-between hover:shadow-md hover:border-slate-300 transition-all group">
           <div className="w-16 h-16 rounded-[1.25rem] bg-indigo-50 flex items-center justify-center text-indigo-600 mb-4 border border-indigo-100 group-hover:scale-110 transition-transform">
              <Calendar size={32} />
           </div>
@@ -115,7 +115,7 @@ export const ProfileView: React.FC = () => {
         </div>
 
         {/* Shift Card */}
-        <div className="md:col-span-4 bg-white rounded-[2rem] border border-slate-200 p-8 shadow-sm flex flex-col min-h-[220px] justify-between hover:shadow-md hover:border-slate-300 transition-all group">
+        <div className="md:col-span-4 bg-white rounded-2xl sm:rounded-[2rem] border border-slate-200 p-5 sm:p-8 shadow-sm flex flex-col min-h-[220px] justify-between hover:shadow-md hover:border-slate-300 transition-all group">
           <div className="w-16 h-16 rounded-[1.25rem] bg-amber-50 flex items-center justify-center text-amber-600 mb-4 border border-amber-100 group-hover:scale-110 transition-transform">
              <Clock size={32} />
           </div>
@@ -128,7 +128,7 @@ export const ProfileView: React.FC = () => {
         </div>
 
         {/* Branch Card */}
-        <div className="md:col-span-4 bg-white rounded-[2rem] border border-slate-200 p-8 shadow-sm flex flex-col min-h-[220px] justify-between hover:shadow-md hover:border-slate-300 transition-all group">
+        <div className="md:col-span-4 bg-white rounded-2xl sm:rounded-[2rem] border border-slate-200 p-5 sm:p-8 shadow-sm flex flex-col min-h-[220px] justify-between hover:shadow-md hover:border-slate-300 transition-all group">
           <div className="w-16 h-16 rounded-[1.25rem] bg-rose-50 flex items-center justify-center text-rose-600 mb-4 border border-rose-100 group-hover:scale-110 transition-transform">
              <MapPin size={32} />
           </div>
@@ -141,7 +141,7 @@ export const ProfileView: React.FC = () => {
         </div>
 
         {/* Security / System Info */}
-        <div className="md:col-span-4 bg-white rounded-[2rem] border border-slate-200 p-8 shadow-sm flex flex-col justify-between min-h-[220px] hover:shadow-md hover:border-slate-300 transition-all group">
+        <div className="md:col-span-4 bg-white rounded-2xl sm:rounded-[2rem] border border-slate-200 p-5 sm:p-8 shadow-sm flex flex-col justify-between min-h-[220px] hover:shadow-md hover:border-slate-300 transition-all group">
            <div className="w-16 h-16 rounded-[1.25rem] bg-slate-50 flex items-center justify-center text-slate-600 mb-4 border border-slate-200 group-hover:scale-110 transition-transform">
              <ShieldCheck size={32} />
            </div>
@@ -152,7 +152,7 @@ export const ProfileView: React.FC = () => {
         </div>
 
         {/* Change Password */}
-        <div className="md:col-span-12 bg-white rounded-[2rem] border border-slate-200 p-8 shadow-sm flex flex-col hover:shadow-md hover:border-slate-300 transition-all">
+        <div className="md:col-span-12 bg-white rounded-2xl sm:rounded-[2rem] border border-slate-200 p-5 sm:p-8 shadow-sm flex flex-col hover:shadow-md hover:border-slate-300 transition-all">
           <h3 className="text-lg font-extrabold text-slate-800 flex items-center gap-2 mb-6">
             <Lock size={20} className="text-rose-500" />
             {tr('تغییر رمز عبور', 'Change Password')}

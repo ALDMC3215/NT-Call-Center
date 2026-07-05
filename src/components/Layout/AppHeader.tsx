@@ -64,7 +64,7 @@ export const AppHeader = () => {
   // Blacklist as a full page lives here (not as a dashboard tab)
   // 🔘🔘 Unified Header Items 🔘🔘
   const headerItems = [
-    { id: 'today',    label: tr('فعالیت امروز', 'Today'), icon: <Calendar size={14} />, type: 'tab' },
+    { id: 'today',    label: tr('فعالیت روزانه', 'Today'), icon: <Calendar size={14} />, type: 'tab' },
     { id: 'followup', label: tr('پیگیری ها', 'Follow-ups'), icon: <PhoneForwarded size={14} />, type: 'tab' },
     { id: 'courses',  label: tr('دوره ها',   'Courses'),    icon: <BookOpen size={14} />, type: 'tab' },
     { id: 'queue',    label: tr('شماره ها',  'Numbers'),    icon: <Phone size={14} />, type: 'tab' },
