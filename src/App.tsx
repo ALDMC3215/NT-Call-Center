@@ -22,10 +22,12 @@ const HomeView           = React.lazy(() => import('./components/Home/HomeView')
 
 import { LoadingSpinner } from './components/Shared/LoadingSpinner';
 import { AnimatePresence, motion } from 'motion/react';
-import { AppHeader } from './components/Layout/AppHeader';
+import { ErrorBoundary } from './ErrorBoundary';
+
+
 import { useLocale } from './hooks/useLocale';
 import ClickSpark from './components/UI/ClickSpark';
-import { Shield, ArrowLeft, UserCheck } from 'lucide-react';
+import { Shield, ArrowLeft, UserCheck, Home } from 'lucide-react';
 
 // ---------------------------------------------------------------------------
 // Follow-up reminder — unchanged from original
@@ -162,12 +164,34 @@ const SessionManager = () => {
 // ---------------------------------------------------------------------------
 export default function App() {
   const { authStatus, loginMode } = useAuth();
-  const { profile, currentView, accentColor, sparkColor } = useAppContext();
+  const { profile, currentView, accentColor, sparkColor, setCurrentView } = useAppContext();
   const { direction } = useLocale();
 
   // Determine if there's a role/panel mismatch
   const adminTriedAgent   = authStatus === 'active_admin'  && loginMode === 'agent';
   const agentTriedManager = authStatus === 'active_agent'  && loginMode === 'manager';
+
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' || (e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight'))) {
+        e.preventDefault();
+        setCurrentView('home');
+      }
+    };
+    const handleMouseUp = (e: MouseEvent) => {
+      if (e.button === 3 || e.button === 4) { // Browser Back/Forward buttons
+        e.preventDefault();
+        setCurrentView('home');
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [setCurrentView]);
 
   return (
     <>
@@ -239,20 +263,35 @@ export default function App() {
                   <div className="flex flex-col w-full h-full overflow-hidden z-10">
                     <FollowupReminder />
                     <SessionManager />
-                    <div className="w-full pointer-events-auto shrink-0 z-20"><AppHeader /></div>
-                    <div className="flex-1 w-full min-h-0 overflow-auto pointer-events-auto bg-transparent relative z-10 px-3 md:px-4 lg:px-5 pb-4">
-                      <AnimatePresence mode="wait">
-                        <motion.div key={currentView} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.3, ease: 'easeOut' }} className="w-full h-full flex flex-col overflow-hidden bg-transparent">
-                          <React.Suspense fallback={<LoadingSpinner />}>
-                            {currentView === 'home'      && <HomeView />}
-                            {currentView === 'dashboard' && <CallListWorkspace />}
-                            {currentView === 'profile'   && <ProfileView />}
-                            {currentView === 'settings'  && <SettingsView />}
-                            {currentView === 'blacklist' && <BlacklistView />}
-                            {currentView === 'about'     && <AboutView />}
-                          </React.Suspense>
-                        </motion.div>
-                      </AnimatePresence>
+                    {/* macOS-style Floating Home Button for internal pages */}
+                    {currentView !== 'home' && (
+                      <div className="w-full flex justify-end p-4 pb-0 z-50 shrink-0 pointer-events-none">
+                        <button 
+                          onClick={() => setCurrentView('home')}
+                          className="pointer-events-auto flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 backdrop-blur-xl border border-slate-200 shadow-[0_4px_20px_rgb(0,0,0,0.05)] text-slate-700 hover:text-brand-600 hover:bg-white hover:scale-105 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300"
+                          title="بازگشت به مرکز فرماندهی (Esc / Alt + ⬅)"
+                        >
+                          <Home size={18} />
+                          <span className="text-sm font-bold tracking-wide">بازگشت</span>
+                        </button>
+                      </div>
+                    )}
+
+                    <div className="flex-1 w-full min-h-0 overflow-auto pointer-events-auto bg-transparent relative z-10 px-0 pb-0 pt-0">
+                      <ErrorBoundary>
+                        <AnimatePresence mode="wait">
+                          <motion.div key={currentView} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.3, ease: 'easeOut' }} className="w-full h-full flex flex-col overflow-hidden bg-transparent">
+                            <React.Suspense fallback={<LoadingSpinner />}>
+                              {currentView === 'home'      && <HomeView />}
+                              {currentView === 'dashboard' && <CallListWorkspace />}
+                              {currentView === 'profile'   && <ProfileView />}
+                              {currentView === 'settings'  && <SettingsView />}
+                              {currentView === 'blacklist' && <BlacklistView />}
+                              {currentView === 'about'     && <AboutView />}
+                            </React.Suspense>
+                          </motion.div>
+                        </AnimatePresence>
+                      </ErrorBoundary>
                     </div>
                   </div>
                 </motion.div>

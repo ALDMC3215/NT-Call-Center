@@ -1,16 +1,77 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAppContext } from '../../hooks/useAppContext';
+import { useAuth } from '../../hooks/useAuth';
 import { useLocale } from '../../hooks/useLocale';
-import { User, Calendar, Clock, MapPin, Briefcase, ShieldCheck } from 'lucide-react';
+import { User, Calendar, Clock, MapPin, Briefcase, ShieldCheck, Lock, RefreshCw } from 'lucide-react';
+import { customToast as toast } from '../UI/toast';
+import { supabase } from '../../lib/supabase';
 
 export const ProfileView: React.FC = () => {
-  const { profile, layoutMargin } = useAppContext();
+  const { profile } = useAppContext();
+  const { supabaseUser } = useAuth();
   const { tr, direction } = useLocale();
+
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      toast.error(tr('لطفاً تمام فیلدها را پر کنید.', 'Please fill all fields.'));
+      return;
+    }
+    if (newPassword.length < 8) {
+      toast.error(tr('رمز عبور جدید باید حداقل ۸ کاراکتر باشد.', 'New password must be at least 8 characters.'));
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error(tr('رمز عبور جدید و تکرار آن مطابقت ندارند.', 'New password and confirmation do not match.'));
+      return;
+    }
+    if (newPassword === currentPassword) {
+      toast.error(tr('رمز عبور جدید نمی‌تواند مشابه رمز فعلی باشد.', 'New password cannot be the same as current password.'));
+      return;
+    }
+    if (!supabaseUser?.email) {
+      toast.error(tr('ایمیل کاربر یافت نشد.', 'User email not found.'));
+      return;
+    }
+
+    setIsChangingPassword(true);
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: supabaseUser.email,
+      password: currentPassword
+    });
+
+    if (signInError) {
+      setIsChangingPassword(false);
+      toast.error(tr('رمز عبور فعلی نامعتبر است.', 'Current password invalid.'));
+      return;
+    }
+
+    const { error: updateError } = await supabase.auth.updateUser({
+      password: newPassword
+    });
+
+    setIsChangingPassword(false);
+
+    if (updateError) {
+      toast.error(tr('خطایی در تغییر رمز عبور رخ داد. دوباره تلاش کنید.', 'Generic retry error.'));
+    } else {
+      toast.success(tr('رمز عبور با موفقیت تغییر کرد.', 'Password changed successfully.'));
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    }
+  };
 
   if (!profile) return null;
 
   return (
-    <div className="w-full h-full overflow-y-auto hide-scrollbar flex flex-col items-center pt-8 pb-32 bg-slate-50" dir={direction} style={{ paddingLeft: `${layoutMargin}px`, paddingRight: `${layoutMargin}px` }}>
+    <div className="w-full h-full overflow-y-auto hide-scrollbar flex flex-col items-center pt-4 pb-32 bg-slate-50 px-4 md:px-8" dir={direction}>
       
       <div className="w-full flex flex-col items-center mb-12 text-center mt-6">
         <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center text-slate-800 mb-6 shadow-sm border border-slate-200">
@@ -88,6 +149,56 @@ export const ProfileView: React.FC = () => {
              <span className="text-[13px] font-bold text-slate-500 tracking-wide mb-1.5 block">{tr('سطح دسترسی', 'Access Level')}</span>
              <span className="text-xl font-extrabold text-slate-800">{tr('محدود (اپراتور)', 'Restricted (Operator)')}</span>
            </div>
+        </div>
+
+        {/* Change Password */}
+        <div className="md:col-span-12 bg-white rounded-[2rem] border border-slate-200 p-8 shadow-sm flex flex-col hover:shadow-md hover:border-slate-300 transition-all">
+          <h3 className="text-lg font-extrabold text-slate-800 flex items-center gap-2 mb-6">
+            <Lock size={20} className="text-rose-500" />
+            {tr('تغییر رمز عبور', 'Change Password')}
+          </h3>
+          <form onSubmit={handleChangePassword} className="flex flex-col md:flex-row gap-4 items-end">
+            <div className="flex-1 w-full flex flex-col gap-4 md:flex-row">
+              <div className="flex-1">
+                <label className="text-[12px] font-bold text-slate-500 mb-2 block">{tr('رمز فعلی', 'Current Password')}</label>
+                <input
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  className="w-full h-12 px-4 text-sm font-medium border border-slate-200 bg-slate-50 focus:bg-white text-slate-900 rounded-xl outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/10 transition-all placeholder:text-slate-400"
+                  dir="ltr"
+                />
+              </div>
+              <div className="flex-1">
+                <label className="text-[12px] font-bold text-slate-500 mb-2 block">{tr('رمز جدید', 'New Password')}</label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full h-12 px-4 text-sm font-medium border border-slate-200 bg-slate-50 focus:bg-white text-slate-900 rounded-xl outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/10 transition-all placeholder:text-slate-400"
+                  dir="ltr"
+                />
+              </div>
+              <div className="flex-1">
+                <label className="text-[12px] font-bold text-slate-500 mb-2 block">{tr('تکرار رمز جدید', 'Repeat New Password')}</label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full h-12 px-4 text-sm font-medium border border-slate-200 bg-slate-50 focus:bg-white text-slate-900 rounded-xl outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/10 transition-all placeholder:text-slate-400"
+                  dir="ltr"
+                />
+              </div>
+            </div>
+            <button
+              type="submit"
+              disabled={isChangingPassword || !currentPassword || !newPassword || !confirmPassword}
+              className="h-12 px-8 w-full md:w-auto bg-rose-600 hover:bg-rose-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2"
+            >
+              {isChangingPassword ? <RefreshCw size={18} className="animate-spin" /> : <Lock size={18} />}
+              <span>{tr('تغییر رمز عبور', 'Change Password')}</span>
+            </button>
+          </form>
         </div>
 
       </div>

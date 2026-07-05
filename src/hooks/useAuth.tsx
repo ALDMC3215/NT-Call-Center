@@ -55,6 +55,10 @@ interface AuthContextType {
   approveAgent: (targetId: string) => Promise<string | null>;
   /** Disable an active agent — calls the secure Supabase RPC */
   disableAgent: (targetId: string) => Promise<string | null>;
+  /** Update user profile information — calls the secure Supabase RPC */
+  updateUserByAdmin: (targetId: string, newFullName: string, newRole: string) => Promise<string | null>;
+  /** Permanently delete a user from the auth system — calls the secure Supabase RPC */
+  deleteUserByAdmin: (targetId: string) => Promise<string | null>;
 }
 
 // ---------------------------------------------------------------------------
@@ -284,6 +288,18 @@ export const AuthProvider = ({
     return null;
   }, []);
 
+  const updateUserByAdmin = useCallback(async (targetId: string, newFullName: string, newRole: string): Promise<string | null> => {
+    const { error } = await supabase.rpc('update_user_by_admin', { target_id: targetId, new_full_name: newFullName, new_role: newRole });
+    if (error) return `خطا در ویرایش: ${error.message}`;
+    return null;
+  }, []);
+
+  const deleteUserByAdmin = useCallback(async (targetId: string): Promise<string | null> => {
+    const { error } = await supabase.rpc('delete_user_by_admin', { target_id: targetId });
+    if (error) return `خطا در حذف: ${error.message}`;
+    return null;
+  }, []);
+
   const value: AuthContextType = {
     authStatus,
     loginMode,
@@ -295,6 +311,8 @@ export const AuthProvider = ({
     signOut,
     approveAgent,
     disableAgent,
+    updateUserByAdmin,
+    deleteUserByAdmin,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

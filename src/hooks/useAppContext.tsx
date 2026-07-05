@@ -28,6 +28,7 @@ const reportMeaningfulActivity = (userId: string) => {
 };
 
 export type ViewType = 'home' | 'dashboard' | 'profile' | 'settings' | 'stats' | 'admin' | 'blacklist' | 'reports' | 'experts' | 'managers' | 'about';
+export type LayoutMode = 'default' | 'header-only' | 'cards-only';
 
 interface AppContextType {
   profile: Profile | null;
@@ -86,7 +87,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [callsRefreshCounter, setCallsRefreshCounter] = useState(0);
   const [blacklist, setBlacklistState] = useState<BlacklistEntry[]>(() => storage.getBlacklist());
   const [importedData, setImportedData] = useState<{ profile: Profile; calls: CallRecord[] } | null>(null);
-
+  
   useEffect(() => {
     if (!profile) {
       setCallsState([]);

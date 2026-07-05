@@ -29,3 +29,13 @@ if (!supabaseUrl || !supabasePublishableKey) {
 // ---------------------------------------------------------------------------
 
 export const supabase = createClient(supabaseUrl, supabasePublishableKey);
+
+// Secondary client used strictly for admin operations like creating a new user
+// without polluting the manager's current auth session.
+export const adminAuthClient = createClient(supabaseUrl, supabasePublishableKey, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false,
+    detectSessionInUrl: false
+  }
+});

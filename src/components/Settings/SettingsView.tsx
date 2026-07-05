@@ -38,12 +38,6 @@ export const SettingsView: React.FC = () => {
   const followups = getActiveFollowups(calls);
   const activeCount = followups.length;
 
-  const { supabaseUser } = useAuth();
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [isChangingPassword, setIsChangingPassword] = useState(false);
-
   const fetchManagers = async () => {
     setManagerLoadState('loading');
     const { data, error } = await supabase.rpc('get_active_managers');
@@ -76,59 +70,7 @@ export const SettingsView: React.FC = () => {
     }
   }, [profile, loadMessages]);
 
-  const handleChangePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      toast.error(tr('لطفاً تمام فیلدها را پر کنید.', 'Please fill all fields.'));
-      return;
-    }
-    if (newPassword.length < 8) {
-      toast.error(tr('رمز عبور جدید باید حداقل ۸ کاراکتر باشد.', 'New password must be at least 8 characters.'));
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      toast.error(tr('رمز عبور جدید و تکرار آن مطابقت ندارند.', 'New password and confirmation do not match.'));
-      return;
-    }
-    if (newPassword === currentPassword) {
-      toast.error(tr('رمز عبور جدید نمی‌تواند مشابه رمز فعلی باشد.', 'New password cannot be the same as current password.'));
-      return;
-    }
-    if (!supabaseUser?.email) {
-      toast.error(tr('ایمیل کاربر یافت نشد.', 'User email not found.'));
-      return;
-    }
 
-    setIsChangingPassword(true);
-
-    // Verify current password via sign in
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: supabaseUser.email,
-      password: currentPassword
-    });
-
-    if (signInError) {
-      setIsChangingPassword(false);
-      toast.error(tr('رمز عبور فعلی نامعتبر است.', 'Current password invalid.'));
-      return;
-    }
-
-    // Update password
-    const { error: updateError } = await supabase.auth.updateUser({
-      password: newPassword
-    });
-
-    setIsChangingPassword(false);
-
-    if (updateError) {
-      toast.error(tr('خطایی در تغییر رمز عبور رخ داد. دوباره تلاش کنید.', 'Generic retry error.'));
-    } else {
-      toast.success(tr('رمز عبور با موفقیت تغییر کرد.', 'Password changed successfully.'));
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-    }
-  };
 
   const fetchLastSent = () => {
     if (!profile) return;
@@ -486,55 +428,6 @@ export const SettingsView: React.FC = () => {
 
         {/* --- ROW 2 --- */}
         <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-
-          {/* Account Security Area */}
-          <div className="lg:col-span-5 flex flex-col gap-3">
-            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-              <Lock size={16} className="text-rose-500" />
-              {tr('امنیت حساب / تغییر رمز عبور', 'Account Security')}
-            </h3>
-
-            <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm flex flex-col h-full">
-              <form onSubmit={handleChangePassword} className="flex flex-col gap-3 flex-1">
-                <div>
-                  <input
-                    type="password"
-                    placeholder={tr('رمز فعلی', 'Current Password')}
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="w-full h-10 px-3 text-sm font-medium border border-slate-200 bg-slate-50 focus:bg-white text-slate-900 rounded-md outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/10 transition-all placeholder:text-slate-400"
-                    dir="ltr"
-                  />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <input
-                    type="password"
-                    placeholder={tr('رمز جدید', 'New Password')}
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full h-10 px-3 text-sm font-medium border border-slate-200 bg-slate-50 focus:bg-white text-slate-900 rounded-md outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/10 transition-all placeholder:text-slate-400"
-                    dir="ltr"
-                  />
-                  <input
-                    type="password"
-                    placeholder={tr('تکرار رمز جدید', 'Repeat New Password')}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full h-10 px-3 text-sm font-medium border border-slate-200 bg-slate-50 focus:bg-white text-slate-900 rounded-md outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/10 transition-all placeholder:text-slate-400"
-                    dir="ltr"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={isChangingPassword || !currentPassword || !newPassword || !confirmPassword}
-                  className="h-10 mt-auto bg-rose-600 hover:bg-rose-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-md font-bold text-sm transition-all flex items-center justify-center gap-2"
-                >
-                  {isChangingPassword ? <RefreshCw size={16} className="animate-spin" /> : <Lock size={16} />}
-                  <span>{tr('تغییر رمز عبور', 'Change Password')}</span>
-                </button>
-              </form>
-            </div>
-          </div>
 
           {/* Manager Messages Area */}
           <div className="lg:col-span-7 flex flex-col gap-3 min-w-0">

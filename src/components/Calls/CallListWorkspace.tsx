@@ -599,7 +599,7 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
         </div>
       )}
       {/* Unified Operational Toolbar */}
-      <div className="pt-4 pb-3 w-full flex flex-col md:flex-row gap-3 items-center justify-between" style={{ paddingLeft: `${layoutMargin}px`, paddingRight: `${layoutMargin}px` }}>
+      <div className="pt-4 pb-3 w-full flex flex-col md:flex-row gap-3 items-center justify-between px-4 md:px-6">
         {/* Left side: Search */}
         <div className="relative flex-1 w-full max-w-md group">
             <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-slate-500/60 group-focus-within:text-brand-500 transition-colors">
@@ -661,7 +661,7 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
       </div>
 
       {/* Main Grid View */}
-      <div className="flex-1 w-full min-h-0 flex items-stretch gap-4 pb-4" style={{ paddingLeft: `${layoutMargin}px`, paddingRight: `${layoutMargin}px` }}>
+      <div className="flex-1 w-full min-h-0 flex items-stretch gap-4 pb-4 px-4 md:px-6" >
         <div className="flex-1 flex flex-col overflow-hidden relative">
 
         {activeTab === 'blacklist' ? (
