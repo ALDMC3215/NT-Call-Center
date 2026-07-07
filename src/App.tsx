@@ -19,6 +19,10 @@ const AuthScreen         = React.lazy(() => import('./components/Auth/AuthScreen
 const PendingScreen      = React.lazy(() => import('./components/Auth/PendingScreen').then(m => ({ default: m.PendingScreen })));
 const ManagerDashboard   = React.lazy(() => import('./components/Manager/ManagerDashboard').then(m => ({ default: m.ManagerDashboard })));
 const HomeView           = React.lazy(() => import('./components/Home/HomeView').then(m => ({ default: m.HomeView })));
+const NegotiationView    = React.lazy(() => import('./components/Education/NegotiationView').then(m => ({ default: m.NegotiationView })));
+const ScheduleView       = React.lazy(() => import('./components/Education/ScheduleView').then(m => ({ default: m.ScheduleView })));
+const CoursesView        = React.lazy(() => import('./components/Courses/CoursesView').then(m => ({ default: m.CoursesView })));
+const IntroTextView      = React.lazy(() => import('./components/Education/IntroTextView').then(m => ({ default: m.IntroTextView })));
 
 import { LoadingSpinner } from './components/Shared/LoadingSpinner';
 import { AnimatePresence, motion } from 'motion/react';
@@ -34,15 +38,21 @@ import { Shield, ArrowLeft, UserCheck, Home } from 'lucide-react';
 // ---------------------------------------------------------------------------
 const FollowupReminder = () => {
   const { calls } = useAppContext();
+  const callsRef = React.useRef(calls);
+
+  React.useEffect(() => {
+    callsRef.current = calls;
+  }, [calls]);
+
   React.useEffect(() => {
     const timer = setInterval(() => {
-      const followups = calls.filter(isActiveFollowup);
+      const followups = callsRef.current.filter(isActiveFollowup);
       if (followups.length > 0) {
         toast.info(`یادآوری: شما ${followups.length} شماره در لیست پیگیری دارید که نیازمند تماس مجدد هستند.`, { duration: 8000 });
       }
     }, 30 * 60 * 1000);
     return () => clearInterval(timer);
-  }, [calls]);
+  }, []);
   return null;
 };
 
@@ -164,7 +174,7 @@ const SessionManager = () => {
 // ---------------------------------------------------------------------------
 export default function App() {
   const { authStatus, loginMode } = useAuth();
-  const { profile, currentView, accentColor, sparkColor, setCurrentView } = useAppContext();
+  const { profile, currentView, popupView, setPopupView, accentColor, sparkColor, setCurrentView } = useAppContext();
   const { direction } = useLocale();
 
   // Determine if there's a role/panel mismatch
@@ -175,13 +185,21 @@ export default function App() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' || (e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight'))) {
         e.preventDefault();
-        setCurrentView('home');
+        if (popupView) {
+          setPopupView(null);
+        } else if (currentView !== 'home') {
+          setCurrentView('home');
+        }
       }
     };
     const handleMouseUp = (e: MouseEvent) => {
       if (e.button === 3 || e.button === 4) { // Browser Back/Forward buttons
         e.preventDefault();
-        setCurrentView('home');
+        if (popupView) {
+          setPopupView(null);
+        } else if (currentView !== 'home') {
+          setCurrentView('home');
+        }
       }
     };
     
@@ -191,7 +209,7 @@ export default function App() {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [setCurrentView]);
+  }, [setCurrentView, popupView, setPopupView, currentView]);
 
   return (
     <>
@@ -288,6 +306,10 @@ export default function App() {
                               {currentView === 'settings'  && <SettingsView />}
                               {currentView === 'blacklist' && <BlacklistView />}
                               {currentView === 'about'     && <AboutView />}
+                              {currentView === 'negotiation' && <NegotiationView />}
+                              {currentView === 'schedule'    && <ScheduleView />}
+                              {currentView === 'courses'     && <CoursesView />}
+                              {currentView === 'intro'       && <IntroTextView />}
                             </React.Suspense>
                           </motion.div>
                         </AnimatePresence>

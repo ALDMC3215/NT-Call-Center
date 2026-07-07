@@ -27,7 +27,8 @@ const reportMeaningfulActivity = (userId: string) => {
   })();
 };
 
-export type ViewType = 'home' | 'dashboard' | 'profile' | 'settings' | 'stats' | 'admin' | 'blacklist' | 'reports' | 'experts' | 'managers' | 'about';
+export type ViewType = 'home' | 'dashboard' | 'profile' | 'settings' | 'stats' | 'admin' | 'blacklist' | 'reports' | 'experts' | 'managers' | 'about' | 'negotiation' | 'schedule' | 'courses' | 'intro';
+export type PopupViewType = 'negotiation' | 'schedule' | 'learning_paths' | 'followup' | 'stats' | 'courses' | 'intro' | null;
 export type LayoutMode = 'default' | 'header-only' | 'cards-only';
 
 interface AppContextType {
@@ -39,6 +40,8 @@ interface AppContextType {
   blacklist: BlacklistEntry[];
   currentView: ViewType;
   setCurrentView: (view: ViewType) => void;
+  popupView: PopupViewType;
+  setPopupView: (view: PopupViewType) => void;
   activeCallTab: 'cards' | 'queue' | 'today' | 'followup' | 'stats' | 'blacklist' | 'courses';
   setActiveCallTab: (tab: 'cards' | 'queue' | 'today' | 'followup' | 'stats' | 'blacklist' | 'courses') => void;
   setProfile: (p: Profile) => void;
@@ -232,8 +235,27 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       console.error("Error updating followups map", e);
     }
   }, []);
-  const [currentView, setCurrentView] = useState<ViewType>('home');
-  const [activeCallTab, setActiveCallTab] = useState<'cards' | 'queue' | 'today' | 'followup' | 'stats' | 'blacklist' | 'courses'>('queue');
+  const [currentView, setCurrentView] = useState<ViewType>(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const view = urlParams.get('view');
+      if (view && ['home', 'dashboard', 'profile', 'settings', 'stats', 'admin', 'blacklist', 'reports', 'experts', 'managers', 'about', 'negotiation', 'schedule'].includes(view)) {
+        return view as ViewType;
+      }
+    }
+    return 'home';
+  });
+  const [popupView, setPopupView] = useState<PopupViewType>(null);
+  const [activeCallTab, setActiveCallTab] = useState<'cards' | 'queue' | 'today' | 'followup' | 'stats' | 'blacklist' | 'courses'>(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const tab = urlParams.get('tab');
+      if (tab && ['cards', 'queue', 'today', 'followup', 'stats', 'blacklist', 'courses'].includes(tab)) {
+        return tab as any;
+      }
+    }
+    return 'queue';
+  });
   const [enableFluid, setEnableFluidState] = useState<boolean>(() => {
     const saved = localStorage.getItem('fluid_enabled');
     return saved ? JSON.parse(saved) : true;
@@ -278,7 +300,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     storage.logout();
     setProfileState(null);
     setCallsState([]);
-    setCurrentView('dashboard');
+    setCurrentView('home');
   }, []);
 
   const addCall = useCallback(async (callDto: Omit<CallRecord, 'id' | 'createdAt'>) => {
@@ -361,6 +383,23 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       return false;
     }
   }, [profile, updateFollowUpInStorage]);
+
+  // Global Blacklist Cross-check
+  useEffect(() => {
+    if (!profile || calls.length === 0 || blacklist.length === 0) return;
+    
+    // Find calls that are in the blacklist
+    const blacklistedCalls = calls.filter(c => blacklist.some(b => b.phone === c.phone));
+    
+    if (blacklistedCalls.length > 0) {
+      // Remove them globally
+      blacklistedCalls.forEach(c => {
+        // Execute deletion quietly, it updates the callsState internally
+        deleteCall(c.id).catch(err => console.error("Error auto-removing blacklisted call:", err));
+      });
+      console.log(`Global check: Automatically removed ${blacklistedCalls.length} blacklisted numbers from the call list.`);
+    }
+  }, [profile, calls, blacklist, deleteCall]);
 
   const clearAllCalls = useCallback(() => {
     // Only local clear (not supported by cloud directly without looping)
@@ -495,7 +534,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     storage.wipeAllData();
     setProfileState(null);
     setCallsState([]);
-    setCurrentView('dashboard');
+    setCurrentView('home');
   }, []);
 
   const addToBlacklist = useCallback((phone: string, reason: BlacklistReason = 'افزودن دستی') => {
@@ -519,7 +558,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     storage.saveBlacklist(importedBlacklist);
     setProfileState(p);
     setBlacklistState(importedBlacklist);
-    setCurrentView('dashboard');
+    setCurrentView('home');
     // Note: restoring cloud calls from backup file is not fully supported locally anymore
   }, []);
 
@@ -725,11 +764,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
     return data as unknown as ContactTaskSummary;
   }, [profile]);
-
   const contextValue = React.useMemo(() => ({
-    profile, calls, isLoadingCalls, callsError, blacklist, currentView, setCurrentView, activeCallTab, setActiveCallTab, setProfile, logout, addCall, updateCall, deleteCall, clearAllCalls, bulkAddCalls, importData, wipeAllData, importedData, setImportedData, addToBlacklist, removeFromBlacklist, isBlacklisted, restoreBackup, setContactWorkList, recordAttempt, enableFluid, setEnableFluid, accentColor, setAccentColor, layoutMargin, setLayoutMargin, sparkColor, setSparkColor,
+    profile, calls, isLoadingCalls, callsError, blacklist, currentView, setCurrentView, popupView, setPopupView, activeCallTab, setActiveCallTab, setProfile, logout, addCall, updateCall, deleteCall, clearAllCalls, bulkAddCalls, importData, wipeAllData, importedData, setImportedData, addToBlacklist, removeFromBlacklist, isBlacklisted, restoreBackup, setContactWorkList, recordAttempt, enableFluid, setEnableFluid, accentColor, setAccentColor, layoutMargin, setLayoutMargin, sparkColor, setSparkColor,
     getMyContactTasks, createContactTask, createContactTaskWithDetails, updateContactTaskDetails, rescheduleContactTask, completeContactTask, cancelContactTask, getMyContactTaskSummary, recordCallAttemptWithTask
-  }), [profile, calls, isLoadingCalls, callsError, blacklist, currentView, setCurrentView, activeCallTab, setActiveCallTab, setProfile, logout, addCall, updateCall, deleteCall, clearAllCalls, bulkAddCalls, importData, wipeAllData, importedData, setImportedData, addToBlacklist, removeFromBlacklist, isBlacklisted, restoreBackup, setContactWorkList, recordAttempt, enableFluid, setEnableFluid, accentColor, setAccentColor, layoutMargin, setLayoutMargin, sparkColor, setSparkColor, getMyContactTasks, createContactTask, createContactTaskWithDetails, updateContactTaskDetails, rescheduleContactTask, completeContactTask, cancelContactTask, getMyContactTaskSummary, recordCallAttemptWithTask]);
+  }), [profile, calls, isLoadingCalls, callsError, blacklist, currentView, setCurrentView, popupView, setPopupView, activeCallTab, setActiveCallTab, setProfile, logout, addCall, updateCall, deleteCall, clearAllCalls, bulkAddCalls, importData, wipeAllData, importedData, setImportedData, addToBlacklist, removeFromBlacklist, isBlacklisted, restoreBackup, setContactWorkList, recordAttempt, enableFluid, setEnableFluid, accentColor, setAccentColor, layoutMargin, setLayoutMargin, sparkColor, setSparkColor, getMyContactTasks, createContactTask, createContactTaskWithDetails, updateContactTaskDetails, rescheduleContactTask, completeContactTask, cancelContactTask, getMyContactTaskSummary, recordCallAttemptWithTask]);
 
   return (
     <AppContext.Provider value={contextValue}>

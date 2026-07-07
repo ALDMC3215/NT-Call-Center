@@ -1,11 +1,11 @@
 import React from 'react';
 import { useAppContext } from '../../hooks/useAppContext';
 import { calculateStats } from '../../utils/stats';
-import { BarChart3, PhoneCall, CheckCircle, XCircle, Clock, Search, X } from 'lucide-react';
+import { BarChart3, PhoneCall, CheckCircle, XCircle, Clock, Search, X, ArrowLeft } from 'lucide-react';
 import { useLocale } from '../../hooks/useLocale';
 
-export const StatsView = () => {
-  const { calls } = useAppContext();
+export const StatsView = ({ isModal, onClose }: { isModal?: boolean, onClose?: () => void }) => {
+  const { calls, setCurrentView } = useAppContext();
   const { tr } = useLocale();
   const stats = calculateStats(calls);
 
@@ -23,6 +23,23 @@ export const StatsView = () => {
         <div className="bento-card p-4 sm:p-5 flex flex-col gap-5">
           <div className="flex flex-col gap-1 text-right">
             <div className="flex items-center gap-2 mb-2">
+               {isModal ? (
+                 <button
+                   onClick={onClose}
+                   className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-colors"
+                   title="بستن"
+                 >
+                   <X size={20} />
+                 </button>
+              ) : (
+                <button
+                  onClick={() => setCurrentView('home')}
+                  className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-colors"
+                  title="بازگشت به مرکز فرماندهی"
+                >
+                  <ArrowLeft size={20} />
+                </button>
+              )}
                <div className="w-9 h-9 rounded-xl bg-brand-100 text-brand-700 flex items-center justify-center">
                   <BarChart3 size={18} />
                </div>

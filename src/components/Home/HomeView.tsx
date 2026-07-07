@@ -1,13 +1,14 @@
 import React, { useMemo, useState } from 'react';
 import { useAppContext } from '../../hooks/useAppContext';
 import { useLocale } from '../../hooks/useLocale';
-import { Phone, PhoneForwarded, Calendar, BookOpen, Activity, ArrowLeft, Settings, Info, Route, Shield, LogOut, User } from 'lucide-react';
+import { Phone, PhoneForwarded, Calendar, BookOpen, Activity, ArrowLeft, Settings, Info, Route, Shield, LogOut, User, Target, CalendarDays } from 'lucide-react';
+import * as Icons from 'lucide-react';
 import { LearningPathsModal } from '../Shared/LearningPathsModal';
 import { ConfirmDialog } from '../Shared/ConfirmDialog';
 import { useAuth } from '../../hooks/useAuth';
 
 export const HomeView = () => {
-  const { profile, calls, setCurrentView, setActiveCallTab } = useAppContext();
+  const { profile, calls, setCurrentView, setActiveCallTab, setPopupView } = useAppContext();
   const { signOut } = useAuth();
   const { tr, direction } = useLocale();
   const [learningPathsOpen, setLearningPathsOpen] = useState(false);
@@ -76,7 +77,7 @@ export const HomeView = () => {
           description: tr('مشاهده لیست و اطلاعات به‌روز دوره‌های آموزشی', 'View updated courses list and details'),
           icon: BookOpen,
           count: null,
-          onClick: () => { setCurrentView('dashboard'); setActiveCallTab('courses'); },
+          onClick: () => { setCurrentView('courses'); setPopupView(null); },
           iconColor: 'text-brand-600',
           iconBg: 'bg-brand-500/10',
           gradient: 'from-purple-500 to-brand-600'
@@ -92,6 +93,39 @@ export const HomeView = () => {
           iconBg: 'bg-rose-500/10',
           gradient: 'from-rose-400 to-red-500'
         } : null,
+        {
+          id: 'negotiation',
+          title: tr('تکنیک‌های مذاکره', 'Negotiation Techniques'),
+          description: tr('یادگیری و مطالعه تکنیک‌های حرفه‌ای فروش و مذاکره', 'Learn and study professional sales and negotiation techniques'),
+          icon: Target,
+          count: null,
+          onClick: () => { setCurrentView('negotiation'); setPopupView(null); },
+          iconColor: 'text-emerald-600',
+          iconBg: 'bg-emerald-500/10',
+          gradient: 'from-emerald-400 to-teal-500'
+        },
+        {
+          id: 'intro',
+          title: tr('متن‌های معرفی', 'Introduction Texts'),
+          description: tr('نمونه متن‌های شروع مکالمه و پرزنت خدمات', 'Sample conversation starters and service presentation texts'),
+          icon: Icons.MessageSquareQuote || Icons.MessageSquare,
+          count: null,
+          onClick: () => { setCurrentView('intro'); setPopupView(null); },
+          iconColor: 'text-rose-600',
+          iconBg: 'bg-rose-500/10',
+          gradient: 'from-rose-400 to-pink-500'
+        },
+        {
+          id: 'schedule',
+          title: tr('برنامه کلاسی', 'Class Schedule'),
+          description: tr('مشاهده برنامه هفتگی کلاس‌ها و وضعیت ثبت‌نام', 'View weekly class schedule and registration status'),
+          icon: CalendarDays,
+          count: null,
+          onClick: () => { setCurrentView('schedule'); },
+          iconColor: 'text-indigo-600',
+          iconBg: 'bg-indigo-500/10',
+          gradient: 'from-indigo-400 to-blue-500'
+        },
         {
           id: 'about',
           title: tr('راهنمای سیستم', 'System Guide'),

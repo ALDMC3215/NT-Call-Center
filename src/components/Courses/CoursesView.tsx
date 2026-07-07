@@ -6,6 +6,7 @@ import { useLocale } from '../../hooks/useLocale';
 import { CourseDetailsModal } from './CourseDetailsModal';
 import { fetchCourseDataDynamic } from '../../utils/scraper';
 import { customToast as toast } from '../UI/toast';
+import { useAppContext } from '../../hooks/useAppContext';
 
 const getIcon = (iconName: string) => {
   const Icon = (Icons as any)[iconName];
@@ -88,7 +89,8 @@ const parseSchedule = (schedule?: string) => {
   return badges;
 };
 
-export const CoursesView = ({ externalSearchQuery = '' }: { externalSearchQuery?: string }) => {
+export const CoursesView = ({ externalSearchQuery = '', isModal, onClose }: { externalSearchQuery?: string, isModal?: boolean, onClose?: () => void }) => {
+  const { setCurrentView } = useAppContext();
   const { tr, direction } = useLocale();
   const [selectedCourse, setSelectedCourse] = useState<CourseItem | null>(null);
   const [dynamicData, setDynamicData] = useState<Record<string, any>>({});
@@ -188,6 +190,34 @@ export const CoursesView = ({ externalSearchQuery = '' }: { externalSearchQuery?
 
   return (
     <div className="flex flex-col h-full w-full relative pt-4 pb-4 px-4 md:px-8 bg-slate-50" dir={direction}>
+      <div className="flex-none bg-transparent mb-4 flex items-center justify-between sticky top-0 z-20">
+        <div className="flex items-center gap-3">
+           <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+             <Icons.BookOpen size={22} strokeWidth={2.5} />
+           </div>
+           <div>
+             <h1 className="text-lg font-black text-slate-800">دوره‌ها و قیمت‌ها</h1>
+           </div>
+        </div>
+        {isModal ? (
+          <button
+            onClick={onClose}
+            className="w-10 h-10 bg-white border border-slate-200 text-slate-500 flex items-center justify-center rounded-full hover:bg-slate-100 hover:text-slate-900 transition-colors shadow-sm"
+            title="بستن"
+          >
+            <Icons.X size={20} />
+          </button>
+        ) : (
+          <button
+            onClick={() => setCurrentView('home')}
+            id="cv-back-btn"
+            className="w-10 h-10 bg-white border border-slate-200 text-slate-500 flex items-center justify-center rounded-full hover:bg-slate-100 hover:text-slate-900 transition-colors shadow-sm"
+            title="بازگشت"
+          >
+            <Icons.ArrowLeft size={20} />
+          </button>
+        )}
+      </div>
       {/* Content Area - Vertical Layout */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden hide-scrollbar relative z-10 pb-4">
         <AnimatePresence mode="wait">

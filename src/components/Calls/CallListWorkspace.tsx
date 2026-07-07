@@ -6,7 +6,7 @@ import { CallResultActionModal } from './CallResultActionModal';
 import { ContactTaskEditorModal } from './ContactTaskEditorModal';
 import { CALL_STATUSES, REGISTRATION_STATUSES } from '../../constants';
 import * as Icons from 'lucide-react';
-import { PhoneOff, Phone, PhoneForwarded, Link as LinkIcon, BookOpen, Users, CheckCircle2, FileText, Search, XCircle, Filter, X, Check, Plus, Calendar, Eraser, Trash2, Upload, ChevronDown, Ban } from 'lucide-react';
+import { PhoneOff, Phone, PhoneForwarded, Link as LinkIcon, BookOpen, Users, CheckCircle2, FileText, Search, XCircle, Filter, X, Check, Plus, Calendar, Eraser, Trash2, Upload, ChevronDown, Ban, ShieldAlert, CalendarDays, Activity, Clock, Route, MessageSquareQuote } from 'lucide-react';
 import { customToast as toast } from '../UI/toast';
 import { createPortal } from 'react-dom';
 import * as xlsx from 'xlsx';
@@ -22,6 +22,10 @@ import { TableMultiSelect } from '../Shared/TableMultiSelect';
 import { BlacklistView } from '../Blacklist/BlacklistView';
 import { StatsView } from '../Stats/StatsView';
 import { CoursesView } from '../Courses/CoursesView';
+import { NegotiationView } from '../Education/NegotiationView';
+import { ScheduleView } from '../Education/ScheduleView';
+import { IntroTextView } from '../Education/IntroTextView';
+import { LearningPathsModal } from '../Shared/LearningPathsModal';
 import { OrbitalCardView } from './OrbitalCardView';
 import { isActiveFollowup } from '../../utils/followups';
 import { jalaliDateTimeToIso } from '../../utils/jalali';
@@ -264,7 +268,9 @@ export const CallListWorkspace = () => {
     setContactWorkList,
     getMyContactTasks,
     recordCallAttemptWithTask,
-    updateContactTaskDetails
+    updateContactTaskDetails,
+    popupView,
+    setPopupView
   } = useAppContext();
   const { tr, valueLabel, direction } = useLocale();
   const [searchQuery, setSearchQuery] = useState('');
@@ -394,10 +400,29 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
   };
 
   const handleManualAdd = (phone: string, fullName: string) => {
+    // 1. Blacklist check
     if (blacklist.some(b => b.phone === phone)) {
       toast.error(tr('خطا: این شماره در لیست سیاه قرار دارد و نمی‌تواند اضافه شود.', 'Error: This number is blacklisted and cannot be added.'));
       return;
     }
+
+    const existingCall = calls.find(c => c.phone === phone);
+    if (existingCall) {
+      // 2. Follow-ups check
+      const hasPendingFollowup = tasks.some(t => t.contact_id === existingCall.id && t.status === 'pending' && ['retry_call', 'consultation_reminder', 'other_followup'].includes(t.task_type));
+      if (hasPendingFollowup) {
+         toast.error(tr('خطا: این شماره در لیست پیگیری‌های شما وجود دارد.', 'Error: This number is in your follow-ups list.'));
+         return;
+      }
+      
+      // 3. Queue (New list) check
+      const hasAnyAttempt = existingCall.attempts && existingCall.attempts.length > 0;
+      if (!hasAnyAttempt) {
+         toast.error(tr('خطا: این شماره در لیست جدید شما وجود دارد.', 'Error: This number is in your new list.'));
+         return;
+      }
+    }
+
     addCall({ phone, fullName });
     toast.success(tr('شماره جدید با موفقیت اضافه شد.', 'New number added successfully.'));
   };
@@ -663,77 +688,41 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
         <div className="hidden md:block order-3 w-[300px]"></div>
       </div>
 
+      {/* Quick Access Bar */}
+      <div className="w-full flex items-center justify-center gap-3 flex-wrap px-4 md:px-6 pb-4">
+         <a href="?view=dashboard&tab=followup" onClick={e => { e.preventDefault(); setPopupView(popupView === 'followup' ? null : 'followup'); }} className={`flex items-center gap-2 px-4 py-2 rounded-xl shadow-sm border transition-colors text-[13px] font-bold ${popupView === 'followup' ? 'bg-brand-50 border-brand-200 text-brand-700' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'}`}>
+            <Clock size={16} className="text-amber-500" />
+            پیگیری‌ها
+         </a>
+         <a href="?view=dashboard&tab=stats" onClick={e => { e.preventDefault(); setPopupView(popupView === 'stats' ? null : 'stats'); }} className={`flex items-center gap-2 px-4 py-2 rounded-xl shadow-sm border transition-colors text-[13px] font-bold ${popupView === 'stats' ? 'bg-brand-50 border-brand-200 text-brand-700' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'}`}>
+            <Activity size={16} className="text-teal-500" />
+            فعالیت روزانه
+         </a>
+         <a href="?view=dashboard&tab=courses" onClick={e => { e.preventDefault(); setPopupView(popupView === 'courses' ? null : 'courses'); }} className={`flex items-center gap-2 px-4 py-2 rounded-xl shadow-sm border transition-colors text-[13px] font-bold ${popupView === 'courses' ? 'bg-brand-50 border-brand-200 text-brand-700' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'}`}>
+            <BookOpen size={16} className="text-blue-500" />
+            دوره‌ها و قیمت‌ها
+         </a>
+         <a href="?view=home" onClick={e => { e.preventDefault(); setPopupView(popupView === 'learning_paths' ? null : 'learning_paths'); }} className={`flex items-center gap-2 px-4 py-2 rounded-xl shadow-sm border transition-colors text-[13px] font-bold ${popupView === 'learning_paths' ? 'bg-brand-50 border-brand-200 text-brand-700' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'}`}>
+            <Route size={16} className="text-purple-500" />
+            مسیرهای یادگیری
+         </a>
+         <a href="?view=negotiation" onClick={e => { e.preventDefault(); setPopupView(popupView === 'negotiation' ? null : 'negotiation'); }} className={`flex items-center gap-2 px-4 py-2 rounded-xl shadow-sm border transition-colors text-[13px] font-bold ${popupView === 'negotiation' ? 'bg-brand-50 border-brand-200 text-brand-700' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'}`}>
+            <ShieldAlert size={16} className="text-rose-500" />
+            تکنیک‌های مذاکره
+         </a>
+         <a href="?view=schedule" onClick={e => { e.preventDefault(); setPopupView(popupView === 'schedule' ? null : 'schedule'); }} className={`flex items-center gap-2 px-4 py-2 rounded-xl shadow-sm border transition-colors text-[13px] font-bold ${popupView === 'schedule' ? 'bg-brand-50 border-brand-200 text-brand-700' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'}`}>
+            <CalendarDays size={16} className="text-indigo-500" />
+            برنامه کلاسی
+         </a>
+         <a href="?view=intro" onClick={e => { e.preventDefault(); setPopupView(popupView === 'intro' ? null : 'intro'); }} className={`flex items-center gap-2 px-4 py-2 rounded-xl shadow-sm border transition-colors text-[13px] font-bold ${popupView === 'intro' ? 'bg-brand-50 border-brand-200 text-brand-700' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'}`}>
+            <MessageSquareQuote size={16} className="text-pink-500" />
+            متن معرفی
+         </a>
+      </div>
+
       {/* Main Grid View */}
       <div className="flex-1 w-full min-h-0 flex items-stretch gap-4 pb-4 px-4 md:px-6" >
         <div className="flex-1 flex flex-col overflow-hidden relative">
-
-        {activeTab === 'blacklist' ? (
-          <BlacklistView />
-        ) : activeTab === 'stats' ? (
-          <StatsView />
-        ) : activeTab === 'courses' ? (
-          <CoursesView externalSearchQuery={searchQuery} />
-        ) : activeTab === 'followup' ? (
-          <div className="relative h-fit max-h-full bg-white rounded-2xl border border-slate-200 flex flex-col overflow-hidden shadow-sm">
-             <div className="w-full flex-1 overflow-auto px-4 custom-scrollbar py-2">
-               <table className="w-full text-right border-separate border-spacing-y-2 min-w-[700px]">
-                 <thead>
-                   <tr className="text-slate-500 text-[11px] font-bold pb-2">
-                     <th className="px-3 pb-2 w-[150px]">شماره تماس</th>
-                     <th className="px-3 pb-2 min-w-[150px]">نام</th>
-                     <th className="px-3 pb-2 w-[150px] text-center">برچسب پیگیری</th>
-                     <th className="px-3 pb-2 w-[200px] text-center">تاریخ و ساعت</th>
-                     <th className="px-3 pb-2 w-[100px] text-center">عملیات</th>
-                   </tr>
-                 </thead>
-                 <tbody>
-                   {tasks.filter(t => ['retry_call', 'consultation_reminder', 'other_followup'].includes(t.task_type) && t.status === 'pending').sort((a, b) => (a.scheduled_date || '').localeCompare(b.scheduled_date || '')).map(task => {
-                     const contact = calls.find(c => c.id === task.contact_id);
-                     if (!contact) return null;
-                     let tagColor = 'bg-slate-100 text-slate-700';
-                     let tagLabel = 'سایر';
-                     if (task.task_type === 'retry_call') { tagColor = 'bg-amber-100 text-amber-700 border border-amber-200'; tagLabel = 'تماس مجدد'; }
-                     else if (task.task_type === 'consultation_reminder') { tagColor = 'bg-blue-100 text-blue-700 border border-blue-200'; tagLabel = 'تماس مشاوره'; }
-                     else if (task.task_type === 'other_followup') { tagColor = 'bg-purple-100 text-purple-700 border border-purple-200'; tagLabel = 'سایر'; }
-
-                     return (
-                       <tr key={task.id} className="bg-white hover:bg-slate-50 border border-slate-200 rounded-xl overflow-hidden shadow-sm transition-colors group">
-                         <td className="px-3 py-3 rounded-r-xl border-y border-r border-slate-200 font-medium" dir="ltr">{contact.phone}</td>
-                         <td className="px-3 py-3 border-y border-slate-200">
-                           <div className="flex flex-col gap-1">
-                             <span className="font-medium text-slate-800">{contact.fullName || '-'}</span>
-                             {task.followup_note && <span className="text-xs text-slate-500 truncate max-w-[200px]" title={task.followup_note}>{task.followup_note}</span>}
-                           </div>
-                         </td>
-                         <td className="px-3 py-3 border-y border-slate-200 text-center">
-                           <span className={`px-2 py-1 text-[11px] font-bold rounded-lg ${tagColor}`}>{tagLabel}</span>
-                         </td>
-                         <td className="px-3 py-3 border-y border-slate-200 text-center text-[12px] text-slate-600 font-medium">
-                           {task.scheduled_date} {task.scheduled_time && `- ${task.scheduled_time}`}
-                         </td>
-                         <td className="px-3 py-3 rounded-l-xl border-y border-l border-slate-200 text-center">
-                            <div className="flex items-center justify-center gap-1.5">
-                              <button onClick={() => setEditModalTask(task)} className="p-1.5 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors inline-flex justify-center" title="ویرایش پیگیری">
-                                <Icons.Edit3 size={16} />
-                              </button>
-                              <button onClick={() => handleRowSubmit(contact)} className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors inline-flex justify-center" title="ثبت نتیجه">
-                                <Icons.Check size={18} strokeWidth={2.5} />
-                              </button>
-                            </div>
-                         </td>
-                       </tr>
-                     );
-                   })}
-                   {tasks.filter(t => ['retry_call', 'consultation_reminder', 'other_followup'].includes(t.task_type) && t.status === 'pending').length === 0 && (
-                     <tr>
-                       <td colSpan={5} className="text-center py-8 text-slate-500 font-medium bg-white rounded-xl border border-slate-200">پیگیری یافت نشد</td>
-                     </tr>
-                   )}
-                 </tbody>
-               </table>
-             </div>
-          </div>
-        ) : (
           <div className="relative h-fit max-h-full bg-white rounded-2xl border border-slate-200 flex flex-col overflow-hidden shadow-sm">
 
           <div className="min-h-0 overflow-x-auto overflow-y-auto custom-select-scroll relative z-10">
@@ -970,7 +959,6 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
             )}
           </div>
         </div>
-        )}
       </div>
       </div>
       <CallResultActionModal 
@@ -1031,6 +1019,128 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
         title={confirmModalConfig.title}
         message={confirmModalConfig.message}
       />
+      {/* Render Quick Access Modals */}
+      <AnimatePresence>
+        {popupView && popupView !== 'learning_paths' && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-8" dir="rtl">
+            <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setPopupView(null)} />
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-slate-50 rounded-3xl w-full h-full max-w-[1400px] relative z-10 overflow-hidden flex flex-col shadow-2xl border border-slate-200">
+               <div className="flex-1 w-full h-full overflow-y-auto overflow-x-hidden relative custom-scrollbar">
+                 {popupView === 'negotiation' && <NegotiationView isModal={true} onClose={() => setPopupView(null)} />}
+                 {popupView === 'schedule' && <ScheduleView isModal={true} onClose={() => setPopupView(null)} />}
+                 {popupView === 'stats' && <StatsView isModal={true} onClose={() => setPopupView(null)} />}
+                 {popupView === 'courses' && <CoursesView isModal={true} onClose={() => setPopupView(null)} />}
+                 {popupView === 'intro' && <IntroTextView isModal={true} onClose={() => setPopupView(null)} />}
+                 {popupView === 'followup' && (
+                   <div className="flex flex-col h-full bg-[#F8FAFC]">
+                     <div className="flex-none bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-20 shadow-sm">
+                       <div className="flex items-center gap-3">
+                         <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                           <Clock size={22} strokeWidth={2.5} />
+                         </div>
+                         <div>
+                           <h1 className="text-lg font-black text-slate-800">لیست پیگیری‌ها</h1>
+                           <p className="text-xs font-medium text-slate-500 mt-0.5">مدیریت تماس‌های معلق و برنامه‌ریزی شده</p>
+                         </div>
+                       </div>
+                       <button onClick={() => setPopupView(null)} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-colors">
+                         <X size={16} strokeWidth={2.5} />
+                       </button>
+                     </div>
+                     <div className="flex-1 overflow-auto p-4 md:p-6 custom-scrollbar">
+                       <div className="max-w-[1200px] mx-auto bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                         <table className="w-full text-right border-separate border-spacing-y-2 min-w-[700px] p-2">
+                           <thead>
+                             <tr className="text-slate-500 text-[11px] font-bold pb-2">
+                               <th className="px-3 pb-2 w-[150px]">شماره تماس</th>
+                               <th className="px-3 pb-2 min-w-[150px]">نام</th>
+                               <th className="px-3 pb-2 w-[150px] text-center">برچسب پیگیری</th>
+                               <th className="px-3 pb-2 w-[200px] text-center">تاریخ و ساعت</th>
+                               <th className="px-3 pb-2 w-[100px] text-center">عملیات</th>
+                             </tr>
+                           </thead>
+                           <tbody>
+                             {tasks.filter(t => ['retry_call', 'consultation_reminder', 'other_followup'].includes(t.task_type) && t.status === 'pending').sort((a, b) => (a.scheduled_date || '').localeCompare(b.scheduled_date || '')).map(task => {
+                               const contact = calls.find(c => c.id === task.contact_id);
+                               if (!contact) return null;
+                               let tagColor = 'bg-slate-100 text-slate-700';
+                               let tagLabel = 'سایر';
+                               if (task.task_type === 'retry_call') { tagColor = 'bg-amber-100 text-amber-700 border border-amber-200'; tagLabel = 'تماس مجدد'; }
+                               else if (task.task_type === 'consultation_reminder') { tagColor = 'bg-blue-100 text-blue-700 border border-blue-200'; tagLabel = 'تماس مشاوره'; }
+                               else if (task.task_type === 'other_followup') { tagColor = 'bg-purple-100 text-purple-700 border border-purple-200'; tagLabel = 'سایر'; }
+
+                               return (
+                                 <tr key={task.id} className="group hover:bg-slate-50 transition-colors bg-white">
+                                   <td className="px-3 py-2 border-y border-r border-slate-100 rounded-r-xl">
+                                     <div className="flex items-center gap-2">
+                                       <Phone size={14} className="text-slate-400" />
+                                       <span className="font-semibold text-slate-700 text-[13px]">{contact.phone}</span>
+                                     </div>
+                                   </td>
+                                   <td className="px-3 py-2 border-y border-slate-100">
+                                     <span className="font-bold text-slate-800 text-[13px]">{contact.fullName || 'ثبت نشده'}</span>
+                                   </td>
+                                   <td className="px-3 py-2 border-y border-slate-100 text-center">
+                                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold ${tagColor}`}>
+                                       {tagLabel}
+                                     </span>
+                                   </td>
+                                   <td className="px-3 py-2 border-y border-slate-100 text-center">
+                                     {task.scheduled_date ? (
+                                       <div className="flex flex-col items-center justify-center">
+                                         <div className="flex items-center gap-1.5 text-slate-600">
+                                           <Calendar size={12} className="text-brand-500" />
+                                           <span className="font-bold text-[12px]">{task.scheduled_date}</span>
+                                         </div>
+                                         {task.scheduled_time && (
+                                           <div className="flex items-center gap-1.5 text-slate-500 mt-0.5">
+                                             <Clock size={12} />
+                                             <span className="font-semibold text-[11px]">{task.scheduled_time}</span>
+                                           </div>
+                                         )}
+                                       </div>
+                                     ) : (
+                                       <span className="text-slate-400 text-[12px]">-</span>
+                                     )}
+                                   </td>
+                                   <td className="px-3 py-2 border-y border-l border-slate-100 rounded-l-xl text-center">
+                                     <button 
+                                       onClick={() => {
+                                         setPopupView(null);
+                                         setSearchQuery(contact.phone);
+                                         setActiveCallTab('cards');
+                                       }}
+                                       className="h-8 px-3 rounded-lg bg-brand-50 text-brand-600 hover:bg-brand-500 hover:text-white transition-all text-[12px] font-bold inline-flex items-center gap-1"
+                                     >
+                                       <Search size={14} />
+                                       مشاهده
+                                     </button>
+                                   </td>
+                                 </tr>
+                               );
+                             })}
+                           </tbody>
+                         </table>
+                         {tasks.filter(t => ['retry_call', 'consultation_reminder', 'other_followup'].includes(t.task_type) && t.status === 'pending').length === 0 && (
+                           <div className="flex flex-col items-center justify-center py-12 px-4">
+                             <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center mb-3">
+                               <Check size={20} className="text-slate-300" />
+                             </div>
+                             <h3 className="text-sm font-bold text-slate-600">پیگیری معلقی وجود ندارد</h3>
+                           </div>
+                         )}
+                       </div>
+                     </div>
+                   </div>
+                 )}
+               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+      {popupView === 'learning_paths' && (
+        <LearningPathsModal isOpen={true} onClose={() => setPopupView(null)} />
+      )}
     </div>
   );
 };
