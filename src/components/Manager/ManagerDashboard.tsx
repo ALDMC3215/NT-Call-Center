@@ -537,7 +537,7 @@ export const ManagerDashboard: React.FC = () => {
                            }
                            return (
                              <div key={m.id} className={`p-3 rounded-xl border shadow-sm ${isMine ? 'bg-indigo-50/50 border-indigo-100 mr-6' : 'bg-white border-slate-200 ml-6'}`}>
-                               <div className="flex justify-between mb-2"><span className="font-extrabold text-[10px] text-slate-700">{isMine ? 'شما' : m.sender_name}</span><span className="text-[9px] text-slate-400 font-bold" dir="ltr">{formatTime(m.created_at)}</span></div>
+                               <div className="flex justify-between mb-2"><span className="font-extrabold text-[10px] text-slate-700">{isMine ? `شما (به: ${m.recipient_name || 'کارشناس'})` : m.sender_name}</span><span className="text-[9px] text-slate-400 font-bold" dir="ltr">{formatTime(m.created_at)}</span></div>
                                <p className="text-[11px] font-medium text-slate-800 leading-relaxed">{m.body}</p>
                                {!isMine && !m.read_at && <div className="mt-2 flex justify-end"><button onClick={() => handleMarkRead(m.id)} className="text-[9px] text-indigo-700 bg-indigo-100 hover:bg-indigo-200 px-2 py-1 rounded-md font-bold transition-colors">خوانده شد</button></div>}
                              </div>
