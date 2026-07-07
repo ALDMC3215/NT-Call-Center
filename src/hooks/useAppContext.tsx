@@ -27,8 +27,8 @@ const reportMeaningfulActivity = (userId: string) => {
   })();
 };
 
-export type ViewType = 'home' | 'dashboard' | 'profile' | 'settings' | 'stats' | 'admin' | 'blacklist' | 'reports' | 'experts' | 'managers' | 'about' | 'negotiation' | 'schedule' | 'courses' | 'intro';
-export type PopupViewType = 'negotiation' | 'schedule' | 'learning_paths' | 'followup' | 'stats' | 'courses' | 'intro' | null;
+export type ViewType = 'home' | 'dashboard' | 'profile' | 'settings' | 'stats' | 'admin' | 'blacklist' | 'trash' | 'reports' | 'experts' | 'managers' | 'about' | 'negotiation' | 'schedule' | 'courses' | 'intro';
+export type PopupViewType = 'negotiation' | 'schedule' | 'learning_paths' | 'stats' | 'courses' | 'intro' | null;
 export type LayoutMode = 'default' | 'header-only' | 'cards-only';
 
 interface AppContextType {
@@ -42,8 +42,8 @@ interface AppContextType {
   setCurrentView: (view: ViewType) => void;
   popupView: PopupViewType;
   setPopupView: (view: PopupViewType) => void;
-  activeCallTab: 'cards' | 'queue' | 'today' | 'followup' | 'stats' | 'blacklist' | 'courses';
-  setActiveCallTab: (tab: 'cards' | 'queue' | 'today' | 'followup' | 'stats' | 'blacklist' | 'courses') => void;
+  activeCallTab: 'cards' | 'queue' | 'today' | 'stats' | 'blacklist' | 'courses';
+  setActiveCallTab: (tab: 'cards' | 'queue' | 'today' | 'stats' | 'blacklist' | 'courses') => void;
   setProfile: (p: Profile) => void;
   logout: () => void;
   addCall: (call: Omit<CallRecord, 'id' | 'createdAt'>) => void;
@@ -58,8 +58,8 @@ interface AppContextType {
   removeFromBlacklist: (phone: string) => void;
   isBlacklisted: (phone: string) => boolean;
   restoreBackup: (p: Profile, importedCalls: CallRecord[], importedBlacklist: BlacklistEntry[]) => void;
-  setContactWorkList: (contactId: string, destination: 'none' | 'today' | 'followup') => Promise<boolean>;
-  recordAttempt: (id: string, values: Pick<CallRecord, 'fullName' | 'callStatus' | 'courses' | 'advisory' | 'advisoryDate' | 'advisoryTime' | 'registered' | 'notes'>) => Promise<boolean>;
+  setContactWorkList: (contactId: string, destination: 'none' | 'today') => Promise<boolean>;
+  recordAttempt: (id: string, values: Pick<CallRecord, 'fullName' | 'callStatus' | 'advisory' | 'notes'>) => Promise<boolean>;
   enableFluid: boolean;
   setEnableFluid: (val: boolean) => void;
   accentColor: string;
@@ -98,21 +98,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    const updateFollowUpInStorage = (p: Profile, contactId: string, nextFollowUpAt: string | undefined) => {
-      try {
-        const key = `novintech_cloud_followups_${p.sessionId}`;
-        const saved = localStorage.getItem(key);
-        const map = saved ? JSON.parse(saved) : {};
-        if (nextFollowUpAt) {
-          map[contactId] = nextFollowUpAt;
-        } else {
-          delete map[contactId];
-        }
-        localStorage.setItem(key, JSON.stringify(map));
-      } catch (e) {
-        console.error("Error updating followups map", e);
-      }
-    };
     if (!profile) {
       setCallsState([]);
       return;
@@ -158,11 +143,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
               jalaliDateTime: a.jalali_date_time || '',
               fullName: a.full_name || '',
               callStatus: a.call_status || '',
-              courses: a.courses || [],
               advisory: a.advisory || '',
-              advisoryDate: a.advisory_date || '',
-              advisoryTime: a.advisory_time || '',
-              registered: a.registered || '',
               notes: a.notes || ''
             }));
 
@@ -171,16 +152,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             phone: c.phone,
             fullName: c.full_name || '',
             callStatus: c.call_status || '',
-            courses: c.courses || [],
             advisory: c.advisory || '',
-            advisoryDate: c.advisory_date || '',
-            advisoryTime: c.advisory_time || '',
-            registered: c.registered || '',
             notes: c.notes || '',
             createdAt: c.created_at,
             queueOrder: c.queue_order,
             attempts: contactAttempts,
             nextFollowUpAt: followUpMap[c.id],
+            isFollowUp: !!followUpMap[c.id],
             workList: c.work_list || 'none',
             workListDate: c.work_list_date || null,
             workListUpdatedAt: c.work_list_updated_at || null
@@ -219,14 +197,14 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     return () => { isMounted = false; };
   }, [profile, callsRefreshCounter]);
 
-  const updateFollowUpInStorage = useCallback((p: Profile | null, contactId: string, nextFollowUpAt: string | undefined) => {
+  const updateFollowUpInStorage = useCallback((p: Profile | null, contactId: string, isFollowUp: boolean) => {
     if (!p) return;
     try {
       const key = `novintech_cloud_followups_${p.sessionId}`;
       const saved = localStorage.getItem(key);
       const map = saved ? JSON.parse(saved) : {};
-      if (nextFollowUpAt) {
-        map[contactId] = nextFollowUpAt;
+      if (isFollowUp) {
+        map[contactId] = 'true';
       } else {
         delete map[contactId];
       }
@@ -246,11 +224,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     return 'home';
   });
   const [popupView, setPopupView] = useState<PopupViewType>(null);
-  const [activeCallTab, setActiveCallTab] = useState<'cards' | 'queue' | 'today' | 'followup' | 'stats' | 'blacklist' | 'courses'>(() => {
+  const [activeCallTab, setActiveCallTab] = useState<'cards' | 'queue' | 'today' | 'stats' | 'blacklist' | 'courses'>(() => {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       const tab = urlParams.get('tab');
-      if (tab && ['cards', 'queue', 'today', 'followup', 'stats', 'blacklist', 'courses'].includes(tab)) {
+      if (tab && ['cards', 'queue', 'today', 'stats', 'blacklist', 'courses'].includes(tab)) {
         return tab as any;
       }
     }
@@ -312,11 +290,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         p_phone: callDto.phone,
         p_full_name: callDto.fullName || null,
         p_call_status: callDto.callStatus || null,
-        p_courses: callDto.courses || [],
         p_advisory: callDto.advisory || null,
-        p_advisory_date: callDto.advisoryDate || null,
-        p_advisory_time: callDto.advisoryTime || null,
-        p_registered: callDto.registered || null,
         p_notes: callDto.notes || null,
         p_queue_order: callDto.queueOrder || null
       });
@@ -343,18 +317,14 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     reportMeaningfulActivity(profile.sessionId);
 
     setCallsState(prev => prev.map(c => c.id === updatedCall.id ? updatedCall : c));
-    updateFollowUpInStorage(profile, updatedCall.id, updatedCall.nextFollowUpAt);
+    updateFollowUpInStorage(profile, updatedCall.id, !!updatedCall.isFollowUp);
 
     try {
       const { error } = await supabase.rpc('update_contact', {
         p_id: updatedCall.id,
         p_full_name: updatedCall.fullName || null,
         p_call_status: updatedCall.callStatus || null,
-        p_courses: updatedCall.courses || [],
         p_advisory: updatedCall.advisory || null,
-        p_advisory_date: updatedCall.advisoryDate || null,
-        p_advisory_time: updatedCall.advisoryTime || null,
-        p_registered: updatedCall.registered || null,
         p_notes: updatedCall.notes || null,
         p_queue_order: updatedCall.queueOrder || null
       });
@@ -388,18 +358,14 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (!profile || calls.length === 0 || blacklist.length === 0) return;
     
-    // Find calls that are in the blacklist
-    const blacklistedCalls = calls.filter(c => blacklist.some(b => b.phone === c.phone));
+    // Find calls that are in the blacklist but not yet marked
+    const newlyBlacklisted = calls.filter(c => !c.isBlacklisted && blacklist.some(b => b.phone === c.phone));
     
-    if (blacklistedCalls.length > 0) {
-      // Remove them globally
-      blacklistedCalls.forEach(c => {
-        // Execute deletion quietly, it updates the callsState internally
-        deleteCall(c.id).catch(err => console.error("Error auto-removing blacklisted call:", err));
-      });
-      console.log(`Global check: Automatically removed ${blacklistedCalls.length} blacklisted numbers from the call list.`);
+    if (newlyBlacklisted.length > 0) {
+      setCallsState(prev => prev.map(c => blacklist.some(b => b.phone === c.phone) ? { ...c, isBlacklisted: true } : c));
+      console.log(`Global check: Marked ${newlyBlacklisted.length} numbers as blacklisted.`);
     }
-  }, [profile, calls, blacklist, deleteCall]);
+  }, [profile, calls, blacklist]);
 
   const clearAllCalls = useCallback(() => {
     // Only local clear (not supported by cloud directly without looping)
@@ -417,11 +383,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         phone: callDto.phone,
         full_name: callDto.fullName || null,
         call_status: callDto.callStatus || null,
-        courses: callDto.courses || [],
         advisory: callDto.advisory || null,
-        advisory_date: callDto.advisoryDate || null,
-        advisory_time: callDto.advisoryTime || null,
-        registered: callDto.registered || null,
         notes: callDto.notes || null,
         queue_order: callDto.queueOrder ?? startOrder + index
       }));
@@ -439,7 +401,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [profile, calls]);
 
-  const setContactWorkList = useCallback(async (contactId: string, destination: 'none' | 'today' | 'followup'): Promise<boolean> => {
+  const setContactWorkList = useCallback(async (contactId: string, destination: 'none' | 'today'): Promise<boolean> => {
     if (!profile) return false;
     reportMeaningfulActivity(profile.sessionId);
 
@@ -462,11 +424,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [profile]);
 
-  const recordAttempt = useCallback(async (id: string, values: Pick<CallRecord, 'fullName' | 'callStatus' | 'courses' | 'advisory' | 'advisoryDate' | 'advisoryTime' | 'registered' | 'notes'>): Promise<boolean> => {
+  const recordAttempt = useCallback(async (id: string, values: Pick<CallRecord, 'fullName' | 'callStatus' | 'advisory' | 'notes'>): Promise<boolean> => {
     if (!profile) return false;
     reportMeaningfulActivity(profile.sessionId);
     const s = values.callStatus;
-    const r = values.registered;
 
     let needsFollowUp = false;
 
@@ -478,17 +439,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       id: attemptId,
       createdAt: now.toISOString(),
       jalaliDateTime: jalaliTime,
-      ...values,
-      courses: values.courses || []
+      ...values
     };
 
     let newFollowUpAt: string | undefined = undefined;
 
     if (needsFollowUp) {
-      const scheduledAdvisory = values.advisory === 'بله' && values.advisoryDate && values.advisoryTime
-        ? jalaliDateTimeToIso(values.advisoryDate, values.advisoryTime)
-        : undefined;
-      newFollowUpAt = scheduledAdvisory || new Date(now.getTime() + 60 * 60 * 1000).toISOString();
+      newFollowUpAt = new Date(now.getTime() + 60 * 60 * 1000).toISOString();
     }
 
     try {
@@ -497,11 +454,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         p_jalali_date_time: jalaliTime,
         p_full_name: values.fullName || null,
         p_call_status: values.callStatus || null,
-        p_courses: values.courses || [],
         p_advisory: values.advisory || null,
-        p_advisory_date: values.advisoryDate || null,
-        p_advisory_time: values.advisoryTime || null,
-        p_registered: values.registered || null,
         p_notes: values.notes || null
       });
 
@@ -623,11 +576,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       p_jalali_date_time: jalaliTime,
       p_full_name: input.fullName || null,
       p_call_status: input.callStatus || null,
-      p_courses: input.courses || [],
       p_advisory: input.advisory || null,
-      p_advisory_date: input.advisoryDate || null,
-      p_advisory_time: input.advisoryTime || null,
-      p_registered: input.registered || null,
       p_notes: input.notes || null,
       p_task_type: input.taskType,
       p_scheduled_date: input.scheduledDate || null,
@@ -647,11 +596,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       ...call,
       fullName: input.fullName || call.fullName,
       callStatus: input.callStatus || call.callStatus,
-      courses: input.courses || call.courses,
       advisory: input.advisory || call.advisory,
-      advisoryDate: input.advisoryDate || call.advisoryDate,
-      advisoryTime: input.advisoryTime || call.advisoryTime,
-      registered: input.registered || call.registered,
       notes: input.notes || call.notes,
       attempts: [...(call.attempts || []), result.attempt],
     } : call));

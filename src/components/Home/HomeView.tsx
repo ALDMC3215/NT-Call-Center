@@ -73,8 +73,8 @@ export const HomeView = () => {
       items: [
         {
           id: 'courses',
-          title: tr('دوره‌ها و قیمت‌ها', 'Courses & Prices'),
-          description: tr('مشاهده لیست و اطلاعات به‌روز دوره‌های آموزشی', 'View updated courses list and details'),
+          title: tr('قیمت دوره‌ها', 'Course Prices'),
+          description: tr('مشاهده لیست و قیمت به‌روز دوره‌های آموزشی', 'View updated list and prices of courses'),
           icon: BookOpen,
           count: null,
           onClick: () => { setCurrentView('courses'); setPopupView(null); },

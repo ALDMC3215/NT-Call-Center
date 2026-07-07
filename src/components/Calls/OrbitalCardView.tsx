@@ -21,9 +21,7 @@ export const OrbitalCardView: React.FC<{ calls: CallRecord[] }> = ({ calls }) =>
   const [draft, setDraft] = useState<Partial<CallRecord>>({
     fullName: '',
     callStatus: '',
-    courses: [],
-    advisory: '',
-    registered: ''
+    advisory: ''
   });
 
   useEffect(() => {
@@ -31,9 +29,7 @@ export const OrbitalCardView: React.FC<{ calls: CallRecord[] }> = ({ calls }) =>
       setDraft({
         fullName: activeCall.fullName || '',
         callStatus: activeCall.callStatus || '',
-        courses: activeCall.courses || [],
-        advisory: activeCall.advisory || '',
-        registered: activeCall.registered || ''
+        advisory: activeCall.advisory || ''
       });
     }
   }, [activeCall?.id]);
@@ -53,18 +49,14 @@ export const OrbitalCardView: React.FC<{ calls: CallRecord[] }> = ({ calls }) =>
 
   const nodes = [
     { id: 'callStatus', label: 'وضعیت تماس', icon: Phone },
-    { id: 'courses', label: 'انتخاب دوره', icon: BookOpen },
-    { id: 'advisory', label: 'مشاوره', icon: Users },
-    { id: 'registered', label: 'ثبت نام', icon: CheckCircle2 },
+    { id: 'advisory', label: 'مشاوره', icon: Users }
   ] as const;
 
   const getOptionsForNode = (id: string) => {
     const rawOptions = (() => {
       switch (id) {
         case 'callStatus': return CALL_STATUSES;
-        case 'courses': return ['برنامه نویسی', 'طراحی وبسایت', 'هوش مصنوعی', 'اپلیکیشن نویسی', 'طراحی UI/UX'];
-        case 'advisory': return ['بله', 'خیر', 'هماهنگی بعدا'];
-        case 'registered': return REGISTRATION_STATUSES;
+        case 'advisory': return ['بله', 'خیر'];
         default: return [];
       }
     })();
@@ -84,11 +76,7 @@ export const OrbitalCardView: React.FC<{ calls: CallRecord[] }> = ({ calls }) =>
       recordAttempt(activeCall.id, {
         fullName: draft.fullName,
         callStatus: status,
-        courses: [],
         advisory: '',
-        registered: '',
-        advisoryDate: activeCall.advisoryDate,
-        advisoryTime: activeCall.advisoryTime,
         notes: activeCall.notes || ''
       });
 
@@ -105,11 +93,7 @@ export const OrbitalCardView: React.FC<{ calls: CallRecord[] }> = ({ calls }) =>
     recordAttempt(activeCall.id, {
       fullName: draft.fullName,
       callStatus: draft.callStatus || '',
-      courses: draft.courses || [],
       advisory: draft.advisory || '',
-      registered: draft.registered || '',
-      advisoryDate: activeCall.advisoryDate,
-      advisoryTime: activeCall.advisoryTime,
       notes: activeCall.notes || ''
     });
 
@@ -123,7 +107,7 @@ export const OrbitalCardView: React.FC<{ calls: CallRecord[] }> = ({ calls }) =>
   // Prepare GlowHover items
   const glowItems = nodes.map(node => {
     const isDisabled = node.id !== 'callStatus' && !isAnswered;
-    const value = node.id === 'courses' ? (draft.courses?.[0] || '') : (draft[node.id as keyof CallRecord] as string || '');
+    const value = (draft[node.id as keyof CallRecord] as string || '');
     
     return {
       id: node.id,
@@ -142,7 +126,6 @@ export const OrbitalCardView: React.FC<{ calls: CallRecord[] }> = ({ calls }) =>
             placeholder={tr('انتخاب کنید...', 'Select...')}
             onValueChange={(val) => {
               if (node.id === 'callStatus') handleStatusChange(val);
-              else if (node.id === 'courses') handleFieldChange('courses', [val]);
               else handleFieldChange(node.id as keyof CallRecord, val);
             }}
           />
@@ -202,14 +185,7 @@ export const OrbitalCardView: React.FC<{ calls: CallRecord[] }> = ({ calls }) =>
                   ) : null}
 
                   {/* Advisory Date */}
-                  {isTop && card.advisoryDate && (
-                    <div className="mt-4 bg-surface-hover px-5 py-2 rounded-full border border-border flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse" />
-                      <span className="text-xs text-cyan-100 font-medium">
-                        {tr('تاریخ مشاوره:', 'Advisory Date:')} {card.advisoryDate} {card.advisoryTime || ''}
-                      </span>
-                    </div>
-                  )}
+                  
                   
                   <div className={`absolute top-6 right-6 text-xs font-medium px-3 py-1.5 rounded-full transition-colors ${isTop ? 'bg-cyan-900/50 text-cyan-100 border border-cyan-500/30' : 'bg-surface-hover text-secondary border border-border'}`}>
                     ردیف {(card.queueOrder ?? 0) + 1}
@@ -237,14 +213,14 @@ export const OrbitalCardView: React.FC<{ calls: CallRecord[] }> = ({ calls }) =>
           whileTap={{ scale: 0.95 }}
           onClick={submit}
           className={`relative overflow-hidden h-14 px-12 rounded-full font-extrabold text-[15px] transition-all flex items-center justify-center gap-3 
-            ${!!(draft.callStatus || (draft.courses && draft.courses.length > 0) || draft.advisory || draft.registered)
+            ${!!(draft.callStatus || draft.advisory)
               ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white  hover:'
               : 'bg-surface-hover/80 text-secondary cursor-not-allowed border border-border '
             }
           `}
         >
           {/* Shimmer Effect */}
-          {!!(draft.callStatus || (draft.courses && draft.courses.length > 0) || draft.advisory || draft.registered) && (
+          {!!(draft.callStatus || draft.advisory) && (
             <motion.div 
               animate={{ x: ["-100%", "200%"] }}
               transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}

@@ -31,21 +31,20 @@ export interface CallRecord {
   phone: string;
   fullName?: string;
   callStatus: string;
-  courses: string[];
   advisory: string;
-  advisoryDate?: string;
-  advisoryTime?: string;
-  registered: string;
   notes: string;
   createdAt: string;
   /** ترتیب ورود شماره از فایل اکسل یا ورود دستی */
   queueOrder?: number;
   /** تاریخچه تغییرناپذیر تمام تماس‌ها و پیگیری‌ها */
   attempts?: CallAttempt[];
-  /** زمان میلادی پیگیری بعدی؛ برای مقایسه دقیق با ساعت سیستم */
+  /** زمان میلادی پیگیری بعدی؛ (منسوخ شده، در آینده حذف می‌شود) */
   nextFollowUpAt?: string;
+  /** وضعیت پیگیری مجدد به صورت سوئیچ روشن/خاموش */
+  isFollowUp?: boolean;
+  isBlacklisted?: boolean;
   /** Manual work list properties */
-  workList?: 'none' | 'today' | 'followup';
+  workList?: 'none' | 'today';
   workListDate?: string | null;
   workListUpdatedAt?: string | null;
 }
@@ -56,11 +55,7 @@ export interface CallAttempt {
   jalaliDateTime: string;
   fullName?: string;
   callStatus: string;
-  courses: string[];
   advisory: string;
-  advisoryDate?: string;
-  advisoryTime?: string;
-  registered: string;
   notes: string;
 }
 
@@ -71,7 +66,6 @@ export interface ExportSummary {
     noAnswer: number;
     followUp: number;
     inactive: number;
-    registered: number;
     successRate: string;
 }
 
@@ -154,11 +148,7 @@ export interface RecordCallAttemptWithTaskInput {
   contactId: string;
   fullName?: string | null;
   callStatus?: string | null;
-  courses?: string[];
   advisory?: string | null;
-  advisoryDate?: string | null;
-  advisoryTime?: string | null;
-  registered?: string | null;
   notes?: string | null;
   taskType: ContactTaskType;
   scheduledDate?: string | null;
@@ -170,3 +160,5 @@ export interface RecordCallAttemptWithTaskResult {
   attempt: CallAttempt;
   task: ContactTask;
 }
+
+export interface TrashEntry extends CallRecord { deletedAt: string; deletedBy: string; }

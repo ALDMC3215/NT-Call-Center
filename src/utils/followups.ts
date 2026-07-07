@@ -4,7 +4,7 @@ import { CallRecord } from '../types';
  * Returns true if the call record is an active follow-up based on business rules.
  */
 export const isActiveFollowup = (c: CallRecord): boolean => {
-  return !!c.nextFollowUpAt;
+  return !!c.isFollowUp || !!c.nextFollowUpAt;
 };
 
 /**
@@ -26,12 +26,8 @@ export const buildFollowUpSnapshot = (calls: CallRecord[]) => {
       fullName: (c.fullName && c.fullName.trim() !== '') ? c.fullName : null,
       phone: c.phone || null,
       callStatus: c.callStatus || null,
-      registered: c.registered || null,
-      courses: Array.isArray(c.courses) && c.courses.length > 0 ? c.courses : [],
       advisory: c.advisory || null,
-      advisoryDate: c.advisoryDate || null,
-      advisoryTime: c.advisoryTime || null,
-      nextFollowUpAt: c.nextFollowUpAt || null,
+      isFollowUp: !!c.isFollowUp || !!c.nextFollowUpAt,
       notes: c.notes || null,
       latestAttemptAt: lastAttempt ? (lastAttempt.createdAt || null) : (c.createdAt || null)
     };

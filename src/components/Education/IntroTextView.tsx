@@ -120,38 +120,38 @@ export const IntroTextView = ({ isModal, onClose }: { isModal?: boolean, onClose
   };
 
   return (
-    <div className="flex flex-col h-full w-full relative pt-4 pb-4 px-4 md:px-8 bg-slate-50" dir={direction}>
-      {/* Header */}
-      <div className="flex-none bg-transparent mb-6 flex items-center justify-between sticky top-0 z-20">
+    <div className="relative w-full h-full flex flex-col bg-[#f8fafc] overflow-hidden" dir={direction}>
+      {/* Top Header */}
+      <div className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shrink-0 z-20 shadow-sm">
         <div className="flex items-center gap-3">
-           <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shadow-sm border border-rose-100">
-             <Icons.MessageSquareQuote size={22} strokeWidth={2.5} />
-           </div>
-           <div>
-             <h1 className="text-lg font-black text-slate-800">متن‌های معرفی و پرزنت</h1>
-             <p className="text-xs text-slate-500 font-medium hidden sm:block">نسخه‌های مختلف برای شروع مکالمه با مشتری</p>
-           </div>
+          <div className="w-10 h-10 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center shrink-0 border border-pink-100">
+            <Icons.MessageSquareQuote size={22} strokeWidth={2.5} />
+          </div>
+          <div>
+            <h1 className="text-lg font-black text-slate-800 leading-tight">متن‌های معرفی و پرزنت</h1>
+            <p className="text-xs font-medium text-slate-500 mt-0.5">نسخه‌های مختلف برای شروع مکالمه با مشتری</p>
+          </div>
         </div>
+
         {isModal ? (
-          <button
-            onClick={onClose}
-            className="w-10 h-10 bg-white border border-slate-200 text-slate-500 flex items-center justify-center rounded-full hover:bg-slate-100 hover:text-slate-900 transition-colors shadow-sm"
-            title="بستن"
-          >
-            <Icons.X size={20} />
-          </button>
+           <button
+             onClick={onClose}
+             className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-colors shrink-0"
+             title="بستن"
+           >
+             <Icons.X size={18} strokeWidth={2.5} />
+           </button>
         ) : (
-          <button
-            onClick={() => setCurrentView('home')}
-            className="w-10 h-10 bg-white border border-slate-200 text-slate-500 flex items-center justify-center rounded-full hover:bg-slate-100 hover:text-slate-900 transition-colors shadow-sm"
-            title="بازگشت"
-          >
-            <Icons.ArrowLeft size={20} />
-          </button>
+           <button
+             onClick={() => setCurrentView('home')}
+             className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-lg transition-colors shrink-0"
+           >
+             بازگشت
+           </button>
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto hide-scrollbar relative z-10 pb-8 space-y-6">
+      <div className="flex-1 overflow-y-auto hide-scrollbar relative z-10 p-4 md:p-6 lg:p-8 space-y-6">
         
         {/* Important Notice */}
         <div className="bg-red-50 border-r-4 border-red-500 rounded-xl p-4 sm:p-5 shadow-sm">

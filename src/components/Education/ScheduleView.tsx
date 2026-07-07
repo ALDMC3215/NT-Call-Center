@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useLocale } from '../../hooks/useLocale';
-import { CalendarDays, Info, BookOpen, Clock, MapPin, User, CheckCircle2, CircleDashed, X } from 'lucide-react';
+import { CalendarDays, Info, BookOpen, Clock, MapPin, User, CheckCircle2, CircleDashed, X, Search } from 'lucide-react';
 import { useAppContext } from '../../hooks/useAppContext';
 
 type CourseStatus = 'closed' | 'open';
@@ -103,11 +103,13 @@ export const ScheduleView = ({ isModal, onClose }: { isModal?: boolean, onClose?
   const { setCurrentView } = useAppContext();
   const [activeTab, setActiveTab] = useState<'open' | 'closed'>('open');
   const [sortBy, setSortBy] = useState<'branch' | 'day' | 'time'>('branch');
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Filter courses based on active tab and sort them logically (by Branch -> Day -> Time)
   const filteredCourses = useMemo(() => {
     return COURSES_DATA
       .filter(c => c.status === activeTab)
+      .filter(c => searchQuery === '' || c.name.includes(searchQuery))
       .sort((a, b) => {
         if (sortBy === 'branch') {
           if (a.branch !== b.branch) return a.branch.localeCompare(b.branch);
@@ -149,15 +151,15 @@ export const ScheduleView = ({ isModal, onClose }: { isModal?: boolean, onClose?
         {isModal ? (
            <button
              onClick={onClose}
-             className="w-10 h-10 bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center rounded-full transition-colors"
+             className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-colors shrink-0"
              title="بستن"
            >
-             <X size={20} />
+             <X size={18} strokeWidth={2.5} />
            </button>
         ) : (
           <button
             onClick={() => setCurrentView('home')}
-            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-lg transition-colors"
+            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-lg transition-colors shrink-0"
           >
             بازگشت
           </button>
@@ -183,9 +185,10 @@ export const ScheduleView = ({ isModal, onClose }: { isModal?: boolean, onClose?
             </div>
           </div>
 
-          {/* Tab Switcher */}
-          <div className="flex items-center gap-2 bg-slate-100/80 p-1.5 rounded-2xl w-full sm:w-fit border border-slate-200/50 self-center sm:self-start">
-            <button
+          {/* Tab Switcher & Search Box */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 w-full">
+            <div className="flex items-center gap-2 bg-slate-100/80 p-1.5 rounded-2xl w-full sm:w-fit border border-slate-200/50 self-center sm:self-start">
+              <button
               onClick={() => setActiveTab('open')}
               className={`relative flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-[14px] font-bold transition-all duration-300 flex-1 sm:flex-none ${
                 activeTab === 'open'
@@ -223,6 +226,19 @@ export const ScheduleView = ({ isModal, onClose }: { isModal?: boolean, onClose?
               <span className="relative z-10">در حال برگزاری</span>
               <span className="relative z-10 mr-1 px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 text-[10px]">۳۰</span>
             </button>
+            </div>
+            
+            <div className="relative w-full sm:w-72 self-center sm:self-end">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+              <input 
+                type="text"
+                placeholder="جستجوی نام دوره..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full h-11 pl-4 pr-9 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:border-indigo-500 transition-colors"
+                dir="rtl"
+              />
+            </div>
           </div>
 
           {/* Table Container */}

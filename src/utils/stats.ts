@@ -8,7 +8,6 @@ export function calculateStats(calls: CallRecord[]) {
   const noAnswer = calls.filter(c => c.callStatus === 'پاسخ نداد').length;
   const followUp = calls.filter(isActiveFollowup).length;
   const inactive = calls.filter(c => c.callStatus === 'شماره ناموجود' || c.callStatus === 'دستگاه خاموش').length;
-  const registered = calls.filter(c => c.registered === 'ثبت نام کرد').length;
   const advisorySet = calls.filter(c => c.advisory === 'بله').length;
   const successRate = total ? ((interested / total) * 100).toFixed(1) + '%' : '0%';
 
@@ -19,7 +18,6 @@ export function calculateStats(calls: CallRecord[]) {
     noAnswer,
     followUp,
     inactive,
-    registered,
     advisorySet,
     successRate
   };

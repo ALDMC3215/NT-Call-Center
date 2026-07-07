@@ -14,7 +14,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import DatePicker, { DateObject } from "react-multi-date-picker";
 import persian from "react-date-object/calendars/persian";
 import persian_fa from "react-date-object/locales/persian_fa";
-import { AdvisoryModal } from './AdvisoryModal';
+
 import { ConfirmDialog } from '../Shared/ConfirmDialog';
 import { Checkbox } from '../UI/checkbox';
 import { TableDropdown } from '../Shared/TableDropdown';
@@ -30,7 +30,7 @@ import { OrbitalCardView } from './OrbitalCardView';
 import { isActiveFollowup } from '../../utils/followups';
 import { jalaliDateTimeToIso } from '../../utils/jalali';
 
-type Tab = 'home' | 'queue' | 'today' | 'followup' | 'stats' | 'blacklist' | 'courses';
+type Tab = 'home' | 'queue' | 'today' | 'stats' | 'blacklist' | 'courses';
 
 const getStatusDot = (status: string) => {
   if (status === 'پاسخ داد') return 'bg-teal-500/80';
@@ -281,6 +281,43 @@ export const CallListWorkspace = () => {
   const [isLoadingTasks, setIsLoadingTasks] = useState(false);
   const [actionModalCall, setActionModalCall] = useState<CallRecord | null>(null);
   const [editModalTask, setEditModalTask] = useState<ContactTask | null>(null);
+  const [hiddenCalls, setHiddenCalls] = useState<Set<string>>(new Set());
+
+  const handleDelete = React.useCallback((c: CallRecord) => {
+    setConfirmModalConfig({
+      isOpen: true,
+      title: tr('حذف شماره', 'Delete number'),
+      message: tr('آیا مطمئن هستید که می‌خواهید این شماره را به سطل زباله منتقل کنید؟', 'Are you sure you want to move this number to trash?'),
+      onConfirm: () => {
+        setHiddenCalls(prev => new Set(prev).add(c.id));
+        let undoClicked = false;
+
+        toast.info(tr('شماره حذف شد.', 'Number deleted.'), {
+          duration: 5000,
+          action: {
+            label: tr('بازگردانی', 'Undo'),
+            onClick: () => {
+              undoClicked = true;
+              setHiddenCalls(prev => {
+                const next = new Set(prev);
+                next.delete(c.id);
+                return next;
+              });
+              toast.success(tr('بازگردانی شد.', 'Restored.'));
+            }
+          }
+        });
+
+        setTimeout(() => {
+          if (!undoClicked) {
+            deleteCall(c.id);
+            const { storage } = require('../../utils/storage');
+            storage.addToTrash({ ...c, deletedAt: new Date().toISOString(), deletedBy: profile?.name || 'Unknown' });
+          }
+        }, 5100);
+      }
+    });
+  }, [deleteCall, profile, tr]);
 
   const loadTasks = React.useCallback(async () => {
     setIsLoadingTasks(true);
@@ -312,11 +349,10 @@ export const CallListWorkspace = () => {
 
 
   const hasAnyFieldSelected = (c: CallRecord) => {
-    return !!(c.callStatus || (c.courses && c.courses.length > 0) || c.advisory || c.registered);
+    return !!(c.callStatus || c.advisory || c.notes);
   };
 
   const [notesModalCall, setNotesModalCall] = useState<CallRecord | null>(null);
-  const [advisoryModalCall, setAdvisoryModalCall] = useState<CallRecord | null>(null);
   const [isManualAddOpen, setIsManualAddOpen] = useState(false);
   const [confirmModalConfig, setConfirmModalConfig] = useState<{isOpen: boolean; title: string; message: string; onConfirm: () => void}>({ isOpen: false, title: '', message: '', onConfirm: () => {} });
   const [submittingIds, setSubmittingIds] = useState<Set<string>>(new Set());
@@ -469,7 +505,7 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
 
   const handleStatusChange = (call: CallRecord, newStatus: string) => {
     if (newStatus !== 'پاسخ داد') {
-      updateCall({ ...call, callStatus: newStatus, courses: [], advisory: undefined, advisoryDate: undefined, advisoryTime: undefined, registered: undefined });
+      updateCall({ ...call, callStatus: newStatus, advisory: undefined });
     } else {
       updateCall({ ...call, callStatus: newStatus });
     }
@@ -519,11 +555,7 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
         contactId: call.id,
         fullName: call.fullName || '',
         callStatus: call.callStatus || '',
-        courses: call.courses || [],
         advisory: call.advisory || '',
-        advisoryDate: call.advisoryDate || '',
-        advisoryTime: call.advisoryTime || '',
-        registered: call.registered || '',
         notes: call.notes || '',
         taskType: taskData.taskType,
         scheduledDate: taskData.scheduledDate,
@@ -597,7 +629,13 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
     if (searchQuery.trim()) {
       list = list.filter(c => (c.phone || '').includes(searchQuery) || (c.fullName || '').includes(searchQuery));
     }
-    return list.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+    return list.sort((a, b) => {
+      if (a.isFollowUp && !b.isFollowUp) return -1;
+      if (!a.isFollowUp && b.isFollowUp) return 1;
+      if (a.isBlacklisted && !b.isBlacklisted) return 1; // Put blacklisted at the end
+      if (!a.isBlacklisted && b.isBlacklisted) return -1;
+      return String(b.createdAt).localeCompare(String(a.createdAt));
+    });
   }, [calls, activeTab, searchQuery, tasks]);
 
   if (isLoadingCalls && !hasInitialCallsLoaded) {
@@ -661,55 +699,25 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
           )}
         </div>
 
-        {/* Center: Search (Order 1 on mobile, 2 on desktop) */}
-        <div className="order-1 md:order-2 relative w-full max-w-md group mx-auto">
-            <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-slate-500/60 group-focus-within:text-brand-500 transition-colors">
-              <Search size={16} strokeWidth={2.5} />
-            </div>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              placeholder={activeTab === 'courses' ? tr('جستجو در دوره‌ها...', 'Search courses...') : tr('جستجو در شماره‌ها و نام‌ها...', 'Search numbers and names...')}
-              dir={direction}
-              className="w-full h-10 bg-white border border-slate-200 rounded-xl pr-10 pl-10 text-[13px] font-medium text-slate-900 placeholder:text-slate-500 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/10 transition-all shadow-sm"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-lg bg-slate-50 text-muted hover:text-rose-500 hover:bg-rose-50 transition-all cursor-pointer"
-              >
-                <X size={14} strokeWidth={2.5} />
-              </button>
-            )}
-        </div>
 
-        {/* Left side: Spacer for centering */}
-        <div className="hidden md:block order-3 w-[300px]"></div>
       </div>
 
       {/* Quick Access Bar */}
       <div className="w-full flex items-center justify-center gap-3 flex-wrap px-4 md:px-6 pb-4">
-         <a href="?view=dashboard&tab=followup" onClick={e => { e.preventDefault(); setPopupView(popupView === 'followup' ? null : 'followup'); }} className={`flex items-center gap-2 px-4 py-2 rounded-xl shadow-sm border transition-colors text-[13px] font-bold ${popupView === 'followup' ? 'bg-brand-50 border-brand-200 text-brand-700' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'}`}>
-            <Clock size={16} className="text-amber-500" />
-            پیگیری‌ها
-         </a>
+
          <a href="?view=dashboard&tab=stats" onClick={e => { e.preventDefault(); setPopupView(popupView === 'stats' ? null : 'stats'); }} className={`flex items-center gap-2 px-4 py-2 rounded-xl shadow-sm border transition-colors text-[13px] font-bold ${popupView === 'stats' ? 'bg-brand-50 border-brand-200 text-brand-700' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'}`}>
             <Activity size={16} className="text-teal-500" />
             فعالیت روزانه
          </a>
          <a href="?view=dashboard&tab=courses" onClick={e => { e.preventDefault(); setPopupView(popupView === 'courses' ? null : 'courses'); }} className={`flex items-center gap-2 px-4 py-2 rounded-xl shadow-sm border transition-colors text-[13px] font-bold ${popupView === 'courses' ? 'bg-brand-50 border-brand-200 text-brand-700' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'}`}>
             <BookOpen size={16} className="text-blue-500" />
-            دوره‌ها و قیمت‌ها
+            قیمت دوره‌ها
          </a>
          <a href="?view=home" onClick={e => { e.preventDefault(); setPopupView(popupView === 'learning_paths' ? null : 'learning_paths'); }} className={`flex items-center gap-2 px-4 py-2 rounded-xl shadow-sm border transition-colors text-[13px] font-bold ${popupView === 'learning_paths' ? 'bg-brand-50 border-brand-200 text-brand-700' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'}`}>
             <Route size={16} className="text-purple-500" />
             مسیرهای یادگیری
          </a>
-         <a href="?view=negotiation" onClick={e => { e.preventDefault(); setPopupView(popupView === 'negotiation' ? null : 'negotiation'); }} className={`flex items-center gap-2 px-4 py-2 rounded-xl shadow-sm border transition-colors text-[13px] font-bold ${popupView === 'negotiation' ? 'bg-brand-50 border-brand-200 text-brand-700' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'}`}>
-            <ShieldAlert size={16} className="text-rose-500" />
-            تکنیک‌های مذاکره
-         </a>
+
          <a href="?view=schedule" onClick={e => { e.preventDefault(); setPopupView(popupView === 'schedule' ? null : 'schedule'); }} className={`flex items-center gap-2 px-4 py-2 rounded-xl shadow-sm border transition-colors text-[13px] font-bold ${popupView === 'schedule' ? 'bg-brand-50 border-brand-200 text-brand-700' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'}`}>
             <CalendarDays size={16} className="text-indigo-500" />
             برنامه کلاسی
@@ -727,46 +735,49 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
 
           <div className="min-h-0 overflow-x-auto overflow-y-auto custom-select-scroll relative z-10">
             {/* Compact Table View */}
-            <table className="w-full text-center border-collapse table-fixed min-w-[950px]">
+            <table className="w-full text-center border-collapse table-fixed min-w-[700px]">
               <colgroup>
-                <col className="w-[160px]" /> {/* Phone/Name */}
-                <col className="w-[140px]" /> {/* Call Status */}
-                <col className="w-[200px]" /> {/* Courses */}
-                <col className="w-[120px]" /> {/* Consultation */}
-                <col className="w-[140px]" /> {/* Registration */}
-                <col className="w-[150px]" /> {/* Date/Time */}
-                <col className="w-[110px]" /> {/* Actions */}
+                <col className="w-[180px]" /> {/* Phone/Name */}
+                <col className="w-[150px]" /> {/* Call Status */}
+                <col className="w-[140px]" /> {/* Consultation */}
+                <col className="w-[320px]" /> {/* Actions */}
               </colgroup>
               <thead className="sticky top-0 bg-slate-100 border-b-2 border-slate-200 z-20">
                 <tr>
                   <th className="py-2.5 px-2 text-[12px] font-extrabold text-slate-800 tracking-wide whitespace-nowrap">{tr('شماره تماس', 'Phone')}</th>
                   <th className="py-2.5 px-2 text-[12px] font-extrabold text-slate-800 tracking-wide whitespace-nowrap">{tr('وضعیت تماس', 'Call Status')}</th>
-                  <th className="py-2.5 px-2 text-[12px] font-extrabold text-slate-800 tracking-wide whitespace-nowrap">{tr('دوره‌ها', 'Courses')}</th>
                   <th className="py-2.5 px-2 text-[12px] font-extrabold text-slate-800 tracking-wide whitespace-nowrap">{tr('مشاوره حضوری', 'Consultation')}</th>
-                  <th className="py-2.5 px-2 text-[12px] font-extrabold text-slate-800 tracking-wide whitespace-nowrap">{tr('ثبت‌نام', 'Registration')}</th>
-                  <th className="py-2.5 px-2 text-[12px] font-extrabold text-slate-800 tracking-wide whitespace-nowrap">{tr('تاریخ و ساعت', 'Date & Time')}</th>
-                  <th className="py-2.5 px-2 text-[12px] font-extrabold text-slate-800 tracking-wide">{tr('عملیات', 'Actions')}</th>
+                  <th className="py-2.5 px-2 text-[12px] font-extrabold text-slate-800 tracking-wide">{tr('وضعیت پرونده', 'File Status')}</th>
                 </tr>
               </thead>
               <tbody className="text-[13px] font-medium text-slate-800 relative z-0">
-                {filteredList.length === 0 ? (
+                {filteredList.filter(c => !hiddenCalls.has(c.id)).length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-24">
+                    <td colSpan={4} className="py-24">
                       {/* Spacer to give height for the absolute empty state overlay */}
                     </td>
                   </tr>
                 ) : (
-                filteredList.map((c, i) => {
+                filteredList.filter(c => !hiddenCalls.has(c.id)).map((c, i) => {
                   const fuStatus = activeTab === 'followup' ? getFollowUpStatus(c.nextFollowUpAt) : null;
                   return (
                   <React.Fragment key={c.id}>
                   <tr
-                    className={`border-b border-slate-100 hover:bg-slate-50 transition-colors duration-300 group ${fuStatus ? `border-r-4 ${fuStatus.borderCls}` : ''}`}
+                    className={`border-b border-slate-100 transition-colors duration-300 group ${c.isBlacklisted ? 'bg-rose-50/70 hover:bg-rose-100/50' : c.isFollowUp ? 'bg-orange-50/70 hover:bg-orange-100/50' : 'hover:bg-slate-50'} ${fuStatus ? `border-r-4 ${fuStatus.borderCls}` : ''}`}
                   >
                     {/* Phone */}
                     <td className="py-2 px-1.5 relative whitespace-nowrap">
                        <div className="flex flex-col items-center justify-center w-full px-2">
-                          <span dir="ltr" className="font-black text-[15px] tracking-wider text-slate-900 group-hover:text-cyan-600 transition-colors">{c.phone}</span>
+                          <div className="flex items-center justify-center gap-1.5">
+                            <span dir="ltr" className="font-bold text-[17px] tracking-widest text-slate-800 group-hover:text-cyan-600 transition-colors">{c.phone}</span>
+                            <button 
+                              onClick={() => handleDelete(c)}
+                              className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+                              title={tr('حذف', 'Delete')}
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </div>
                           <input
                             type="text"
                             value={c.fullName || ''}
@@ -795,21 +806,6 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                        </div>
                     </td>
 
-                    {/* Courses */}
-                    <td className="py-2 px-1.5 relative whitespace-nowrap">
-                       <div className="flex items-center justify-center gap-1.5">
-                          <BookOpen size={14} className="text-muted shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <TableMultiSelect
-                              values={c.courses || []}
-                              onChange={(vals) => handleFieldChange(c, 'courses', vals)}
-                              disabled={c.callStatus !== 'پاسخ داد'}
-                              placeholder={tr('انتخاب دوره', 'Select course')}
-                            />
-                          </div>
-                       </div>
-                    </td>
-
                     {/* Consultation */}
                     <td className="py-2 px-1.5 relative whitespace-nowrap">
                        <div className="flex items-center justify-center gap-1.5">
@@ -818,103 +814,45 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                             value={c.advisory || ''}
                             onChange={(val) => handleFieldChange(c, 'advisory', val)}
                             disabled={c.callStatus !== 'پاسخ داد'}
-                            options={['بله', 'خیر', 'هماهنگی بعدا'].map(s => ({ value: s, label: valueLabel(s) }))}
+                            options={['بله', 'خیر'].map(s => ({ value: s, label: valueLabel(s) }))}
                             placeholder={tr('مشاوره', 'Consultation')}
                           />
                        </div>
                     </td>
 
-                    {/* Registration */}
-                    <td className="py-2 px-1.5 relative whitespace-nowrap">
-                       <div className="flex items-center gap-1.5 w-[140px] justify-center">
-                          {c.registered === 'ثبت نام کرد' ? (
-                            <CheckCircle2 size={16} className="text-emerald-500 shrink-0" />
-                          ) : (
-                            <FileText size={16} className="text-slate-400 shrink-0" />
-                          )}
-                          <TableDropdown
-                            value={c.registered || ''}
-                            onChange={(val) => handleFieldChange(c, 'registered', val)}
-                            disabled={c.callStatus !== 'پاسخ داد'}
-                            options={REGISTRATION_STATUSES.map(s => ({ value: s, label: s }))}
-                            placeholder={tr('ثبت‌نام', 'Registration')}
-                          />
-                       </div>
-                    </td>
-
-                    {/* Date & Time */}
-                    <td className="py-2 px-1.5 relative whitespace-nowrap">
-                       <div className="flex items-center justify-center">
-                          {c.advisory === 'بله' ? (
-                             <button
-                               onClick={() => setAdvisoryModalCall(c)}
-                               className="flex items-center justify-center gap-1.5 text-[12px] font-bold text-brand-700 bg-brand-50 hover:bg-brand-100 px-3 py-1.5 rounded-lg transition-colors border border-brand-100 hover:border-brand-200 min-w-[120px] shadow-sm"
-                               dir="ltr"
-                             >
-                               {c.advisoryDate && c.advisoryTime ? (
-                                 <>
-                                   <Calendar size={14} className="opacity-70 shrink-0" />
-                                   <span className="truncate">{c.advisoryDate} &middot; {c.advisoryTime}</span>
-                                 </>
-                               ) : (
-                                 <>
-                                   <Calendar size={14} className="opacity-70 shrink-0" />
-                                   <span dir="rtl" className="truncate">{tr('انتخاب زمان', 'Select time')}</span>
-                                 </>
-                               )}
-                             </button>
-                          ) : (
-                            <span className="text-slate-400">-</span>
-                          )}
-                       </div>
-                    </td>
-
                     {/* Actions */}
                     <td className="py-2 px-1.5 relative">
-                       <div className="flex items-center justify-center gap-1.5">
+                       <div className="flex items-center justify-center gap-3">
+                           <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                             <input type="radio" checked={!!c.isFollowUp && !c.isBlacklisted} onChange={() => { if (!c.isBlacklisted) updateCall({ ...c, isFollowUp: true }); }} className="w-4 h-4 text-orange-500 bg-slate-100 border-slate-300 focus:ring-orange-500 focus:ring-2 disabled:opacity-50" disabled={c.isBlacklisted} />
+                             <span className={`text-[13px] font-bold ${c.isFollowUp && !c.isBlacklisted ? 'text-orange-600' : 'text-slate-600'}`}>{tr('پیگیری', 'Follow-up')}</span>
+                           </label>
+                           
+                           <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                             <input type="radio" checked={!!c.isBlacklisted} onChange={() => {
+                               setConfirmModalConfig({
+                                 isOpen: true,
+                                 title: tr('لیست سیاه', 'Blacklist'),
+                                 message: tr('آیا مطمئن هستید که می‌خواهید این شماره را به لیست سیاه اضافه کنید؟', 'Are you sure you want to add this number to the blacklist?'),
+                                 onConfirm: () => {
+                                    addToBlacklist(c.phone);
+                                    updateCall({ ...c, isFollowUp: false, isBlacklisted: true });
+                                    toast.success(tr('شماره سیاه شد.', 'Number blacklisted.'));
+                                 }
+                               });
+                             }} className="w-4 h-4 text-rose-500 bg-slate-100 border-slate-300 focus:ring-rose-500 focus:ring-2" />
+                             <span className={`text-[13px] font-bold ${c.isBlacklisted ? 'text-rose-600' : 'text-slate-600'}`}>{tr('لیست سیاه', 'Blacklist')}</span>
+                           </label>
+                           
+
+                           <div className="w-[1px] h-6 bg-slate-200 mx-1"></div>
+                           
                            <button
                              onClick={() => handleRowSubmit(c)}
                              disabled={!hasAnyFieldSelected(c) || submittingIds.has(c.id)}
-                             aria-label={tr('ثبت نتیجه', 'Submit result')}
-                             className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all shadow-sm tooltip-trigger shrink-0 ${hasAnyFieldSelected(c) ? 'bg-brand-600 text-white hover:bg-brand-500 hover:shadow shadow-brand-600/20' : 'bg-slate-100 text-slate-400 opacity-60 border border-slate-200'}`}
-                             title={tr('ثبت نتیجه', 'Submit result')}
+                             className={`px-4 h-8 rounded-lg flex items-center justify-center font-bold text-xs transition-all shrink-0 ${hasAnyFieldSelected(c) ? 'bg-brand-600 text-white shadow-sm shadow-brand-600/20 hover:bg-brand-500' : 'bg-slate-50 text-slate-400 border border-slate-200'}`}
                            >
-                             {submittingIds.has(c.id) ? <Icons.Loader2 size={16} className="animate-spin" /> : <Check size={18} strokeWidth={2.5} />}
-                           </button>
-                           <button
-                             onClick={() => {
-                                setConfirmModalConfig({
-                                  isOpen: true,
-                                  title: tr('افزودن به لیست سیاه', 'Add to blacklist'),
-                                  message: tr('آیا مطمئن هستید که می‌خواهید این شماره را به لیست سیاه اضافه کنید؟ با این کار شماره از لیست فعلی حذف می‌شود.', 'Are you sure you want to add this number to the blacklist? It will be removed from the current list.'),
-                                  onConfirm: () => {
-                                     addToBlacklist(c.phone);
-                                     deleteCall(c.id);
-                                     toast.success(tr('شماره به لیست سیاه اضافه شد.', 'Number added to blacklist.'));
-                                  }
-                                });
-                             }}
-                             className="w-8 h-8 rounded-lg flex items-center justify-center transition-all bg-transparent text-slate-500 hover:bg-slate-200 hover:text-slate-800 tooltip-trigger shrink-0"
-                             title={tr('افزودن به لیست سیاه', 'Add to blacklist')}
-                           >
-                              <Ban size={16} />
-                           </button>
-                           <button
-                             onClick={() => {
-                                setConfirmModalConfig({
-                                  isOpen: true,
-                                  title: tr('حذف شماره', 'Delete number'),
-                                  message: tr('آیا مطمئن هستید که می‌خواهید این شماره را برای همیشه حذف کنید؟', 'Are you sure you want to delete this number?'),
-                                  onConfirm: () => {
-                                     deleteCall(c.id);
-                                     toast.success(tr('شماره حذف شد.', 'Number deleted.'));
-                                  }
-                                });
-                             }}
-                             className="w-8 h-8 rounded-lg flex items-center justify-center transition-all bg-transparent text-slate-500 hover:bg-rose-100 hover:text-rose-600 tooltip-trigger shrink-0"
-                             title={tr('حذف شماره', 'Delete number')}
-                           >
-                              <Trash2 size={16} />
+                             {submittingIds.has(c.id) ? <Icons.Loader2 size={14} className="animate-spin" /> : tr('ثبت وضعیت', 'Submit')}
                            </button>
                        </div>
                     </td>
@@ -930,26 +868,16 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
 
             {filteredList.length === 0 && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-slate-500">
-                  {activeTab === 'followup' ? (
-                    <>
-                      <CheckCircle2 size={56} className="mb-4 text-emerald-300 opacity-50" />
-                      <p className="font-bold text-slate-700 text-lg mb-2">{tr('فعلاً پیگیری فعالی نداری', 'No active follow-ups')}</p>
-                      <p className="font-medium text-slate-500">{tr('شماره‌هایی که نیاز به تماس دوباره دارند، اینجا نمایش داده می‌شوند.', 'Contacts needing another call will appear here.')}</p>
-                    </>
-                  ) : (
-                    <>
-                      <div className="w-16 h-16 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center mb-4 shadow-sm">
-                        <Filter size={28} className="text-slate-400" />
-                      </div>
-                      <p className="font-bold text-slate-600 text-[15px] mb-2">{tr('هیچ داده‌ای یافت نشد', 'No data found')}</p>
-                      <p className="text-[13px] text-slate-400 font-medium max-w-sm text-center">{tr('برای این بخش هنوز اطلاعاتی ثبت نشده یا فیلترهای جستجو نتیجه‌ای نداشتند.', 'No information recorded yet or search yielded no results.')}</p>
-                    </>
-                  )}
+                  <div className="w-16 h-16 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center mb-4 shadow-sm">
+                    <Filter size={28} className="text-slate-400" />
+                  </div>
+                  <p className="font-bold text-slate-600 text-[15px] mb-2">{tr('هیچ داده‌ای یافت نشد', 'No data found')}</p>
+                  <p className="text-[13px] text-slate-400 font-medium max-w-sm text-center">{tr('برای این بخش هنوز اطلاعاتی ثبت نشده یا فیلترهای جستجو نتیجه‌ای نداشتند.', 'No information recorded yet or search yielded no results.')}</p>
 
                   {activeTab === 'queue' && (
                     <button
                       onClick={() => setIsManualAddOpen(true)}
-                      className="h-11 px-6 bg-brand-500 hover:bg-brand-600 text-white rounded-xl font-bold text-[14px] transition-colors flex items-center justify-center gap-2 pointer-events-auto shadow-sm"
+                      className="h-11 px-6 bg-brand-500 hover:bg-brand-600 text-white rounded-xl font-bold text-[14px] transition-colors flex items-center justify-center gap-2 pointer-events-auto shadow-sm mt-4"
                     >
                       <Plus size={18} />
                       {tr('افزودن شماره', 'Add number')}
@@ -978,35 +906,6 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
           if (notesModalCall) handleFieldChange(notesModalCall, 'notes', notes);
         }}
       />
-      <AdvisoryModal
-        call={advisoryModalCall}
-        isOpen={!!advisoryModalCall}
-        onClose={() => setAdvisoryModalCall(null)}
-        onSave={(date, time) => {
-          if (advisoryModalCall) {
-             const scheduledAdvisory = date && time ? jalaliDateTimeToIso(date, time) : undefined;
-             const s = advisoryModalCall.callStatus;
-             const r = advisoryModalCall.registered;
-             let needsFollowUp = false;
-             if (s === 'پاسخ نداد') needsFollowUp = true;
-             else if (s === 'پاسخ داد' && r !== 'ثبت نام کرد') needsFollowUp = true;
-
-             let newFollowUpAt = advisoryModalCall.nextFollowUpAt;
-             if (scheduledAdvisory) {
-               newFollowUpAt = scheduledAdvisory;
-             } else if (!needsFollowUp) {
-               newFollowUpAt = undefined;
-             }
-
-             updateCall({
-               ...advisoryModalCall,
-               advisoryDate: date,
-               advisoryTime: time,
-               nextFollowUpAt: newFollowUpAt
-             });
-          }
-        }}
-      />
       <ManualAddModal
         isOpen={isManualAddOpen}
         onClose={() => setIsManualAddOpen(false)}
@@ -1024,115 +923,14 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
         {popupView && popupView !== 'learning_paths' && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-8" dir="rtl">
             <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setPopupView(null)} />
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-slate-50 rounded-3xl w-full h-full max-w-[1400px] relative z-10 overflow-hidden flex flex-col shadow-2xl border border-slate-200">
+             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.2 }} className="bg-white rounded-2xl w-full max-w-[95vw] xl:max-w-[90vw] h-[85vh] relative z-10 overflow-hidden flex flex-col shadow-2xl border border-slate-100">
                <div className="flex-1 w-full h-full overflow-y-auto overflow-x-hidden relative custom-scrollbar">
                  {popupView === 'negotiation' && <NegotiationView isModal={true} onClose={() => setPopupView(null)} />}
                  {popupView === 'schedule' && <ScheduleView isModal={true} onClose={() => setPopupView(null)} />}
                  {popupView === 'stats' && <StatsView isModal={true} onClose={() => setPopupView(null)} />}
                  {popupView === 'courses' && <CoursesView isModal={true} onClose={() => setPopupView(null)} />}
                  {popupView === 'intro' && <IntroTextView isModal={true} onClose={() => setPopupView(null)} />}
-                 {popupView === 'followup' && (
-                   <div className="flex flex-col h-full bg-[#F8FAFC]">
-                     <div className="flex-none bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-20 shadow-sm">
-                       <div className="flex items-center gap-3">
-                         <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-                           <Clock size={22} strokeWidth={2.5} />
-                         </div>
-                         <div>
-                           <h1 className="text-lg font-black text-slate-800">لیست پیگیری‌ها</h1>
-                           <p className="text-xs font-medium text-slate-500 mt-0.5">مدیریت تماس‌های معلق و برنامه‌ریزی شده</p>
-                         </div>
-                       </div>
-                       <button onClick={() => setPopupView(null)} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-colors">
-                         <X size={16} strokeWidth={2.5} />
-                       </button>
-                     </div>
-                     <div className="flex-1 overflow-auto p-4 md:p-6 custom-scrollbar">
-                       <div className="max-w-[1200px] mx-auto bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-                         <table className="w-full text-right border-separate border-spacing-y-2 min-w-[700px] p-2">
-                           <thead>
-                             <tr className="text-slate-500 text-[11px] font-bold pb-2">
-                               <th className="px-3 pb-2 w-[150px]">شماره تماس</th>
-                               <th className="px-3 pb-2 min-w-[150px]">نام</th>
-                               <th className="px-3 pb-2 w-[150px] text-center">برچسب پیگیری</th>
-                               <th className="px-3 pb-2 w-[200px] text-center">تاریخ و ساعت</th>
-                               <th className="px-3 pb-2 w-[100px] text-center">عملیات</th>
-                             </tr>
-                           </thead>
-                           <tbody>
-                             {tasks.filter(t => ['retry_call', 'consultation_reminder', 'other_followup'].includes(t.task_type) && t.status === 'pending').sort((a, b) => (a.scheduled_date || '').localeCompare(b.scheduled_date || '')).map(task => {
-                               const contact = calls.find(c => c.id === task.contact_id);
-                               if (!contact) return null;
-                               let tagColor = 'bg-slate-100 text-slate-700';
-                               let tagLabel = 'سایر';
-                               if (task.task_type === 'retry_call') { tagColor = 'bg-amber-100 text-amber-700 border border-amber-200'; tagLabel = 'تماس مجدد'; }
-                               else if (task.task_type === 'consultation_reminder') { tagColor = 'bg-blue-100 text-blue-700 border border-blue-200'; tagLabel = 'تماس مشاوره'; }
-                               else if (task.task_type === 'other_followup') { tagColor = 'bg-purple-100 text-purple-700 border border-purple-200'; tagLabel = 'سایر'; }
 
-                               return (
-                                 <tr key={task.id} className="group hover:bg-slate-50 transition-colors bg-white">
-                                   <td className="px-3 py-2 border-y border-r border-slate-100 rounded-r-xl">
-                                     <div className="flex items-center gap-2">
-                                       <Phone size={14} className="text-slate-400" />
-                                       <span className="font-semibold text-slate-700 text-[13px]">{contact.phone}</span>
-                                     </div>
-                                   </td>
-                                   <td className="px-3 py-2 border-y border-slate-100">
-                                     <span className="font-bold text-slate-800 text-[13px]">{contact.fullName || 'ثبت نشده'}</span>
-                                   </td>
-                                   <td className="px-3 py-2 border-y border-slate-100 text-center">
-                                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold ${tagColor}`}>
-                                       {tagLabel}
-                                     </span>
-                                   </td>
-                                   <td className="px-3 py-2 border-y border-slate-100 text-center">
-                                     {task.scheduled_date ? (
-                                       <div className="flex flex-col items-center justify-center">
-                                         <div className="flex items-center gap-1.5 text-slate-600">
-                                           <Calendar size={12} className="text-brand-500" />
-                                           <span className="font-bold text-[12px]">{task.scheduled_date}</span>
-                                         </div>
-                                         {task.scheduled_time && (
-                                           <div className="flex items-center gap-1.5 text-slate-500 mt-0.5">
-                                             <Clock size={12} />
-                                             <span className="font-semibold text-[11px]">{task.scheduled_time}</span>
-                                           </div>
-                                         )}
-                                       </div>
-                                     ) : (
-                                       <span className="text-slate-400 text-[12px]">-</span>
-                                     )}
-                                   </td>
-                                   <td className="px-3 py-2 border-y border-l border-slate-100 rounded-l-xl text-center">
-                                     <button 
-                                       onClick={() => {
-                                         setPopupView(null);
-                                         setSearchQuery(contact.phone);
-                                         setActiveCallTab('cards');
-                                       }}
-                                       className="h-8 px-3 rounded-lg bg-brand-50 text-brand-600 hover:bg-brand-500 hover:text-white transition-all text-[12px] font-bold inline-flex items-center gap-1"
-                                     >
-                                       <Search size={14} />
-                                       مشاهده
-                                     </button>
-                                   </td>
-                                 </tr>
-                               );
-                             })}
-                           </tbody>
-                         </table>
-                         {tasks.filter(t => ['retry_call', 'consultation_reminder', 'other_followup'].includes(t.task_type) && t.status === 'pending').length === 0 && (
-                           <div className="flex flex-col items-center justify-center py-12 px-4">
-                             <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center mb-3">
-                               <Check size={20} className="text-slate-300" />
-                             </div>
-                             <h3 className="text-sm font-bold text-slate-600">پیگیری معلقی وجود ندارد</h3>
-                           </div>
-                         )}
-                       </div>
-                     </div>
-                   </div>
-                 )}
                </div>
             </motion.div>
           </div>

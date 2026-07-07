@@ -6,7 +6,7 @@ import { useLocale } from '../../hooks/useLocale';
 
 export const StatsView = ({ isModal, onClose }: { isModal?: boolean, onClose?: () => void }) => {
   const { calls, setCurrentView } = useAppContext();
-  const { tr } = useLocale();
+  const { tr, direction } = useLocale();
   const stats = calculateStats(calls);
 
     const statCards = [
@@ -19,34 +19,39 @@ export const StatsView = ({ isModal, onClose }: { isModal?: boolean, onClose?: (
     ];
   
     return (
-      <div className="flex flex-col gap-6 w-full h-full overflow-y-auto p-4 md:p-8 bg-slate-50" >
-        <div className="bento-card p-4 sm:p-5 flex flex-col gap-5">
-          <div className="flex flex-col gap-1 text-right">
-            <div className="flex items-center gap-2 mb-2">
-               {isModal ? (
-                 <button
-                   onClick={onClose}
-                   className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-colors"
-                   title="بستن"
-                 >
-                   <X size={20} />
-                 </button>
-              ) : (
-                <button
-                  onClick={() => setCurrentView('home')}
-                  className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-colors"
-                  title="بازگشت به مرکز فرماندهی"
-                >
-                  <ArrowLeft size={20} />
-                </button>
-              )}
-               <div className="w-9 h-9 rounded-xl bg-brand-100 text-brand-700 flex items-center justify-center">
-                  <BarChart3 size={18} />
-               </div>
-               <h2 className="text-xl font-medium text-primary">{tr('آمار و عملکرد', 'Statistics and performance')}</h2>
+      <div className="relative w-full h-full flex flex-col bg-[#f8fafc] overflow-hidden" dir={direction}>
+        {/* Top Header */}
+        <div className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shrink-0 z-20 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center shrink-0">
+              <BarChart3 size={22} strokeWidth={2.5} />
             </div>
-            <p className="text-[14px] text-secondary">{tr('نمای کلی وضعیت تماس‌ها و نرخ موفقیت در شیفت فعلی.', 'Overview of call results and success rate for the current shift.')}</p>
+            <div>
+              <h1 className="text-lg font-black text-slate-800 leading-tight">{tr('آمار و عملکرد', 'Statistics and performance')}</h1>
+              <p className="text-xs font-medium text-slate-500 mt-0.5">{tr('نمای کلی وضعیت تماس‌ها و نرخ موفقیت در شیفت فعلی.', 'Overview of call results and success rate for the current shift.')}</p>
+            </div>
           </div>
+
+          {isModal ? (
+             <button
+               onClick={onClose}
+               className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-colors shrink-0"
+               title="بستن"
+             >
+               <X size={18} strokeWidth={2.5} />
+             </button>
+          ) : (
+             <button
+               onClick={() => setCurrentView('home')}
+               className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-lg transition-colors shrink-0"
+             >
+               بازگشت
+             </button>
+          )}
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 space-y-6">
+          <div className="max-w-4xl mx-auto flex flex-col gap-6">
   
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {statCards.map((card, i) => (
@@ -71,5 +76,6 @@ export const StatsView = ({ isModal, onClose }: { isModal?: boolean, onClose?: (
           </div>
         </div>
       </div>
-    );
+    </div>
+  );
 };

@@ -119,27 +119,12 @@ export const NegotiationView = ({ isModal, onClose }: { isModal?: boolean, onClo
       
       {/* Header */}
       <div className="flex-none bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-20 shadow-sm">
-        <div className="flex items-center gap-4">
-          {isModal ? (
-             <button
-               onClick={onClose}
-               className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-colors"
-               title="بستن"
-             >
-               <X size={20} />
-             </button>
-          ) : (
-            <button
-              onClick={() => setCurrentView('home')}
-              className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 hover:text-slate-900 transition-colors"
-              title="بازگشت به مرکز فرماندهی"
-            >
-              <ArrowLeft size={20} />
-            </button>
-          )}
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+            <Target size={22} strokeWidth={2.5} />
+          </div>
           <div>
-            <h1 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2">
-              <BookOpen className="text-brand-600" size={24} />
+            <h1 className="text-lg font-black text-slate-800 leading-tight">
               تکنیک‌های حرفه‌ای مذاکره
             </h1>
             <p className="text-sm text-slate-500 font-medium mt-1">
@@ -147,6 +132,22 @@ export const NegotiationView = ({ isModal, onClose }: { isModal?: boolean, onClo
             </p>
           </div>
         </div>
+        {isModal ? (
+           <button
+             onClick={onClose}
+             className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-colors shrink-0"
+             title="بستن"
+           >
+             <X size={18} strokeWidth={2.5} />
+           </button>
+        ) : (
+           <button
+             onClick={() => setCurrentView('home')}
+             className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-lg transition-colors shrink-0"
+           >
+             بازگشت
+           </button>
+        )}
       </div>
 
       <div className="flex-1 overflow-hidden flex flex-col lg:flex-row max-w-7xl mx-auto w-full">

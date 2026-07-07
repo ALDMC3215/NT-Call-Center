@@ -17,18 +17,14 @@ export const exportFollowupsToExcel = async (snapshot: any[], activeCount: numbe
     { key: 'name', width: 22 },
     { key: 'phone', width: 16 },
     { key: 'status', width: 20 },
-    { key: 'registered', width: 15 },
-    { key: 'courses', width: 35 },
     { key: 'advisory', width: 15 },
-    { key: 'advisoryDate', width: 15 },
-    { key: 'advisoryTime', width: 15 },
-    { key: 'nextFollowUp', width: 20 },
+    { key: 'isFollowUp', width: 15 },
     { key: 'notes', width: 45 },
     { key: 'lastAttempt', width: 20 },
   ];
 
   // Row 1: Title
-  ws.mergeCells('A1:L1');
+  ws.mergeCells('A1:H1');
   const titleRow = ws.getRow(1);
   titleRow.height = 40;
   const titleCell = ws.getCell('A1');
@@ -38,7 +34,7 @@ export const exportFollowupsToExcel = async (snapshot: any[], activeCount: numbe
   titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF172554' } };
 
   // Row 2: Metadata
-  ws.mergeCells('A2:L2');
+  ws.mergeCells('A2:H2');
   const metaRow = ws.getRow(2);
   metaRow.height = 30;
   const metaCell = ws.getCell('A2');
@@ -54,8 +50,8 @@ export const exportFollowupsToExcel = async (snapshot: any[], activeCount: numbe
   const headerRow = ws.getRow(4);
   headerRow.height = 35;
   const headers = [
-    'ردیف', 'نام', 'شماره تماس', 'وضعیت تماس', 'وضعیت ثبتنام', 'دورهها',
-    'مشاوره حضوری', 'تاریخ مشاوره', 'ساعت مشاوره', 'زمان پیگیری بعدی', 'یادداشتها', 'آخرین ثبت نتیجه'
+    'ردیف', 'نام', 'شماره تماس', 'وضعیت تماس',
+    'مشاوره حضوری', 'پیگیری مجدد', 'یادداشتها', 'آخرین ثبت نتیجه'
   ];
   headerRow.values = headers;
 
@@ -71,7 +67,7 @@ export const exportFollowupsToExcel = async (snapshot: any[], activeCount: numbe
     };
   });
 
-  ws.autoFilter = `A4:L${4 + Math.max(1, snapshot.length)}`;
+  ws.autoFilter = `A4:H${4 + Math.max(1, snapshot.length)}`;
 
   const formatDateTime = (isoString: string | null) => {
     if (!isoString) return '';
@@ -86,12 +82,8 @@ export const exportFollowupsToExcel = async (snapshot: any[], activeCount: numbe
       c.fullName || '',
       c.phone ? String(c.phone) : '',
       c.callStatus || '',
-      c.registered || '',
-      Array.isArray(c.courses) ? c.courses.join('، ') : '',
       c.advisory || '',
-      c.advisoryDate || '',
-      c.advisoryTime || '',
-      formatDateTime(c.nextFollowUpAt),
+      c.isFollowUp ? 'بله' : 'خیر',
       c.notes || '',
       formatDateTime(c.latestAttemptAt)
     ];

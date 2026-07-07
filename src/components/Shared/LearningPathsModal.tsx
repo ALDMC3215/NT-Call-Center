@@ -44,21 +44,22 @@ export const LearningPathsModal = ({ isOpen, onClose }: Props) => {
         className="bg-white rounded-2xl shadow-2xl w-full max-w-[95vw] xl:max-w-[90vw] h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50/50 shrink-0">
+        <div className="flex-none bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-20 shadow-sm shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+            <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 shrink-0">
               <Route size={22} strokeWidth={2.5} />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-800 leading-tight">مسیرهای یادگیری</h2>
-              <p className="text-[13px] text-slate-500 font-medium mt-0.5">مسیر پیشنهادی از شروع تا مهارت تخصصی</p>
+              <h2 className="text-lg font-black text-slate-800 leading-tight">مسیرهای یادگیری</h2>
+              <p className="text-xs font-medium text-slate-500 mt-0.5">مسیر پیشنهادی از شروع تا مهارت تخصصی</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/50 transition-colors"
+            className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-colors shrink-0"
+            title="بستن"
           >
-            <X size={20} />
+            <X size={18} strokeWidth={2.5} />
           </button>
         </div>
 

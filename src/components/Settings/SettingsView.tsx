@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Settings, RefreshCw, PhoneOff, Upload, Briefcase, Download, Send, History, X, MessageSquare, Inbox, Lock } from 'lucide-react';
+import { Settings, RefreshCw, PhoneOff, Upload, Briefcase, Download, Send, History, X, MessageSquare, Inbox, Lock, Trash2 } from 'lucide-react';
 import { COURSE_CATEGORIES } from '../../data/courses';
 import { fetchCourseDataDynamic } from '../../utils/scraper';
 import { useAppContext } from '../../hooks/useAppContext';
@@ -299,6 +299,15 @@ export const SettingsView: React.FC = () => {
                   </div>
                   <div className="flex flex-col">
                     <span className="font-bold text-xs">{tr('لیست سیاه', 'Blacklist')}</span>
+                  </div>
+                </button>
+
+                <button onClick={() => setCurrentView('trash')} className="flex items-center p-3 bg-slate-50 border border-slate-200 text-slate-700 rounded-md hover:bg-white hover:border-slate-300 transition-colors gap-3 text-right">
+                  <div className="w-8 h-8 rounded-md bg-rose-50 text-rose-500 flex items-center justify-center shrink-0">
+                    <Trash2 size={16} />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-bold text-xs">{tr('سطل زباله', 'Trash')}</span>
                   </div>
                 </button>
               </div>

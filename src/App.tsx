@@ -13,6 +13,7 @@ import { isActiveFollowup } from './utils/followups';
 const ProfileView        = React.lazy(() => import('./components/Profile/ProfileView').then(m => ({ default: m.ProfileView })));
 const SettingsView       = React.lazy(() => import('./components/Settings/SettingsView').then(m => ({ default: m.SettingsView })));
 const BlacklistView      = React.lazy(() => import('./components/Blacklist/BlacklistView').then(m => ({ default: m.BlacklistView })));
+const TrashView          = React.lazy(() => import('./components/Settings/TrashView').then(m => ({ default: m.TrashView })));
 const CallListWorkspace  = React.lazy(() => import('./components/Calls/CallListWorkspace').then(m => ({ default: m.CallListWorkspace })));
 const AboutView          = React.lazy(() => import('./components/About/AboutView').then(m => ({ default: m.AboutView })));
 const AuthScreen         = React.lazy(() => import('./components/Auth/AuthScreen').then(m => ({ default: m.AuthScreen })));
@@ -321,7 +322,7 @@ export default function App() {
                     <MessageNotifier />
                     <SessionManager />
                     {/* macOS-style Floating Home Button for internal pages */}
-                    {currentView !== 'home' && (
+                    {currentView !== 'home' && !popupView && (
                       <div className="absolute top-4 left-4 z-50 pointer-events-none">
                         <button 
                           onClick={() => setCurrentView('home')}
@@ -344,6 +345,7 @@ export default function App() {
                               {currentView === 'profile'   && <ProfileView />}
                               {currentView === 'settings'  && <SettingsView />}
                               {currentView === 'blacklist' && <BlacklistView />}
+                              {currentView === 'trash'     && <TrashView />}
                               {currentView === 'about'     && <AboutView />}
                               {currentView === 'negotiation' && <NegotiationView />}
                               {currentView === 'schedule'    && <ScheduleView />}

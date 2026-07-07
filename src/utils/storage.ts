@@ -1,4 +1,4 @@
-import { CallRecord, Profile, BlacklistEntry, BlacklistReason } from '../types';
+import { CallRecord, Profile, BlacklistEntry, BlacklistReason, TrashEntry } from '../types';
 
 const PROFILE_KEY = 'novintech_profile';
 
@@ -19,11 +19,7 @@ export const storage = {
         createdAt: new Date(0).toISOString(),
         jalaliDateTime: call.createdAt,
         callStatus: call.callStatus,
-        courses: call.courses || [],
         advisory: call.advisory || '',
-        advisoryDate: call.advisoryDate || '',
-        advisoryTime: call.advisoryTime || '',
-        registered: call.registered || '',
         notes: call.notes || ''
       }] : [];
       return {
@@ -69,5 +65,20 @@ export const storage = {
   },
   wipeAllData: () => {
     localStorage.clear();
+  },
+  getTrash: (): TrashEntry[] => {
+    return JSON.parse(localStorage.getItem('novintech_trash') || '[]');
+  },
+  addToTrash: (entry: TrashEntry) => {
+    const list = storage.getTrash();
+    // Don't add if already there
+    if (!list.some(e => e.id === entry.id)) {
+      list.push(entry);
+      localStorage.setItem('novintech_trash', JSON.stringify(list));
+    }
+  },
+  removeFromTrash: (id: string) => {
+    const list = storage.getTrash();
+    localStorage.setItem('novintech_trash', JSON.stringify(list.filter(e => e.id !== id)));
   }
 };

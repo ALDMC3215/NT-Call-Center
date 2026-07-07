@@ -14,6 +14,10 @@ export interface ToastProps {
   type?: ToastType;
   duration?: number;
   onClose?: (id: string) => void;
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
 }
 
 const toastIcons = {
@@ -38,12 +42,12 @@ const emitToast = (toast: ToastProps) => {
 };
 
 export const customToast = Object.assign(
-  (message: string, options?: number | { icon?: string; duration?: number }) => emitToast({ id: Date.now().toString() + Math.random(), message, type: 'info', duration: typeof options === 'number' ? options : options?.duration || 3000 }),
+  (message: string, options?: number | { icon?: string; duration?: number; action?: ToastProps['action'] }) => emitToast({ id: Date.now().toString() + Math.random(), message, type: 'info', duration: typeof options === 'number' ? options : options?.duration || 3000, action: typeof options === 'object' ? options.action : undefined }),
   {
-    success: (message: string, options?: number | { icon?: string; duration?: number }) => emitToast({ id: Date.now().toString() + Math.random(), message, type: 'success', duration: typeof options === 'number' ? options : options?.duration || 3000 }),
-    error: (message: string, options?: number | { icon?: string; duration?: number }) => emitToast({ id: Date.now().toString() + Math.random(), message, type: 'error', duration: typeof options === 'number' ? options : options?.duration || 4000 }),
-    warning: (message: string, options?: number | { icon?: string; duration?: number }) => emitToast({ id: Date.now().toString() + Math.random(), message, type: 'warning', duration: typeof options === 'number' ? options : options?.duration || 4000 }),
-    info: (message: string, options?: number | { icon?: string; duration?: number }) => emitToast({ id: Date.now().toString() + Math.random(), message, type: 'info', duration: typeof options === 'number' ? options : options?.duration || 3000 }),
+    success: (message: string, options?: number | { icon?: string; duration?: number; action?: ToastProps['action'] }) => emitToast({ id: Date.now().toString() + Math.random(), message, type: 'success', duration: typeof options === 'number' ? options : options?.duration || 3000, action: typeof options === 'object' ? options.action : undefined }),
+    error: (message: string, options?: number | { icon?: string; duration?: number; action?: ToastProps['action'] }) => emitToast({ id: Date.now().toString() + Math.random(), message, type: 'error', duration: typeof options === 'number' ? options : options?.duration || 4000, action: typeof options === 'object' ? options.action : undefined }),
+    warning: (message: string, options?: number | { icon?: string; duration?: number; action?: ToastProps['action'] }) => emitToast({ id: Date.now().toString() + Math.random(), message, type: 'warning', duration: typeof options === 'number' ? options : options?.duration || 4000, action: typeof options === 'object' ? options.action : undefined }),
+    info: (message: string, options?: number | { icon?: string; duration?: number; action?: ToastProps['action'] }) => emitToast({ id: Date.now().toString() + Math.random(), message, type: 'info', duration: typeof options === 'number' ? options : options?.duration || 3000, action: typeof options === 'object' ? options.action : undefined }),
   }
 );
 
@@ -93,6 +97,20 @@ const BasicToast: React.FC<{ toast: ToastProps; onClose: (id: string) => void; k
     >
       <div className="flex-shrink-0">{toastIcons[toast.type || 'info']}</div>
       <p className="flex-1 text-[13px] font-medium tracking-tight">{toast.message}</p>
+      
+      {toast.action && (
+        <button
+          onClick={() => {
+            toast.action?.onClick();
+            setVisible(false);
+            setTimeout(() => onClose(toast.id), 300);
+          }}
+          className="px-3 py-1.5 ml-2 text-[12px] font-bold bg-white text-slate-800 rounded-lg shadow-sm hover:bg-slate-50 transition-colors border border-slate-200 shrink-0"
+        >
+          {toast.action.label}
+        </button>
+      )}
+
       <button
         className="flex-shrink-0 rounded-full p-1 text-muted transition-colors hover:bg-surface-hover hover:text-primary"
         onClick={() => {
