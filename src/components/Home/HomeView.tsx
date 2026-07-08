@@ -55,6 +55,17 @@ export const HomeView = () => {
           iconColor: 'text-brand-600',
           iconBg: 'bg-brand-500/10',
           gradient: 'from-brand-500 to-indigo-500'
+        },
+        {
+          id: 'negotiation',
+          title: tr('تکنیک‌های مذاکره', 'Negotiation Techniques'),
+          description: tr('آموزش جامع فروش و تکنیک‌های متقاعدسازی', 'Comprehensive sales and persuasion techniques'),
+          icon: Target,
+          count: null,
+          onClick: () => { setCurrentView('negotiation'); },
+          iconColor: 'text-amber-600',
+          iconBg: 'bg-amber-500/10',
+          gradient: 'from-amber-500 to-orange-500'
         }
       ]
     },
