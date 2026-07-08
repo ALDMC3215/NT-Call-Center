@@ -27,18 +27,18 @@ const formatTimePart = (timeStr: string) => {
 
 const parseSchedule = (schedule?: string) => {
   if (!schedule) return [];
-  if (schedule === "گروه یا شعبه پیش‌فرضی ثبت نشده است." || !schedule.match(/\d/)) {
+  if (schedule === "گروه یا شعبه پیش‌فرضی ثبت نشده است." || !schedule.match(/[\d۰-۹]/)) {
     return [{ type: 'text', value: schedule }];
   }
   
-  const rawParts = schedule.split(' ');
+  const rawParts = schedule.split(/\s+/);
   const mergedParts: string[] = [];
   
   for (let i = 0; i < rawParts.length; i++) {
      const p = rawParts[i];
      
      if ((p === 'الی' || p === 'تا' || p === '-') && i > 0 && i < rawParts.length - 1) {
-         if (mergedParts.length > 0 && mergedParts[mergedParts.length - 1].match(/\d/) && rawParts[i+1].match(/\d/)) {
+         if (mergedParts.length > 0 && mergedParts[mergedParts.length - 1].match(/[\d۰-۹]/) && rawParts[i+1].match(/[\d۰-۹]/)) {
              const prev = mergedParts.pop();
              mergedParts.push(`${prev} الی ${formatTimePart(rawParts[i+1])}`);
              i++; 
@@ -46,7 +46,7 @@ const parseSchedule = (schedule?: string) => {
          }
      }
      
-     if ((p === 'گروه' || p === 'کد' || p === 'سکشن') && i < rawParts.length - 1) {
+     if ((p === 'گروه' || p === 'کد' || p === 'سکشن' || p === 'شعبه') && i < rawParts.length - 1) {
          mergedParts.push(`${p} ${rawParts[i+1]}`);
          i++;
          continue;
@@ -67,7 +67,7 @@ const parseSchedule = (schedule?: string) => {
   let currentText = '';
   
   mergedParts.forEach(part => {
-    const cleanPart = part.replace('‌', '').replace(' ', ''); // handle zwnj and 'سه شنبه'
+    const cleanPart = part.replace(/‌/g, '').replace(/\s/g, ''); // handle zwnj and 'سه شنبه'
     if (days.includes(cleanPart) || days.includes(part)) {
       if (currentText) { badges.push({ type: 'text', value: currentText.trim() }); currentText = ''; }
       badges.push({ type: 'day', value: part });
@@ -77,7 +77,7 @@ const parseSchedule = (schedule?: string) => {
     } else if (part.startsWith('شعبه')) {
       if (currentText) { badges.push({ type: 'text', value: currentText.trim() }); currentText = ''; }
       badges.push({ type: 'branch', value: part });
-    } else if (part.match(/\d/) && (part.includes('الی') || part.includes('تا') || part.includes('-') || part.match(/^\d+$/) || part.match(/^\d+:\d+$/))) {
+    } else if (part.match(/[\d۰-۹]/) && (part.includes('الی') || part.includes('تا') || part.includes('-') || part.match(/^[\d۰-۹]+$/) || part.match(/^[\d۰-۹]+:[\d۰-۹]+$/))) {
       if (currentText) { badges.push({ type: 'text', value: currentText.trim() }); currentText = ''; }
       badges.push({ type: 'time', value: part });
     } else {
