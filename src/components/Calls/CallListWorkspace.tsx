@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useRef } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { useAppContext } from '../../hooks/useAppContext';
 import { useLocale } from '../../hooks/useLocale';
 import { CallRecord, ContactTask, ContactTaskType } from '../../types';
@@ -29,6 +29,65 @@ import { LearningPathsModal } from '../Shared/LearningPathsModal';
 import { OrbitalCardView } from './OrbitalCardView';
 import { isActiveFollowup } from '../../utils/followups';
 import { jalaliDateTimeToIso } from '../../utils/jalali';
+import { COURSE_CATEGORIES } from '../../data/courses';
+
+const CourseAutocomplete = ({ value, onChange }: { value: string, onChange: (v: string) => void }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [localVal, setLocalVal] = useState(value);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  
+  const ALL_COURSES = useMemo(() => {
+    const titles = new Set<string>();
+    COURSE_CATEGORIES.forEach(cat => {
+      cat.subcategories.forEach(sub => {
+        sub.courses.forEach(c => titles.add(c.title));
+      });
+    });
+    return Array.from(titles);
+  }, []);
+
+  useEffect(() => { setLocalVal(value); }, [value]);
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  const filtered = ALL_COURSES.filter(o => o.toLowerCase().includes((localVal||'').toLowerCase()));
+
+  return (
+    <div className="relative w-full" ref={wrapperRef}>
+      <input
+        type="text"
+        value={localVal || ''}
+        onChange={e => {
+          setLocalVal(e.target.value);
+          onChange(e.target.value);
+          setIsOpen(true);
+        }}
+        onFocus={() => setIsOpen(true)}
+        placeholder="دوره مدنظر..."
+        className="text-[12px] font-medium text-slate-700 text-center bg-slate-100 border border-slate-200 hover:border-slate-300 focus:border-cyan-500 outline-none w-full min-w-[120px] px-2 py-2 rounded-lg transition-colors placeholder:text-slate-400"
+      />
+      <AnimatePresence>
+      {isOpen && localVal && filtered.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 5 }} className="absolute z-[100] top-full mt-1 w-[200px] left-1/2 -translate-x-1/2 bg-white border border-slate-200 rounded-xl shadow-lg max-h-[150px] overflow-y-auto custom-scrollbar flex flex-col p-1 text-right">
+          {filtered.map(o => (
+             <button key={o} onClick={() => { setLocalVal(o); onChange(o); setIsOpen(false); }} className="px-3 py-1.5 text-[11px] text-slate-700 hover:bg-brand-50 hover:text-brand-700 text-right rounded-lg w-full truncate transition-colors">
+               {o}
+             </button>
+          ))}
+        </motion.div>
+      )}
+      </AnimatePresence>
+    </div>
+  );
+};
 
 type Tab = 'home' | 'queue' | 'today' | 'stats' | 'blacklist' | 'courses';
 
@@ -259,6 +318,7 @@ export const CallListWorkspace = () => {
     activeCallTab: activeTab,
     setActiveCallTab,
     addToBlacklist,
+    removeFromBlacklist,
     recordAttempt,
     addCall,
     bulkAddCalls,
@@ -580,15 +640,17 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
       } else if (call.callStatus === 'عدم تمایل') {
         addToBlacklist(call.phone, 'عدم تمایل');
         updateCall({ ...call, workList: 'today', isFollowUp: false });
+        setContactWorkList(call.id, 'today');
         toast.success(tr('شماره عدم تمایل بود، در لیست سیاه و فعالیت روزانه ثبت شد.', 'Number blacklisted and moved to Daily Activity.'), {
           duration: 5000,
-          action: { label: 'بازگردانی', onClick: () => { removeFromBlacklist(call.phone); updateCall({ ...call, workList: 'none' }); } }
+          action: { label: 'بازگردانی', onClick: () => { removeFromBlacklist(call.phone); updateCall({ ...call, workList: 'none' }); setContactWorkList(call.id, 'none'); } }
         });
       } else {
         updateCall({ ...call, workList: 'today', isFollowUp: false });
+        setContactWorkList(call.id, 'today');
         toast.success(tr('نتیجه تماس به فعالیت روزانه منتقل شد.', 'Call result moved to Daily Activity.'), {
           duration: 5000,
-          action: { label: 'بازگردانی', onClick: () => { updateCall({ ...call, workList: 'none' }); } }
+          action: { label: 'بازگردانی', onClick: () => { updateCall({ ...call, workList: 'none' }); setContactWorkList(call.id, 'none'); } }
         });
         loadTasks();
       }
@@ -633,15 +695,17 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
       } else if (call.callStatus === 'عدم تمایل') {
         addToBlacklist(call.phone, 'عدم تمایل');
         updateCall({ ...call, workList: 'today', isFollowUp: false });
+        setContactWorkList(call.id, 'today');
         toast.success(tr('در لیست سیاه و فعالیت روزانه ثبت شد.', 'Blacklisted and moved to Daily Activity.'), {
           duration: 5000,
-          action: { label: 'بازگردانی', onClick: () => { removeFromBlacklist(call.phone); updateCall({ ...call, workList: 'none' }); } }
+          action: { label: 'بازگردانی', onClick: () => { removeFromBlacklist(call.phone); updateCall({ ...call, workList: 'none' }); setContactWorkList(call.id, 'none'); } }
         });
       } else {
         updateCall({ ...call, workList: 'today', isFollowUp: false });
+        setContactWorkList(call.id, 'today');
         toast.success(tr('با موفقیت ثبت و به فعالیت روزانه منتقل شد.', 'Saved and moved to Daily Activity.'), {
           duration: 5000,
-          action: { label: 'بازگردانی', onClick: () => { updateCall({ ...call, workList: 'none' }); } }
+          action: { label: 'بازگردانی', onClick: () => { updateCall({ ...call, workList: 'none' }); setContactWorkList(call.id, 'none'); } }
         });
       }
     } catch (err) {
@@ -760,7 +824,7 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
       {/* Main Grid View */}
       <div className="flex-1 w-full min-h-0 flex items-stretch gap-4 pb-4 px-4 md:px-6" >
         <div className="flex-1 flex flex-col overflow-hidden relative">
-          <div className="relative h-fit max-h-full bg-white rounded-2xl border border-slate-200 flex flex-col overflow-hidden shadow-sm">
+          <div className="relative h-full bg-white rounded-2xl border border-slate-200 flex flex-col overflow-hidden shadow-sm">
 
           {activeTab === 'courses' ? (
              <div className="w-full h-full custom-scrollbar"><CoursesView embedded={true} /></div>
@@ -874,14 +938,11 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                     </td>
 
                     {/* Interested Course */}
-                    <td className="py-2 px-1.5 relative whitespace-nowrap">
-                       <div className="flex items-center justify-center">
-                          <input
-                            type="text"
-                            value={c.interestedCourse || ''}
-                            onChange={e => handleFieldChange(c, 'interestedCourse', e.target.value)}
-                            placeholder={tr('دوره مدنظر...', 'Course...')}
-                            className="text-[12px] font-medium text-slate-700 text-center bg-slate-100 border border-slate-200 hover:border-slate-300 focus:border-cyan-500 outline-none w-full min-w-[120px] px-2 py-2 rounded-lg transition-colors placeholder:text-slate-400"
+                    <td className="py-2 px-1.5 relative whitespace-nowrap overflow-visible">
+                       <div className="flex items-center justify-center relative w-full">
+                          <CourseAutocomplete 
+                            value={c.interestedCourse || ''} 
+                            onChange={(val) => handleFieldChange(c, 'interestedCourse', val)} 
                           />
                        </div>
                     </td>
@@ -935,7 +996,7 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                            <motion.button
                              whileHover={{ scale: 1.05 }}
                              whileTap={{ scale: 0.95 }}
-                             onClick={() => { updateCall({ ...c, isFollowUp: true, workList: 'none' }); toast.success(tr('به پیگیری‌ها منتقل شد.', 'Moved to Follow-ups.')); }}
+                             onClick={() => { updateCall({ ...c, isFollowUp: true, workList: 'none' }); setContactWorkList(c.id, 'none'); toast.success(tr('به پیگیری‌ها منتقل شد.', 'Moved to Follow-ups.')); }}
                              disabled={c.isFollowUp || c.isBlacklisted}
                              className={`px-2 py-1.5 rounded-lg flex items-center justify-center font-bold text-[10px] transition-all flex-1 min-w-[55px] ${!c.isFollowUp && !c.isBlacklisted ? 'bg-orange-100 text-orange-700 hover:bg-orange-200' : 'bg-slate-50 text-slate-300'}`}
                              title={tr('پیگیری', 'Follow-up')}
@@ -943,27 +1004,7 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                              <Icons.PhoneForwarded size={12} />
                            </motion.button>
 
-                           <motion.button
-                             whileHover={{ scale: 1.05 }}
-                             whileTap={{ scale: 0.95 }}
-                             onClick={() => {
-                               setConfirmModalConfig({
-                                 isOpen: true,
-                                 title: tr('لیست سیاه', 'Blacklist'),
-                                 message: tr('آیا مطمئن هستید که می‌خواهید این شماره را به لیست سیاه اضافه کنید؟', 'Are you sure you want to add this number to the blacklist?'),
-                                 onConfirm: () => {
-                                    addToBlacklist(c.phone);
-                                    updateCall({ ...c, isFollowUp: false, isBlacklisted: true, workList: 'none' });
-                                    toast.success(tr('شماره سیاه شد.', 'Number blacklisted.'));
-                                 }
-                               });
-                             }}
-                             disabled={c.isBlacklisted}
-                             className={`px-2 py-1.5 rounded-lg flex items-center justify-center font-bold text-[10px] transition-all flex-1 min-w-[55px] ${!c.isBlacklisted ? 'bg-rose-100 text-rose-700 hover:bg-rose-200' : 'bg-slate-50 text-slate-300'}`}
-                             title={tr('لیست سیاه', 'Blacklist')}
-                           >
-                             <Icons.Ban size={12} />
-                           </motion.button>
+
 
                            <motion.button
                              whileHover={{ scale: 1.05 }}
@@ -981,6 +1022,7 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                                whileTap={{ scale: 0.95 }}
                                onClick={() => {
                                  updateCall({ ...c, workList: 'none', isFollowUp: false });
+                                 setContactWorkList(c.id, 'none');
                                  toast.success(tr('به لیست اصلی بازگردانده شد.', 'Returned to main list.'));
                                }}
                                className="px-2 py-1.5 rounded-lg flex items-center justify-center font-bold text-[10px] transition-all flex-1 min-w-[55px] bg-indigo-100 text-indigo-700 hover:bg-indigo-200"
