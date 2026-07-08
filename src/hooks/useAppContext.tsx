@@ -112,7 +112,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         const { data: contactsData, error: contactsError } = await supabase
           .from('expert_contacts')
           .select('*')
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false })
+          .order('queue_order', { ascending: true, nullsFirst: false });
 
         if (contactsError) throw contactsError;
 

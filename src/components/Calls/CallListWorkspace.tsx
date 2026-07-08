@@ -753,8 +753,12 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
     if (searchQuery.trim()) {
       list = list.filter(c => (c.phone || '').includes(searchQuery) || (c.fullName || '').includes(searchQuery));
     }
-    return list.sort((a, b) => {
-      return String(b.createdAt).localeCompare(String(a.createdAt));
+    return [...list].sort((a, b) => {
+      const timeDiff = String(b.createdAt).localeCompare(String(a.createdAt));
+      if (timeDiff !== 0) return timeDiff;
+      const qDiff = (a.queueOrder ?? 0) - (b.queueOrder ?? 0);
+      if (qDiff !== 0) return qDiff;
+      return String(a.id).localeCompare(String(b.id));
     });
   }, [calls, activeTab, searchQuery, tasks]);
 
@@ -884,7 +888,7 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                 </tr>
               </thead>
               <tbody className="text-[13px] font-medium text-slate-800 relative z-0">
-                <AnimatePresence mode="popLayout">
+                <AnimatePresence>
                 {filteredList.filter(c => !hiddenCalls.has(c.id)).length === 0 ? (
                   <motion.tr key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                     <td colSpan={4} className="py-24">
@@ -897,7 +901,6 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                   return (
                   <motion.tr
                     key={c.id}
-                    layout
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
