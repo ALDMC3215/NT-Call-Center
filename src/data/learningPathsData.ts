@@ -12,6 +12,7 @@ const COLORS = {
 export const initialNodes: Node[] = [
   // ROOT
   { id: 'root', type: 'mindmap', data: { label: 'مسیرهای یادگیری نوین تک', level: 0, color: COLORS.root }, position: { x: 0, y: 0 } },
+  { id: 'icdl', type: 'mindmap', data: { label: 'ICDL (به شرط بلد نبودن کار با کامپیوتر)', level: 0, color: COLORS.level1 }, position: { x: 0, y: 0 } },
   
   // LEVEL 1
   { id: 'cat-ai', type: 'mindmap', data: { label: 'هوش مصنوعی', level: 1, color: COLORS.level1 }, position: { x: 0, y: 0 } },
@@ -84,15 +85,18 @@ export const initialNodes: Node[] = [
 ];
 
 export const initialEdges: Edge[] = [
-  // Root -> Level 1
-  { id: 'e-root-ai', source: 'root', target: 'cat-ai', type: 'default', animated: true, style: { stroke: '#94a3b8', strokeWidth: 1.5 } },
-  { id: 'e-root-network', source: 'root', target: 'cat-network', type: 'default', animated: true, style: { stroke: '#94a3b8', strokeWidth: 1.5 } },
-  { id: 'e-root-kids', source: 'root', target: 'cat-kids', type: 'default', animated: true, style: { stroke: '#94a3b8', strokeWidth: 1.5 } },
-  { id: 'e-root-robotics', source: 'root', target: 'cat-robotics', type: 'default', animated: true, style: { stroke: '#94a3b8', strokeWidth: 1.5 } },
-  { id: 'e-root-api', source: 'root', target: 'cat-api', type: 'default', animated: true, style: { stroke: '#94a3b8', strokeWidth: 1.5 } },
-  { id: 'e-root-mobile', source: 'root', target: 'cat-mobile', type: 'default', animated: true, style: { stroke: '#94a3b8', strokeWidth: 1.5 } },
-  { id: 'e-root-web', source: 'root', target: 'cat-web', type: 'default', animated: true, style: { stroke: '#94a3b8', strokeWidth: 1.5 } },
-  { id: 'e-root-graphics', source: 'root', target: 'cat-graphics', type: 'default', animated: true, style: { stroke: '#94a3b8', strokeWidth: 1.5 } },
+  // Root -> ICDL
+  { id: 'e-root-icdl', source: 'root', target: 'icdl', type: 'default', animated: true, style: { stroke: '#94a3b8', strokeWidth: 1.5 } },
+
+  // ICDL -> Level 1
+  { id: 'e-icdl-ai', source: 'icdl', target: 'cat-ai', type: 'default', animated: true, style: { stroke: '#94a3b8', strokeWidth: 1.5 } },
+  { id: 'e-icdl-network', source: 'icdl', target: 'cat-network', type: 'default', animated: true, style: { stroke: '#94a3b8', strokeWidth: 1.5 } },
+  { id: 'e-icdl-kids', source: 'icdl', target: 'cat-kids', type: 'default', animated: true, style: { stroke: '#94a3b8', strokeWidth: 1.5 } },
+  { id: 'e-icdl-robotics', source: 'icdl', target: 'cat-robotics', type: 'default', animated: true, style: { stroke: '#94a3b8', strokeWidth: 1.5 } },
+  { id: 'e-icdl-api', source: 'icdl', target: 'cat-api', type: 'default', animated: true, style: { stroke: '#94a3b8', strokeWidth: 1.5 } },
+  { id: 'e-icdl-mobile', source: 'icdl', target: 'cat-mobile', type: 'default', animated: true, style: { stroke: '#94a3b8', strokeWidth: 1.5 } },
+  { id: 'e-icdl-web', source: 'icdl', target: 'cat-web', type: 'default', animated: true, style: { stroke: '#94a3b8', strokeWidth: 1.5 } },
+  { id: 'e-icdl-graphics', source: 'icdl', target: 'cat-graphics', type: 'default', animated: true, style: { stroke: '#94a3b8', strokeWidth: 1.5 } },
 
   // AI -> Level 2
   { id: 'e-ai-python', source: 'cat-ai', target: 'ai-python', type: 'default', animated: true, style: { stroke: '#94a3b8', strokeWidth: 1.5 } },

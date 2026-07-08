@@ -525,7 +525,10 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
         addToBlacklist(call.phone, 'ناموجود بودن شماره');
         const deleteSuccess = await deleteCall(call.id);
         if (deleteSuccess) {
-          toast.success(tr('شماره ناموجود بود، در لیست سیاه ثبت و حذف شد.', 'Number unavailable, blacklisted and deleted.'));
+          toast.success(tr('شماره ناموجود بود، در لیست سیاه ثبت و حذف شد.', 'Number unavailable, blacklisted and deleted.'), {
+            duration: 5000,
+            action: { label: 'بازگردانی', onClick: () => { removeFromBlacklist(call.phone); addCall(call); } }
+          });
         } else {
           toast.error(tr('نتیجه ثبت شد، اما حذف شماره انجام نشد. دوباره روی ثبت نتیجه بزنید تا فقط حذف تکمیل شود.', 'Result saved but deletion failed. Press submit again to complete cleanup.'));
         }
@@ -563,17 +566,30 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
         followupNote: taskData.followupNote
       });
 
-      if (call.callStatus === 'ناموجود' || call.callStatus === 'عدم تمایل') {
-        addToBlacklist(call.phone, 'عدم تمایل / ناموجود بودن');
+      if (call.callStatus === 'ناموجود') {
+        addToBlacklist(call.phone, 'ناموجود بودن');
         const deleteSuccess = await deleteCall(call.id);
         if (deleteSuccess) {
-          toast.success(tr('شماره ناموجود/عدم تمایل بود، در لیست سیاه ثبت و حذف شد.', 'Number blacklisted and deleted.'));
+          toast.success(tr('شماره ناموجود بود، در لیست سیاه ثبت و حذف شد.', 'Number blacklisted and deleted.'), {
+            duration: 5000,
+            action: { label: 'بازگردانی', onClick: () => { removeFromBlacklist(call.phone); addCall(call); } }
+          });
         } else {
           toast.error(tr('نتیجه ثبت شد، اما حذف شماره انجام نشد. دوباره روی ثبت نتیجه بزنید.', 'Result saved but deletion failed.'));
         }
+      } else if (call.callStatus === 'عدم تمایل') {
+        addToBlacklist(call.phone, 'عدم تمایل');
+        updateCall({ ...call, workList: 'today', isFollowUp: false });
+        toast.success(tr('شماره عدم تمایل بود، در لیست سیاه و فعالیت روزانه ثبت شد.', 'Number blacklisted and moved to Daily Activity.'), {
+          duration: 5000,
+          action: { label: 'بازگردانی', onClick: () => { removeFromBlacklist(call.phone); updateCall({ ...call, workList: 'none' }); } }
+        });
       } else {
         updateCall({ ...call, workList: 'today', isFollowUp: false });
-        toast.success(tr('نتیجه تماس به فعالیت روزانه منتقل شد.', 'Call result moved to Daily Activity.'));
+        toast.success(tr('نتیجه تماس به فعالیت روزانه منتقل شد.', 'Call result moved to Daily Activity.'), {
+          duration: 5000,
+          action: { label: 'بازگردانی', onClick: () => { updateCall({ ...call, workList: 'none' }); } }
+        });
         loadTasks();
       }
       setActionModalCall(null);
@@ -607,13 +623,26 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
         interestedCourse: call.interestedCourse
       });
 
-      if (call.callStatus === 'عدم تمایل' || call.callStatus === 'ناموجود') {
-        addToBlacklist(call.phone, 'عدم تمایل / ناموجود بودن');
+      if (call.callStatus === 'ناموجود') {
+        addToBlacklist(call.phone, 'ناموجود بودن');
         await deleteCall(call.id);
-        toast.success(tr('در لیست سیاه ثبت و از لیست حذف شد.', 'Blacklisted and deleted.'));
+        toast.success(tr('در لیست سیاه ثبت و از لیست حذف شد.', 'Blacklisted and deleted.'), {
+          duration: 5000,
+          action: { label: 'بازگردانی', onClick: () => { removeFromBlacklist(call.phone); addCall(call); } }
+        });
+      } else if (call.callStatus === 'عدم تمایل') {
+        addToBlacklist(call.phone, 'عدم تمایل');
+        updateCall({ ...call, workList: 'today', isFollowUp: false });
+        toast.success(tr('در لیست سیاه و فعالیت روزانه ثبت شد.', 'Blacklisted and moved to Daily Activity.'), {
+          duration: 5000,
+          action: { label: 'بازگردانی', onClick: () => { removeFromBlacklist(call.phone); updateCall({ ...call, workList: 'none' }); } }
+        });
       } else {
         updateCall({ ...call, workList: 'today', isFollowUp: false });
-        toast.success(tr('با موفقیت ثبت و به فعالیت روزانه منتقل شد.', 'Saved and moved to Daily Activity.'));
+        toast.success(tr('با موفقیت ثبت و به فعالیت روزانه منتقل شد.', 'Saved and moved to Daily Activity.'), {
+          duration: 5000,
+          action: { label: 'بازگردانی', onClick: () => { updateCall({ ...call, workList: 'none' }); } }
+        });
       }
     } catch (err) {
        toast.error(tr('خطا در ثبت نتیجه', 'Error'));
@@ -699,6 +728,11 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
         <a href="?view=dashboard&tab=today" onClick={e => { e.preventDefault(); setActiveCallTab('today'); setPopupView(null); }} className={`flex items-center gap-2 px-4 py-2 rounded-xl shadow-sm border transition-colors text-[13px] font-bold ${activeTab === 'today' && !popupView ? 'bg-brand-50 border-brand-200 text-brand-700' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'}`}>
           <Activity size={16} className="text-teal-500" />
           فعالیت روزانه
+          {calls.filter(c => c.workList === 'today').length > 0 && (
+            <span className="bg-brand-500 text-white text-[10px] px-1.5 py-0.5 rounded-md min-w-[20px] text-center">
+              {calls.filter(c => c.workList === 'today').length}
+            </span>
+          )}
         </a>
         <a href="?view=dashboard&tab=followup" onClick={e => { e.preventDefault(); setActiveCallTab('followup'); setPopupView(null); }} className={`flex items-center gap-2 px-4 py-2 rounded-xl shadow-sm border transition-colors text-[13px] font-bold ${activeTab === 'followup' && !popupView ? 'bg-brand-50 border-brand-200 text-brand-700' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'}`}>
           <PhoneForwarded size={16} className="text-orange-500" />
@@ -735,7 +769,7 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
           ) : activeTab === 'intro' ? (
              <div className="w-full h-full custom-scrollbar"><IntroTextView embedded={true} /></div>
           ) : activeTab === 'learning_paths' ? (
-             <div className="w-full h-full custom-scrollbar"><LearningPathsModal isOpen={true} onClose={() => {}} embedded={true} /></div>
+             <div className="w-full h-full flex flex-col min-h-0 relative"><LearningPathsModal isOpen={true} onClose={() => {}} embedded={true} /></div>
           ) : (
           <div className="flex flex-col h-full min-h-0">
             {activeTab === 'queue' && (
@@ -786,18 +820,24 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                 </tr>
               </thead>
               <tbody className="text-[13px] font-medium text-slate-800 relative z-0">
+                <AnimatePresence mode="popLayout">
                 {filteredList.filter(c => !hiddenCalls.has(c.id)).length === 0 ? (
-                  <tr>
+                  <motion.tr key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                     <td colSpan={4} className="py-24">
                       {/* Spacer to give height for the absolute empty state overlay */}
                     </td>
-                  </tr>
+                  </motion.tr>
                 ) : (
                 filteredList.filter(c => !hiddenCalls.has(c.id)).map((c, i) => {
                   const fuStatus = activeTab === 'followup' ? getFollowUpStatus(c.nextFollowUpAt) : null;
                   return (
-                  <React.Fragment key={c.id}>
-                  <tr
+                  <motion.tr
+                    key={c.id}
+                    layout
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
                     className={`border-b border-slate-100 transition-colors duration-300 group ${c.isBlacklisted ? 'bg-rose-50/70 hover:bg-rose-100/50' : c.isFollowUp ? 'bg-orange-50/70 hover:bg-orange-100/50' : 'hover:bg-slate-50'} ${fuStatus ? `border-r-4 ${fuStatus.borderCls}` : ''}`}
                   >
                     {/* Phone */}
@@ -881,25 +921,31 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                     {/* Actions */}
                     <td className="py-2 px-1.5 relative">
                        <div className="flex flex-row flex-wrap items-center justify-center gap-1.5">
-                           <button
+                           <motion.button
+                             whileHover={{ scale: 1.05 }}
+                             whileTap={{ scale: 0.95 }}
                              onClick={() => handleSimpleSubmit(c)}
                              disabled={!hasAnyFieldSelected(c) || submittingIds.has(c.id)}
                              className={`px-2 py-1.5 rounded-lg flex items-center justify-center font-bold text-[10px] transition-all flex-1 min-w-[55px] ${hasAnyFieldSelected(c) ? 'bg-brand-500 text-white hover:bg-brand-600 shadow-sm' : 'bg-slate-100 text-slate-400'}`}
                              title={tr('ثبت نتیجه', 'Submit')}
                            >
                              {submittingIds.has(c.id) ? <Icons.Loader2 size={12} className="animate-spin" /> : <Icons.Check size={14} />}
-                           </button>
+                           </motion.button>
 
-                           <button
+                           <motion.button
+                             whileHover={{ scale: 1.05 }}
+                             whileTap={{ scale: 0.95 }}
                              onClick={() => { updateCall({ ...c, isFollowUp: true, workList: 'none' }); toast.success(tr('به پیگیری‌ها منتقل شد.', 'Moved to Follow-ups.')); }}
                              disabled={c.isFollowUp || c.isBlacklisted}
                              className={`px-2 py-1.5 rounded-lg flex items-center justify-center font-bold text-[10px] transition-all flex-1 min-w-[55px] ${!c.isFollowUp && !c.isBlacklisted ? 'bg-orange-100 text-orange-700 hover:bg-orange-200' : 'bg-slate-50 text-slate-300'}`}
                              title={tr('پیگیری', 'Follow-up')}
                            >
                              <Icons.PhoneForwarded size={12} />
-                           </button>
+                           </motion.button>
 
-                           <button
+                           <motion.button
+                             whileHover={{ scale: 1.05 }}
+                             whileTap={{ scale: 0.95 }}
                              onClick={() => {
                                setConfirmModalConfig({
                                  isOpen: true,
@@ -917,23 +963,39 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                              title={tr('لیست سیاه', 'Blacklist')}
                            >
                              <Icons.Ban size={12} />
-                           </button>
+                           </motion.button>
 
-                           <button
+                           <motion.button
+                             whileHover={{ scale: 1.05 }}
+                             whileTap={{ scale: 0.95 }}
                              onClick={() => setNotesModalCall(c)}
                              className={`px-2 py-1.5 rounded-lg flex items-center justify-center font-bold text-[10px] transition-all flex-1 min-w-[55px] ${c.notes ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
                              title={tr('یادداشت', 'Notes')}
                            >
                              <Icons.MessageSquareQuote size={12} />
-                           </button>
+                           </motion.button>
+
+                           {(activeTab === 'today' || activeTab === 'followup') && (
+                             <motion.button
+                               whileHover={{ scale: 1.05 }}
+                               whileTap={{ scale: 0.95 }}
+                               onClick={() => {
+                                 updateCall({ ...c, workList: 'none', isFollowUp: false });
+                                 toast.success(tr('به لیست اصلی بازگردانده شد.', 'Returned to main list.'));
+                               }}
+                               className="px-2 py-1.5 rounded-lg flex items-center justify-center font-bold text-[10px] transition-all flex-1 min-w-[55px] bg-indigo-100 text-indigo-700 hover:bg-indigo-200"
+                               title={tr('بازگردانی به لیست اصلی', 'Return to Queue')}
+                             >
+                               <Icons.RotateCcw size={12} />
+                             </motion.button>
+                           )}
                        </div>
                     </td>
-                  </tr>
-
-                  </React.Fragment>
+                  </motion.tr>
                   );
                 })
               )}
+              </AnimatePresence>
               </tbody>
             </table>
 
