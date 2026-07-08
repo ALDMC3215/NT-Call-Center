@@ -996,7 +996,7 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                            <motion.button
                              whileHover={{ scale: 1.05 }}
                              whileTap={{ scale: 0.95 }}
-                             onClick={() => { updateCall({ ...c, isFollowUp: true, workList: 'none' }); setContactWorkList(c.id, 'none'); toast.success(tr('به پیگیری‌ها منتقل شد.', 'Moved to Follow-ups.')); }}
+                             onClick={() => { updateCall({ ...c, isFollowUp: true, workList: 'followup' }); setContactWorkList(c.id, 'followup'); toast.success(tr('به پیگیری‌ها منتقل شد.', 'Moved to Follow-ups.')); }}
                              disabled={c.isFollowUp || c.isBlacklisted}
                              className={`px-2 py-1.5 rounded-lg flex items-center justify-center font-bold text-[10px] transition-all flex-1 min-w-[55px] ${!c.isFollowUp && !c.isBlacklisted ? 'bg-orange-100 text-orange-700 hover:bg-orange-200' : 'bg-slate-50 text-slate-300'}`}
                              title={tr('پیگیری', 'Follow-up')}

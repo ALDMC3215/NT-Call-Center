@@ -58,7 +58,7 @@ interface AppContextType {
   removeFromBlacklist: (phone: string) => void;
   isBlacklisted: (phone: string) => boolean;
   restoreBackup: (p: Profile, importedCalls: CallRecord[], importedBlacklist: BlacklistEntry[]) => void;
-  setContactWorkList: (contactId: string, destination: 'none' | 'today') => Promise<boolean>;
+  setContactWorkList: (contactId: string, destination: 'none' | 'today' | 'followup') => Promise<boolean>;
   recordAttempt: (id: string, values: Pick<CallRecord, 'fullName' | 'callStatus' | 'advisory' | 'notes'>) => Promise<boolean>;
   enableFluid: boolean;
   setEnableFluid: (val: boolean) => void;
@@ -161,7 +161,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             queueOrder: c.queue_order,
             attempts: contactAttempts,
             nextFollowUpAt: followUpMap[c.id],
-            isFollowUp: !!followUpMap[c.id],
+            isFollowUp: !!followUpMap[c.id] || c.work_list === 'followup',
             workList: c.work_list || 'none',
             workListDate: c.work_list_date || null,
             workListUpdatedAt: c.work_list_updated_at || null
@@ -412,7 +412,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [profile, calls]);
 
-  const setContactWorkList = useCallback(async (contactId: string, destination: 'none' | 'today'): Promise<boolean> => {
+  const setContactWorkList = useCallback(async (contactId: string, destination: 'none' | 'today' | 'followup'): Promise<boolean> => {
     if (!profile) return false;
     reportMeaningfulActivity(profile.sessionId);
 
