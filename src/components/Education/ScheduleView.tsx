@@ -98,7 +98,7 @@ const COURSES_DATA: FlatCourse[] = [
   { name: 'یادگیری عمیق گروه ۶', status: 'open', time: '۱۶ تا ۲۰', day: 'چهارشنبه', branch: 'شعبه ۱' },
 ];
 
-export const ScheduleView = ({ isModal, onClose }: { isModal?: boolean, onClose?: () => void }) => {
+export const ScheduleView = ({ isModal, onClose, embedded }: { isModal?: boolean, onClose?: () => void, embedded?: boolean }) => {
   const { direction } = useLocale();
   const { setCurrentView } = useAppContext();
   const [activeTab, setActiveTab] = useState<'open' | 'closed'>('open');
@@ -131,45 +131,12 @@ export const ScheduleView = ({ isModal, onClose }: { isModal?: boolean, onClose?
         }
         return 0;
       });
-  }, [activeTab, sortBy]);
+  }, [activeTab, sortBy, searchQuery]);
 
-  return (
-    <div className="relative w-full h-full flex flex-col bg-[#f8fafc] overflow-hidden" dir={direction}>
-      
-      {/* Top Header */}
-      <div className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shrink-0 z-20 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-            <CalendarDays size={22} strokeWidth={2.5} />
-          </div>
-          <div>
-            <h1 className="text-lg font-black text-slate-800">برنامه کلاسی</h1>
-            <p className="text-xs font-medium text-slate-500 mt-0.5">جدول تمامی سکشن‌ها به صورت فشرده</p>
-          </div>
-        </div>
-        
-        {isModal ? (
-           <button
-             onClick={onClose}
-             className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-colors shrink-0"
-             title="بستن"
-           >
-             <X size={18} strokeWidth={2.5} />
-           </button>
-        ) : (
-          <button
-            onClick={() => setCurrentView('home')}
-            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-lg transition-colors shrink-0"
-          >
-            بازگشت
-          </button>
-        )}
-      </div>
+  const content = (
+    <div className={`flex flex-col gap-6 w-full ${embedded ? 'h-full' : 'max-w-[1200px] mx-auto'}`}>
 
-      <div className="flex-1 overflow-y-auto px-4 py-6 sm:px-8 sm:py-8 lg:px-12 hide-scrollbar">
-        <div className="max-w-[1200px] mx-auto flex flex-col gap-6">
-          
-          {/* Summary Alert */}
+      {/* Summary Alert */}
           <div className="bg-gradient-to-r from-slate-50 to-indigo-50 border border-slate-200 rounded-2xl p-4 md:p-5 flex flex-col md:flex-row gap-4 md:items-center justify-between shadow-sm">
             <div className="flex items-start gap-4">
               <div className="mt-0.5 w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-indigo-500 shrink-0">
@@ -177,8 +144,8 @@ export const ScheduleView = ({ isModal, onClose }: { isModal?: boolean, onClose?
               </div>
               <div>
                 <p className="text-sm font-medium text-slate-600 leading-relaxed">
-                  در مجموع <span className="font-bold text-slate-900">۵۵ سکشن</span> ثبت شده است: 
-                  <span className="font-bold text-slate-900 mx-1">۳۰ سکشن درحال برگزاری</span> 
+                  در مجموع <span className="font-bold text-slate-900">۵۵ سکشن</span> ثبت شده است:
+                  <span className="font-bold text-slate-900 mx-1">۳۰ سکشن درحال برگزاری</span>
                   و <span className="font-bold text-blue-600 mx-1">۲۵ سکشن باز برای ثبت‌نام</span>.
                 </p>
               </div>
@@ -227,10 +194,10 @@ export const ScheduleView = ({ isModal, onClose }: { isModal?: boolean, onClose?
               <span className="relative z-10 mr-1 px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 text-[10px]">۳۰</span>
             </button>
             </div>
-            
+
             <div className="relative w-full sm:w-72 self-center sm:self-end">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-              <input 
+              <input
                 type="text"
                 placeholder="جستجوی نام دوره..."
                 value={searchQuery}
@@ -244,7 +211,7 @@ export const ScheduleView = ({ isModal, onClose }: { isModal?: boolean, onClose?
           {/* Table Container */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
             <AnimatePresence mode="wait">
-              <motion.div 
+              <motion.div
                 key={activeTab + sortBy}
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -256,20 +223,20 @@ export const ScheduleView = ({ isModal, onClose }: { isModal?: boolean, onClose?
                   <thead className={`border-b ${activeTab === 'open' ? 'bg-blue-50/50 border-blue-100' : 'bg-slate-50 border-slate-200'}`}>
                     <tr>
                       <th className="py-4 px-6 text-[13px] font-extrabold text-slate-700">نام دوره</th>
-                      <th 
-                        onClick={() => setSortBy('branch')} 
+                      <th
+                        onClick={() => setSortBy('branch')}
                         className={`py-4 px-6 text-[13px] font-extrabold cursor-pointer transition-colors ${sortBy === 'branch' ? 'text-indigo-600' : 'text-slate-700 hover:text-slate-900'}`}
                       >
                         شعبه {sortBy === 'branch' && '↓'}
                       </th>
-                      <th 
-                        onClick={() => setSortBy('day')} 
+                      <th
+                        onClick={() => setSortBy('day')}
                         className={`py-4 px-6 text-[13px] font-extrabold cursor-pointer transition-colors ${sortBy === 'day' ? 'text-indigo-600' : 'text-slate-700 hover:text-slate-900'}`}
                       >
                         روز {sortBy === 'day' && '↓'}
                       </th>
-                      <th 
-                        onClick={() => setSortBy('time')} 
+                      <th
+                        onClick={() => setSortBy('time')}
                         className={`py-4 px-6 text-[13px] font-extrabold cursor-pointer transition-colors ${sortBy === 'time' ? 'text-indigo-600' : 'text-slate-700 hover:text-slate-900'}`}
                       >
                         بازه زمانی {sortBy === 'time' && '↓'}
@@ -280,7 +247,7 @@ export const ScheduleView = ({ isModal, onClose }: { isModal?: boolean, onClose?
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {filteredCourses.map((course, idx) => (
-                      <tr 
+                      <tr
                         key={`${course.name}-${course.day}-${course.time}-${idx}`}
                         className="hover:bg-slate-50/80 transition-colors group"
                       >
@@ -332,7 +299,7 @@ export const ScheduleView = ({ isModal, onClose }: { isModal?: boolean, onClose?
                 </table>
               </motion.div>
             </AnimatePresence>
-            
+
             {/* Empty State */}
             {filteredCourses.length === 0 && (
               <div className="flex flex-col items-center justify-center py-16 px-4">
@@ -345,7 +312,52 @@ export const ScheduleView = ({ isModal, onClose }: { isModal?: boolean, onClose?
             )}
           </div>
 
+    </div>
+  );
+
+  if (embedded) {
+    return (
+      <div className="flex flex-col w-full h-full relative" dir={direction}>
+        {content}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col h-full bg-slate-50 relative" dir={direction}>
+
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-slate-200 px-4 py-4 sm:px-6 md:px-8 flex items-center justify-between shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-sm">
+            <CalendarDays size={20} strokeWidth={2.5} />
+          </div>
+          <div>
+            <h1 className="text-[17px] sm:text-lg font-extrabold text-slate-800">برنامه کلاسی</h1>
+            <p className="text-xs font-medium text-slate-500">لیست تمامی دوره‌های در حال برگزاری و ثبت‌نام</p>
+          </div>
         </div>
+
+        {isModal ? (
+           <button
+             onClick={onClose}
+             className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-colors shrink-0"
+             title="بستن"
+           >
+             <X size={18} strokeWidth={2.5} />
+           </button>
+        ) : (
+          <button
+            onClick={() => setCurrentView('home')}
+            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-lg transition-colors shrink-0"
+          >
+            بازگشت
+          </button>
+        )}
+      </div>
+
+      <div className="flex-1 overflow-y-auto px-4 py-6 sm:px-8 sm:py-8 lg:px-12 hide-scrollbar">
+        {content}
       </div>
     </div>
   );

@@ -32,6 +32,9 @@ export interface CallRecord {
   fullName?: string;
   callStatus: string;
   advisory: string;
+  advisoryDate?: string | null;
+  advisoryTime?: string | null;
+  interestedCourse?: string | null;
   notes: string;
   createdAt: string;
   /** ترتیب ورود شماره از فایل اکسل یا ورود دستی */
@@ -55,8 +58,11 @@ export interface CallAttempt {
   jalaliDateTime: string;
   fullName?: string;
   callStatus: string;
-  advisory: string;
-  notes: string;
+  advisory?: string;
+  advisoryDate?: string | null;
+  advisoryTime?: string | null;
+  interestedCourse?: string | null;
+  notes?: string;
 }
 
 export interface ExportSummary {

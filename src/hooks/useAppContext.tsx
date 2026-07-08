@@ -42,8 +42,8 @@ interface AppContextType {
   setCurrentView: (view: ViewType) => void;
   popupView: PopupViewType;
   setPopupView: (view: PopupViewType) => void;
-  activeCallTab: 'cards' | 'queue' | 'today' | 'stats' | 'blacklist' | 'courses';
-  setActiveCallTab: (tab: 'cards' | 'queue' | 'today' | 'stats' | 'blacklist' | 'courses') => void;
+  activeCallTab: 'cards' | 'queue' | 'today' | 'followup' | 'stats' | 'blacklist' | 'courses' | 'learning_paths' | 'schedule' | 'intro';
+  setActiveCallTab: (tab: 'cards' | 'queue' | 'today' | 'followup' | 'stats' | 'blacklist' | 'courses' | 'learning_paths' | 'schedule' | 'intro') => void;
   setProfile: (p: Profile) => void;
   logout: () => void;
   addCall: (call: Omit<CallRecord, 'id' | 'createdAt'>) => void;
@@ -153,6 +153,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             fullName: c.full_name || '',
             callStatus: c.call_status || '',
             advisory: c.advisory || '',
+            advisoryDate: c.advisory_date || null,
+            advisoryTime: c.advisory_time || null,
+            interestedCourse: c.courses && c.courses.length > 0 ? c.courses[0] : null,
             notes: c.notes || '',
             createdAt: c.created_at,
             queueOrder: c.queue_order,
@@ -224,11 +227,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     return 'home';
   });
   const [popupView, setPopupView] = useState<PopupViewType>(null);
-  const [activeCallTab, setActiveCallTab] = useState<'cards' | 'queue' | 'today' | 'stats' | 'blacklist' | 'courses'>(() => {
+  const [activeCallTab, setActiveCallTab] = useState<'cards' | 'queue' | 'today' | 'followup' | 'stats' | 'blacklist' | 'courses' | 'learning_paths' | 'schedule' | 'intro'>(() => {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       const tab = urlParams.get('tab');
-      if (tab && ['cards', 'queue', 'today', 'stats', 'blacklist', 'courses'].includes(tab)) {
+      if (tab && ['cards', 'queue', 'today', 'followup', 'stats', 'blacklist', 'courses'].includes(tab)) {
         return tab as any;
       }
     }
@@ -290,7 +293,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         p_phone: callDto.phone,
         p_full_name: callDto.fullName || null,
         p_call_status: callDto.callStatus || null,
+        p_courses: callDto.interestedCourse ? [callDto.interestedCourse] : null,
         p_advisory: callDto.advisory || null,
+        p_advisory_date: callDto.advisoryDate || null,
+        p_advisory_time: callDto.advisoryTime || null,
+        p_registered: null,
         p_notes: callDto.notes || null,
         p_queue_order: callDto.queueOrder || null
       });
@@ -324,7 +331,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         p_id: updatedCall.id,
         p_full_name: updatedCall.fullName || null,
         p_call_status: updatedCall.callStatus || null,
+        p_courses: updatedCall.interestedCourse ? [updatedCall.interestedCourse] : null,
         p_advisory: updatedCall.advisory || null,
+        p_advisory_date: updatedCall.advisoryDate || null,
+        p_advisory_time: updatedCall.advisoryTime || null,
+        p_registered: null,
         p_notes: updatedCall.notes || null,
         p_queue_order: updatedCall.queueOrder || null
       });
@@ -424,7 +435,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [profile]);
 
-  const recordAttempt = useCallback(async (id: string, values: Pick<CallRecord, 'fullName' | 'callStatus' | 'advisory' | 'notes'>): Promise<boolean> => {
+  const recordAttempt = useCallback(async (id: string, values: Pick<CallRecord, 'fullName' | 'callStatus' | 'advisory' | 'notes' | 'advisoryDate' | 'advisoryTime' | 'interestedCourse'>): Promise<boolean> => {
     if (!profile) return false;
     reportMeaningfulActivity(profile.sessionId);
     const s = values.callStatus;
@@ -454,7 +465,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         p_jalali_date_time: jalaliTime,
         p_full_name: values.fullName || null,
         p_call_status: values.callStatus || null,
+        p_courses: values.interestedCourse ? [values.interestedCourse] : null,
         p_advisory: values.advisory || null,
+        p_advisory_date: values.advisoryDate || null,
+        p_advisory_time: values.advisoryTime || null,
+        p_registered: null,
         p_notes: values.notes || null
       });
 

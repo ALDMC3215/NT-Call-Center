@@ -6,6 +6,7 @@ import * as Icons from 'lucide-react';
 import { LearningPathsModal } from '../Shared/LearningPathsModal';
 import { ConfirmDialog } from '../Shared/ConfirmDialog';
 import { useAuth } from '../../hooks/useAuth';
+import { ScheduleView } from '../Education/ScheduleView';
 
 export const HomeView = () => {
   const { profile, calls, setCurrentView, setActiveCallTab, setPopupView } = useAppContext();
@@ -31,113 +32,20 @@ export const HomeView = () => {
   // Define categorized sections
   const sections = [
     {
-      title: tr('عملیات روزانه', 'Daily Operations'),
+      title: tr('ورود به پنل', 'Panel Entry'),
       items: [
         {
           id: 'queue',
-          title: tr('لیست شماره', 'Numbers List'),
-          description: tr('مدیریت شماره‌های تماس جدید و بررسی نشده', 'Manage new and pending contact numbers'),
+          title: tr('پنل شماره‌گیری', 'Dialing Panel'),
+          description: tr('ورود به پنل اصلی برای مدیریت تماس‌ها، پیگیری‌ها و دسترسی به ابزارهای کارشناسی', 'Enter main panel for call management, follow-ups, and expert tools'),
           icon: Phone,
           count: counts.totalCount,
           onClick: () => { setCurrentView('dashboard'); setActiveCallTab('queue'); },
           iconColor: 'text-indigo-600',
           iconBg: 'bg-indigo-500/10',
           gradient: 'from-indigo-500 to-blue-500'
-        },
-        {
-          id: 'today',
-          title: tr('فعالیت روزانه', 'Daily Activity'),
-          description: tr('شماره‌های منتقل شده به لیست فعالیت‌های روزانه', 'Numbers transferred to daily activity list'),
-          icon: Calendar,
-          count: counts.todayCount,
-          onClick: () => { setCurrentView('dashboard'); setActiveCallTab('today'); },
-          iconColor: 'text-emerald-600',
-          iconBg: 'bg-emerald-500/10',
-          gradient: 'from-emerald-400 to-teal-500'
-        },
-        {
-          id: 'followup',
-          title: tr('پیگیری ها', 'Follow-ups'),
-          description: tr('پیگیری‌های زمان‌بندی شده برای تماس مجدد', 'Scheduled follow-ups for call backs'),
-          icon: PhoneForwarded,
-          count: counts.followupCount,
-          onClick: () => { setCurrentView('dashboard'); setActiveCallTab('followup'); },
-          iconColor: 'text-amber-600',
-          iconBg: 'bg-amber-500/10',
-          gradient: 'from-amber-400 to-orange-500'
         }
       ]
-    },
-    {
-      title: tr('آموزش و اطلاعات', 'Education & Information'),
-      items: [
-        {
-          id: 'courses',
-          title: tr('قیمت دوره‌ها', 'Course Prices'),
-          description: tr('مشاهده لیست و قیمت به‌روز دوره‌های آموزشی', 'View updated list and prices of courses'),
-          icon: BookOpen,
-          count: null,
-          onClick: () => { setCurrentView('courses'); setPopupView(null); },
-          iconColor: 'text-brand-600',
-          iconBg: 'bg-brand-500/10',
-          gradient: 'from-purple-500 to-brand-600'
-        },
-        profile?.role !== 'admin' ? {
-          id: 'learning-paths',
-          title: tr('مسیرهای یادگیری', 'Learning Paths'),
-          description: tr('مسیرهای یادگیری و پیشرفت شخصی شما', 'Your personal learning paths and progress'),
-          icon: Route,
-          count: null,
-          onClick: () => { setLearningPathsOpen(true); },
-          iconColor: 'text-rose-600',
-          iconBg: 'bg-rose-500/10',
-          gradient: 'from-rose-400 to-red-500'
-        } : null,
-        {
-          id: 'negotiation',
-          title: tr('تکنیک‌های مذاکره', 'Negotiation Techniques'),
-          description: tr('یادگیری و مطالعه تکنیک‌های حرفه‌ای فروش و مذاکره', 'Learn and study professional sales and negotiation techniques'),
-          icon: Target,
-          count: null,
-          onClick: () => { setCurrentView('negotiation'); setPopupView(null); },
-          iconColor: 'text-emerald-600',
-          iconBg: 'bg-emerald-500/10',
-          gradient: 'from-emerald-400 to-teal-500'
-        },
-        {
-          id: 'intro',
-          title: tr('متن‌های معرفی', 'Introduction Texts'),
-          description: tr('نمونه متن‌های شروع مکالمه و پرزنت خدمات', 'Sample conversation starters and service presentation texts'),
-          icon: Icons.MessageSquareQuote || Icons.MessageSquare,
-          count: null,
-          onClick: () => { setCurrentView('intro'); setPopupView(null); },
-          iconColor: 'text-rose-600',
-          iconBg: 'bg-rose-500/10',
-          gradient: 'from-rose-400 to-pink-500'
-        },
-        {
-          id: 'schedule',
-          title: tr('برنامه کلاسی', 'Class Schedule'),
-          description: tr('مشاهده برنامه هفتگی کلاس‌ها و وضعیت ثبت‌نام', 'View weekly class schedule and registration status'),
-          icon: CalendarDays,
-          count: null,
-          onClick: () => { setCurrentView('schedule'); },
-          iconColor: 'text-indigo-600',
-          iconBg: 'bg-indigo-500/10',
-          gradient: 'from-indigo-400 to-blue-500'
-        },
-        {
-          id: 'about',
-          title: tr('راهنمای سیستم', 'System Guide'),
-          description: tr('آموزش و راهنمای کامل استفاده از پنل نوین‌تک', 'Complete instructions and guide for using the panel'),
-          icon: Info,
-          count: null,
-          onClick: () => { setCurrentView('about'); },
-          iconColor: 'text-blue-600',
-          iconBg: 'bg-blue-500/10',
-          gradient: 'from-blue-400 to-blue-600'
-        }
-      ].filter(Boolean)
     },
     {
       title: tr('تنظیمات کاربری', 'User Settings'),
@@ -192,7 +100,7 @@ export const HomeView = () => {
 
   return (
     <div className="relative w-full min-h-full flex flex-col hide-scrollbar overflow-x-hidden" dir={direction}>
-      
+
       {/* Ambient macOS Style Background */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 bg-[#f8f9fa]">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-300/30 rounded-full blur-[120px]"></div>
@@ -201,7 +109,7 @@ export const HomeView = () => {
       </div>
 
       <div className="relative z-10 w-full max-w-6xl mx-auto flex flex-col pt-8 md:pt-12 pb-24 px-4 sm:px-6 md:px-8">
-        
+
         {/* Welcome Header - Glassmorphic */}
         <div className="mb-8 md:mb-14 flex flex-col md:flex-row md:items-center justify-between gap-6">
            <div>
@@ -219,10 +127,10 @@ export const HomeView = () => {
              <Activity className="text-brand-600 drop-shadow-sm" size={36} strokeWidth={1.5} />
            </div>
         </div>
-        
+
         {/* Render sections */}
         <div className="flex flex-col gap-12">
-          {sections.map(section => (
+          {sections.map((section, sIndex) => (
             <div key={section.title} className="w-full">
               <div className="flex items-center gap-4 mb-6">
                 <h3 className="text-xl font-bold text-slate-800">
@@ -230,19 +138,63 @@ export const HomeView = () => {
                 </h3>
                 <div className="flex-1 h-px bg-gradient-to-l from-transparent via-slate-200 to-transparent"></div>
               </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                {section.items.map((card: any) => {
-                  const Icon = card.icon;
-                  return (
-                      <button
-                      key={card.id}
-                      onClick={card.onClick}
-                      className="group relative flex flex-col text-right items-start p-5 sm:p-6 bg-white/50 backdrop-blur-xl rounded-[1.5rem] border border-white/70 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] hover:-translate-y-1.5 transition-all duration-400 ease-out overflow-hidden"
-                    >
+
+              {sIndex === 0 ? (
+                <div className="flex flex-col xl:flex-row gap-6">
+                  {/* Panel Entry Card */}
+                  <div className="w-full xl:w-[350px] shrink-0">
+                    {section.items.map((card: any) => {
+                      const Icon = card.icon;
+                      return (
+                        <button
+                          key={card.id}
+                          onClick={card.onClick}
+                          className="w-full group relative flex flex-col text-right items-start p-6 sm:p-8 bg-white/50 backdrop-blur-xl rounded-[1.5rem] border border-white/70 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] hover:-translate-y-1.5 transition-all duration-400 ease-out overflow-hidden"
+                        >
+                          <div className={`absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r ${card.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
+                          <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-gradient-to-tr from-slate-100 to-transparent rounded-full opacity-50 group-hover:scale-150 transition-transform duration-700 pointer-events-none"></div>
+
+                          <div className="flex items-center justify-between w-full mb-6">
+                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${card.iconBg} ${card.iconColor} group-hover:scale-110 transition-transform duration-300 shadow-sm relative z-10`}>
+                              <Icon size={28} strokeWidth={2} />
+                            </div>
+                            <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-brand-50 group-hover:text-brand-500 transition-colors shadow-sm">
+                              <ArrowLeft size={18} className="rtl:rotate-180" />
+                            </div>
+                          </div>
+
+                          <div className="relative z-10">
+                            <h4 className="text-xl sm:text-2xl font-black text-slate-800 mb-3 group-hover:text-brand-700 transition-colors">
+                              {card.title}
+                            </h4>
+                            <p className="text-sm font-medium text-slate-500 leading-relaxed mb-4">
+                              {card.description}
+                            </p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {/* Schedule Table */}
+                  <div className="flex-1 bg-white/50 backdrop-blur-xl rounded-[1.5rem] border border-white/70 shadow-[0_4px_20px_rgb(0,0,0,0.03)] overflow-hidden h-[500px]">
+                    <div className="h-full custom-scrollbar">
+                      <ScheduleView embedded={true} />
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                  {section.items.map((card: any) => {
+                    const Icon = card.icon;
+                    return (
+                        <button
+                        key={card.id}
+                        onClick={card.onClick}
+                        className="group relative flex flex-col text-right items-start p-5 sm:p-6 bg-white/50 backdrop-blur-xl rounded-[1.5rem] border border-white/70 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] hover:-translate-y-1.5 transition-all duration-400 ease-out overflow-hidden"
+                      >
                       {/* Top Gradient Highlight */}
                       <div className={`absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r ${card.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
-                      
+
                       <div className="w-full flex items-center justify-between mb-4">
                         <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${card.iconBg} ${card.iconColor} shadow-sm group-hover:scale-110 transition-transform duration-500`}>
                           <Icon size={24} strokeWidth={2} />
@@ -256,7 +208,7 @@ export const HomeView = () => {
                           </div>
                         )}
                       </div>
-                      
+
                       <div className="w-full pl-10">
                         <h3 className="font-extrabold text-[16px] text-slate-800 group-hover:text-brand-600 transition-colors">
                           {card.title}
@@ -269,10 +221,11 @@ export const HomeView = () => {
                           <ArrowLeft size={16} strokeWidth={2.5} />
                         </div>
                       </div>
-                    </button>
-                  );
-                })}
-              </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           ))}
         </div>

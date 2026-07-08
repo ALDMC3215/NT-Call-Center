@@ -6,12 +6,14 @@ import { LearningPathMap } from '../Courses/LearningPathMap';
 interface Props {
   isOpen: boolean;
   onClose: () => void;
+  embedded?: boolean;
 }
 
-export const LearningPathsModal = ({ isOpen, onClose }: Props) => {
+export const LearningPathsModal = ({ isOpen, onClose, embedded }: Props) => {
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (embedded) return;
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
@@ -23,7 +25,7 @@ export const LearningPathsModal = ({ isOpen, onClose }: Props) => {
       document.removeEventListener('keydown', handleKey);
       document.body.style.overflow = '';
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, embedded]);
 
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
@@ -33,15 +35,10 @@ export const LearningPathsModal = ({ isOpen, onClose }: Props) => {
 
   if (!isOpen) return null;
 
-  return createPortal(
-    <div
-      className="fixed inset-0 z-[99999] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 md:p-6"
-      onClick={handleBackdropClick}
-      dir="rtl"
-    >
+  const content = (
       <div
         ref={modalRef}
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-[95vw] xl:max-w-[90vw] h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+        className="bg-white w-full h-full flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
       >
         {/* Header */}
         <div className="flex-none bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-20 shadow-sm shrink-0">
@@ -54,6 +51,7 @@ export const LearningPathsModal = ({ isOpen, onClose }: Props) => {
               <p className="text-xs font-medium text-slate-500 mt-0.5">مسیر پیشنهادی از شروع تا مهارت تخصصی</p>
             </div>
           </div>
+          {!embedded && (
           <button
             onClick={onClose}
             className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-colors shrink-0"
@@ -61,6 +59,7 @@ export const LearningPathsModal = ({ isOpen, onClose }: Props) => {
           >
             <X size={18} strokeWidth={2.5} />
           </button>
+          )}
         </div>
 
         {/* Content */}
@@ -68,6 +67,19 @@ export const LearningPathsModal = ({ isOpen, onClose }: Props) => {
           <LearningPathMap />
         </div>
       </div>
+  );
+
+  if (embedded) {
+    return content;
+  }
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[99999] bg-slate-50 flex items-center justify-center p-0"
+      onClick={handleBackdropClick}
+      dir="rtl"
+    >
+      {content}
     </div>,
     document.body
   );

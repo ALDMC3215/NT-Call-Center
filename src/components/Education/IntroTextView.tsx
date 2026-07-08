@@ -87,7 +87,7 @@ const INTRO_SCRIPTS = [
   }
 ];
 
-export const IntroTextView = ({ isModal, onClose }: { isModal?: boolean, onClose?: () => void }) => {
+export const IntroTextView = ({ isModal, onClose, embedded }: { isModal?: boolean, onClose?: () => void, embedded?: boolean }) => {
   const { direction } = useLocale();
   const { setCurrentView } = useAppContext();
   const [activeTab, setActiveTab] = useState<string>('script-1');
@@ -133,21 +133,25 @@ export const IntroTextView = ({ isModal, onClose }: { isModal?: boolean, onClose
           </div>
         </div>
 
-        {isModal ? (
-           <button
-             onClick={onClose}
-             className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-colors shrink-0"
-             title="بستن"
-           >
-             <Icons.X size={18} strokeWidth={2.5} />
-           </button>
-        ) : (
-           <button
-             onClick={() => setCurrentView('home')}
-             className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-lg transition-colors shrink-0"
-           >
-             بازگشت
-           </button>
+        {!embedded && (
+          <>
+          {isModal ? (
+             <button
+               onClick={onClose}
+               className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-colors shrink-0"
+               title="بستن"
+             >
+               <Icons.X size={18} strokeWidth={2.5} />
+             </button>
+          ) : (
+             <button
+               onClick={() => setCurrentView('home')}
+               className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-lg transition-colors shrink-0"
+             >
+               بازگشت
+             </button>
+          )}
+          </>
         )}
       </div>
 

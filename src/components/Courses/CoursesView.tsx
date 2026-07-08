@@ -74,6 +74,9 @@ const parseSchedule = (schedule?: string) => {
     } else if (part.startsWith('گروه') || part.startsWith('کد') || part.startsWith('سکشن') || part.startsWith('گر')) {
       if (currentText) { badges.push({ type: 'text', value: currentText.trim() }); currentText = ''; }
       badges.push({ type: 'group_label', value: part });
+    } else if (part.startsWith('شعبه')) {
+      if (currentText) { badges.push({ type: 'text', value: currentText.trim() }); currentText = ''; }
+      badges.push({ type: 'branch', value: part });
     } else if (part.match(/\d/) && (part.includes('الی') || part.includes('تا') || part.includes('-') || part.match(/^\d+$/) || part.match(/^\d+:\d+$/))) {
       if (currentText) { badges.push({ type: 'text', value: currentText.trim() }); currentText = ''; }
       badges.push({ type: 'time', value: part });
@@ -89,7 +92,7 @@ const parseSchedule = (schedule?: string) => {
   return badges;
 };
 
-export const CoursesView = ({ externalSearchQuery = '', isModal, onClose }: { externalSearchQuery?: string, isModal?: boolean, onClose?: () => void }) => {
+export const CoursesView = ({ externalSearchQuery = '', isModal, onClose, embedded }: { externalSearchQuery?: string, isModal?: boolean, onClose?: () => void, embedded?: boolean }) => {
   const { setCurrentView } = useAppContext();
   const { tr, direction } = useLocale();
   const [selectedCourse, setSelectedCourse] = useState<CourseItem | null>(null);
@@ -179,7 +182,8 @@ export const CoursesView = ({ externalSearchQuery = '', isModal, onClose }: { ex
     ...sub,
     courses: sub.courses.filter(course => 
       fuzzyMatch(activeSearchQuery, course.title) || 
-      fuzzyMatch(activeSearchQuery, course.description)
+      fuzzyMatch(activeSearchQuery, course.description) ||
+      (course.schedules && course.schedules.some((s: string) => fuzzyMatch(activeSearchQuery, s)))
     )
   })).filter(sub => sub.courses.length > 0);
 
@@ -242,24 +246,26 @@ export const CoursesView = ({ externalSearchQuery = '', isModal, onClose }: { ex
             )}
         </div>
 
-        <div className="order-2 md:order-none shrink-0">
-          {isModal ? (
-             <button
-               onClick={onClose}
-               className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-colors"
-               title="بستن"
-             >
-               <Icons.X size={18} strokeWidth={2.5} />
-             </button>
-          ) : (
-             <button
-               onClick={() => setCurrentView('home')}
-               className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-lg transition-colors"
-             >
-               بازگشت
-             </button>
-          )}
-        </div>
+        {!embedded && (
+          <div className="order-2 md:order-none shrink-0">
+            {isModal ? (
+               <button
+                 onClick={onClose}
+                 className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-colors"
+                 title="بستن"
+               >
+                 <Icons.X size={18} strokeWidth={2.5} />
+               </button>
+            ) : (
+               <button
+                 onClick={() => setCurrentView('home')}
+                 className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-lg transition-colors"
+               >
+                 بازگشت
+               </button>
+            )}
+          </div>
+        )}
       </div>
       {/* Content Area - Vertical Layout */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden hide-scrollbar relative z-10 p-4 md:p-6 lg:p-8">
@@ -300,28 +306,54 @@ export const CoursesView = ({ externalSearchQuery = '', isModal, onClose }: { ex
                     return (
                       <div 
                         key={idx} 
-                        className="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-2xl relative overflow-hidden group hover:border-brand-500/30 hover:shadow-md transition-all duration-300 min-h-[72px]"
+                        className="flex flex-col p-4 bg-white border border-slate-200 rounded-2xl relative overflow-hidden group hover:border-brand-500/30 hover:shadow-md transition-all duration-300 min-h-[72px]"
                       >
                         {/* Left ticket notched decor */}
-                        <div className="absolute top-1/2 -translate-y-1/2 -left-2.5 w-5 h-5 rounded-full bg-[#f8fafc] border-r border-slate-200"></div>
+                        <div className="absolute top-[36px] -translate-y-1/2 -left-2.5 w-5 h-5 rounded-full bg-[#f8fafc] border-r border-slate-200 z-20"></div>
                         {/* Right ticket notched decor */}
-                        <div className="absolute top-1/2 -translate-y-1/2 -right-2.5 w-5 h-5 rounded-full bg-[#f8fafc] border-l border-slate-200"></div>
+                        <div className="absolute top-[36px] -translate-y-1/2 -right-2.5 w-5 h-5 rounded-full bg-[#f8fafc] border-l border-slate-200 z-20"></div>
 
-                        <div className="flex flex-col gap-1 pr-3 pl-3 flex-1 min-w-0">
-                          <h4 className="text-[13px] font-extrabold text-slate-800 transition-colors truncate tracking-tight" title={course.title}>
-                            {course.title}
-                          </h4>
-                          <span className="text-[10px] font-medium text-slate-400 truncate">
-                            {course.subcategoryTitle}
-                          </span>
+                        <div className="flex items-center justify-between w-full relative z-10">
+                          <div className="flex flex-col gap-1 pr-3 pl-3 flex-1 min-w-0">
+                            <h4 className="text-[13px] font-extrabold text-slate-800 transition-colors truncate tracking-tight" title={course.title}>
+                              {course.title}
+                            </h4>
+                            <span className="text-[10px] font-medium text-slate-400 truncate">
+                              {course.subcategoryTitle}
+                            </span>
+                          </div>
+
+                          <div className="flex flex-col items-end shrink-0 pl-3 pr-3 border-r border-dashed border-slate-200">
+                            {course.originalPrice && course.originalPrice !== course.price && (
+                              <span className="text-[10px] font-medium text-slate-400 line-through tracking-tight">{course.originalPrice}</span>
+                            )}
+                            <span className="text-[13px] font-extrabold text-brand-600 tracking-tight">{course.price || tr('نامشخص', 'Unknown')}</span>
+                          </div>
                         </div>
 
-                        <div className="flex flex-col items-end shrink-0 pl-3 pr-3 border-r border-dashed border-slate-200">
-                          {course.originalPrice && course.originalPrice !== course.price && (
-                            <span className="text-[10px] font-medium text-slate-400 line-through tracking-tight">{course.originalPrice}</span>
-                          )}
-                          <span className="text-[13px] font-extrabold text-brand-600 tracking-tight">{course.price || tr('نامشخص', 'Unknown')}</span>
-                        </div>
+                        {/* Schedules / Active Sections */}
+                        {course.schedules && course.schedules.length > 0 && (
+                          <div className="w-full mt-3 pt-3 border-t border-dashed border-slate-200 flex flex-col gap-1.5 relative z-10">
+                             {course.schedules.map((sched: string, sIdx: number) => {
+                                const badges = parseSchedule(sched);
+                                return (
+                                  <div key={sIdx} className="flex flex-wrap items-center gap-1.5">
+                                    {badges.map((b, i) => (
+                                      <span key={i} className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
+                                        b.type === 'day' ? 'bg-indigo-50 text-indigo-600' :
+                                        b.type === 'time' ? 'bg-emerald-50 text-emerald-600' :
+                                        b.type === 'group_label' ? 'bg-orange-50 text-orange-600' :
+                                        b.type === 'branch' ? 'bg-rose-50 text-rose-600' :
+                                        'bg-slate-50 text-slate-600'
+                                      }`}>
+                                        {b.value}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )
+                             })}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
