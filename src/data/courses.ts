@@ -44,7 +44,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/english-for-it/",
             "schedules": [
-              "زبان تخصصی کامپیوتر بزرگسال پنجشنبه 9 12"
+              "زبان تخصصی کامپیوتر بزرگسال پنجشنبه ۹ تا ۱۲ شعبه ۲"
             ],
             "metadata": [
               "نوع دوره: حضوری",
@@ -62,9 +62,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "price": "7,435,000 تومان",
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/oop-kids/",
-            "schedules": [
-              "شئگرایی در پایتون نوجوان شنبه ۱۰ ۱۳ گ"
-            ],
+            "schedules": [],
             "metadata": [
               "نوع دوره: حضوری",
               "پیش نیاز: پایتون نوجوانان",
@@ -83,8 +81,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/python-kids/",
             "schedules": [
-              "پایتون نوجوان شنبه 15 18 گروه 9",
-              "پایتون نوجوان سهشنبه 16 19 گروه 8"
+              "پایتون نوجوان گروه ۱۰ یکشنبه ۱۵ تا ۱۸ شعبه ۲"
             ],
             "metadata": [
               "نوع دوره: حضوری",
@@ -104,7 +101,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/scratch/",
             "schedules": [
-              "اسکرچ کودکان پنجشنبه 10 13 گروه 3"
+              "اسکرچ گروه ۳ پنجشنبه ۹ تا ۱۲ شعبه ۲"
             ],
             "metadata": [
               "نوع دوره: حضوری",
@@ -124,8 +121,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/game-junior/",
             "schedules": [
-              "بازی سازی نوجوان یکشنبه 15 18 گروه 6",
-              "بازی سازی نوجوان شنبه 17 20 گروه 5"
+              "بازی‌سازی نوجوان گروه ۶ یکشنبه ۱۵ تا ۱۸ شعبه ۲"
             ],
             "metadata": [
               "نوع دوره: حضوری",
@@ -145,7 +141,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/icdl/",
             "schedules": [
-              "Icdl جامع شنبه چهارشنبه 18 21 گروه 10"
+              "ICDL گروه ۱۰ سه‌شنبه ۱۵ تا ۱۸ شعبه ۲"
             ],
             "metadata": [
               "نوع دوره: حضوری",
@@ -165,9 +161,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "price": "5,100,000 تومان",
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/articlefor-vision/",
-            "schedules": [
-              "1002 01"
-            ],
+            "schedules": [],
             "metadata": [
               "نوع دوره: حضوری",
               "پیش نیاز: بینایی ماشین",
@@ -185,9 +179,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "price": "4,110,000 تومان",
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/linkdin/",
-            "schedules": [
-              "یکشنبه 18 21"
-            ],
+            "schedules": [],
             "metadata": [
               "نوع دوره: حضوری",
               "پیش نیاز: ندارد",
@@ -206,9 +198,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "price": "8,700,000 تومان",
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/comprehensive-matrix/",
-            "schedules": [
-              "ماتریکس جامع چهارشنبه 16 20 گروه 2"
-            ],
+            "schedules": [],
             "metadata": [
               "نوع دوره: حضوری",
               "پیش نیاز: ندارد",
@@ -240,9 +230,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "price": "7,220,000 تومان",
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/bot-tel/",
-            "schedules": [
-              "ربات نویسی تلگرام دوشنبه 18 21 گروه 1"
-            ],
+            "schedules": [],
             "metadata": [
               "نوع دوره: حضوری",
               "پیش نیاز: پایتون جامع",
@@ -261,7 +249,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/android-java/",
             "schedules": [
-              "برنامه نویسی موبایل شنبه 18 21 گروه 10"
+              "برنامه‌نویسی موبایل ۱۱ سه‌شنبه ۱۸ تا ۲۱ شعبه ۲"
             ],
             "metadata": [
               "نوع دوره: حضوری",
@@ -281,9 +269,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "price": "8,838,000 تومان",
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/android-advance/",
-            "schedules": [
-              "اپلیکیشن نویسی پیشرفته شنبه 16 20 گروه2"
-            ],
+            "schedules": [],
             "metadata": [
               "نوع دوره: حضوری",
               "پیش نیاز: برنامه نویسی موبایل جامع",
@@ -302,8 +288,9 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/python/",
             "schedules": [
-              "پایتون جامع شنبه 16 20 گروه 27",
-              "پایتون جامع دوشنبه 16 20 گروه 26"
+              "پایتون ۲۸ پنجشنبه ۹ تا ۱۲ شعبه ۲",
+              "پایتون ۲۷ شنبه ۱۶ تا ۲۰ شعبه ۱",
+              "پایتون ۲۶ دوشنبه ۱۶ تا ۲۰ شعبه ۱"
             ],
             "metadata": [
               "نوع دوره: حضوری",
@@ -322,9 +309,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "price": "5,225,000 تومان",
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/cpp/",
-            "schedules": [
-              "C یکشنبه سهشنبه 10 13 گروه 2"
-            ],
+            "schedules": [],
             "metadata": [
               "نوع دوره: حضوری",
               "پیش نیاز: ندارد",
@@ -343,7 +328,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/sqlite3/",
             "schedules": [
-              "پایگاه داده Sqlite3 سهشنبه 15 18 گروه 8"
+              "پایگاه داده ۹ چهارشنبه ۱۵ تا ۱۸ شعبه ۲"
             ],
             "metadata": [
               "نوع دوره: حضوری",
@@ -363,9 +348,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "price": "5,050,000 تومان",
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/c-sharp/",
-            "schedules": [
-              "C پنجشنبه 9 12 گروه 1 2"
-            ],
+            "schedules": [],
             "metadata": [
               "نوع دوره: حضوری",
               "پیش نیاز: ندارد",
@@ -384,9 +367,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "price": "1,100,000 تومان",
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/github/",
-            "schedules": [
-              "Git Github دوشنبه 15 18 گروه 2"
-            ],
+            "schedules": [],
             "metadata": [
               "نوع دوره: حضوری",
               "پیش نیاز: ندارد",
@@ -406,7 +387,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/django-drf/",
             "schedules": [
-              "Django یکشنبه 18 21 گروه 2"
+              "DRF-Django یکشنبه ۱۸ تا ۲۱ شعبه ۲"
             ],
             "metadata": [
               "نوع دوره: حضوری",
@@ -426,9 +407,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "price": "7,435,000 تومان",
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/python-cs50/",
-            "schedules": [
-              "پایتون Cs50 شنبه چهارشنبه 15 18 گروه 1"
-            ],
+            "schedules": [],
             "metadata": [
               "نوع دوره: حضوری",
               "پیش نیاز: ندارد",
@@ -461,7 +440,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/vision/",
             "schedules": [
-              "پردازش تصویر و بینایی ماشین یکشنبه 18 21 گر"
+              "ویژن ۵ یکشنبه ۱۸ تا ۲۱ شعبه ۲"
             ],
             "metadata": [
               "نوع دوره: حضوری",
@@ -481,7 +460,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/deep-learning/",
             "schedules": [
-              "یادگیری عمیق چهارشنبه 16 20 گروه 6"
+              "یادگیری عمیق گروه ۶ چهارشنبه ۱۶ تا ۲۰ شعبه ۱"
             ],
             "metadata": [
               "نوع دوره: حضوری",
@@ -501,8 +480,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/machine-learning-data-analysis/",
             "schedules": [
-              "یادگیری ماشین دوشنبه 16 20 گروه 9",
-              "یادگیری ماشین سهشنبه 15 18 گروه 8"
+              "علم داده ۹ دوشنبه ۱۵ تا ۱۸ شعبه ۲"
             ],
             "metadata": [
               "نوع دوره: حضوری",
@@ -523,9 +501,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "price": "7,220,000 تومان",
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/finance-ai/",
-            "schedules": [
-              "تحلیل داده بازار مالی دوشنبه 18 21 گروه 2"
-            ],
+            "schedules": [],
             "metadata": [
               "نوع دوره: حضوری",
               "پیش نیاز: پایتون جامع",
@@ -544,7 +520,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/chatgpt/",
             "schedules": [
-              "ابزار های هوش مصنوعی چهارشنبه 18 21 گروه 12"
+              "ابزار هوش مصنوعی گروه ۱۵ سه‌شنبه ۱۸ تا ۲۱ شعبه ۲"
             ],
             "metadata": [
               "نوع دوره: حضوری",
@@ -563,9 +539,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "price": "7,220,000 تومان",
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/powerbi/",
-            "schedules": [
-              "هوش تجاری شنبه دوشنبه 18 21 گروه 1"
-            ],
+            "schedules": [],
             "metadata": [
               "نوع دوره: حضوری",
               "پیش نیاز: ندارد",
@@ -585,7 +559,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/rnn/",
             "schedules": [
-              "Rnn دوشنبه 10 13 گروه 3"
+              "RNN G3 دوشنبه ۹ تا ۱۲ شعبه ۲"
             ],
             "metadata": [
               "نوع دوره: حضوری",
@@ -618,7 +592,8 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/dore-zaban-maharati-nojavan/",
             "schedules": [
-              "زبان مهارتی نوجوان شنبه چهارشنبه 10 1130 گر"
+              "زبان مهارتی نوجوان شنبه ۹ تا ۱۲ شعبه ۲",
+              "زبان مهارتی نوجوان چهارشنبه ۹ تا ۱۲ شعبه ۲"
             ],
             "metadata": [
               "نوع دوره: حضوری",
@@ -637,7 +612,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/it-english-course-for-teens/",
             "schedules": [
-              "زبان تخصصی نوجوان سه شنبه 16 18 گروه 1"
+              "زبان تخصصی کامپیوتر نوجوان سه‌شنبه ۱۵ تا ۱۸ شعبه ۲"
             ],
             "metadata": [
               "نوع دوره: حضوری",
@@ -681,7 +656,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/wp-ecommerce/",
             "schedules": [
-              "وردپرس جامع چهارشنبه 15 18 گروه 6"
+              "وردپرس ۶ نوجوان چهارشنبه ۱۵ تا ۱۸ شعبه ۲"
             ],
             "metadata": [
               "نوع دوره: حضوری",
@@ -700,7 +675,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/php/",
             "schedules": [
-              "Php سهشنبه 18 21 گروه 5"
+              "PHP 5 دوشنبه ۹ تا ۱۲ شعبه ۲"
             ],
             "metadata": [
               "نوع دوره: حضوری",
@@ -718,9 +693,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "price": "13,500,000 تومان",
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/backend-course-nodejs-nestjs/",
-            "schedules": [
-              "مهندسی بک اند دوشنبه 16 20 گروه 2"
-            ],
+            "schedules": [],
             "metadata": [
               "نوع دوره: حضوری",
               "پیش نیاز: پک فرانت اند جامع",
@@ -739,8 +712,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/front-end/",
             "schedules": [
-              "پک فرانت اند یکشنبه سهشنبه 18 21 گروه 10",
-              "پک فرانت اند جامع دوشنبه 16 20 گروه 9"
+              "پک فرانت ۹ دوشنبه ۱۶ تا ۲۰ شعبه ۱"
             ],
             "metadata": [
               "نوع دوره: حضوری",
@@ -760,9 +732,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "price": "8,838,000 تومان",
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/frontend-master/",
-            "schedules": [
-              "React Next Js پنجشنبه 1530 1930 گروه 1"
-            ],
+            "schedules": [],
             "metadata": [
               "نوع دوره: حضوری",
               "پیش نیاز: پک فرانت اند جامع",
@@ -794,7 +764,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/photoshop/",
             "schedules": [
-              "فتوشاپ جامع شنبه 18 21 گروه 3"
+              "فتوشاپ گروه ۳ شنبه ۱۸ تا ۲۱ شعبه ۲"
             ],
             "metadata": [
               "نوع دوره: حضوری",
@@ -814,7 +784,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/ui-ux/",
             "schedules": [
-              "Ui Ux دوشنبه 18 21 گروه 6"
+              "UI/UX گروه ۷ یکشنبه ۱۵ تا ۱۸ شعبه ۲"
             ],
             "metadata": [
               "نوع دوره: حضوری",
@@ -858,9 +828,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "price": "ناموجود",
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/%d8%ad%d8%b3%d8%a7%d8%a8%d8%af%d8%a7%d8%b1%db%8c-%d9%85%d9%82%d8%af%d9%85%d8%a7%d8%aa%db%8c/",
-            "schedules": [
-              "گروه یا شعبه پیش‌فرضی ثبت نشده است."
-            ],
+            "schedules": [],
             "metadata": [
               "نوع دوره: حضوری",
               "پیش نیاز: ندارد",
@@ -878,9 +846,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "price": "ناموجود",
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/sepidar/",
-            "schedules": [
-              "گروه یا شعبه پیش‌فرضی ثبت نشده است."
-            ],
+            "schedules": [],
             "metadata": [
               "نوع دوره: حضوری",
               "پیش نیاز: ندارد",
@@ -898,9 +864,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "price": "12,150,000 تومان",
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/excel-in-accounting/",
-            "schedules": [
-              "اکسل حسابداری شنبه 10 13 گروه 1"
-            ],
+            "schedules": [],
             "metadata": [
               "نوع دوره: حضوری",
               "پیش نیاز: ندارد",
@@ -932,9 +896,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "price": "12,150,000 تومان",
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/lpic-2-linux-network-infrastructure-course/",
-            "schedules": [
-              "Lpic 2 پنجشنبه 9 13 گروه 2"
-            ],
+            "schedules": [],
             "metadata": [
               "نوع دوره: حضوری",
               "پیش نیاز: اصول مدیریت سیستم‌عامل لینوکس (LPIC-1)",
@@ -953,9 +915,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "price": "25,280,000 تومان",
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/cyber-security/",
-            "schedules": [
-              "هک و امنیت شبکه پنجشنبه ۹ ۱۳ گروه۱"
-            ],
+            "schedules": [],
             "metadata": [
               "نوع دوره: حضوری",
               "پیش نیاز: +Network و سابقه کار مرتبط با شبکه",
@@ -975,7 +935,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/network/",
             "schedules": [
-              "Network شنبه 16 20 گروه 8"
+              "نتورک پلاس ۸ شنبه ۱۶ تا ۲۰ شعبه ۱"
             ],
             "metadata": [
               "نوع دوره: حضوری",
@@ -995,9 +955,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "price": "12,150,000 تومان",
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/linux-lpic-1-course/",
-            "schedules": [
-              "Lpic 1 پنجشنبه 9 13 گروه 2"
-            ],
+            "schedules": [],
             "metadata": [
               "نوع دوره: حضوری",
               "پیش نیاز: ندارد",

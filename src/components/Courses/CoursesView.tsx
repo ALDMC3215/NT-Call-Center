@@ -171,7 +171,14 @@ export const CoursesView = ({ externalSearchQuery = '', isModal, onClose, embedd
       courses: sub.courses.map(course => {
         // Merge dynamic data if available
         if (course.url && dynamicData[course.url]) {
-          return { ...course, ...dynamicData[course.url] };
+          const dyn = { ...dynamicData[course.url] };
+          // Do not overwrite local schedules, we want to keep the "open sections" manually synced
+          delete dyn.schedules;
+          // Do not overwrite price if dynamic price is empty
+          if (!dyn.price) delete dyn.price;
+          if (!dyn.originalPrice) delete dyn.originalPrice;
+          
+          return { ...course, ...dyn };
         }
         return course;
       })
