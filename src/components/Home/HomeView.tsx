@@ -44,6 +44,17 @@ export const HomeView = () => {
           iconColor: 'text-indigo-600',
           iconBg: 'bg-indigo-500/10',
           gradient: 'from-indigo-500 to-blue-500'
+        },
+        {
+          id: 'schedule',
+          title: tr('برنامه کلاسی', 'Schedule'),
+          description: tr('لیست تمامی دوره‌های در حال برگزاری و ثبت‌نام', 'List of all running and registering courses'),
+          icon: CalendarDays,
+          count: null,
+          onClick: () => { setCurrentView('dashboard'); setActiveCallTab('schedule'); },
+          iconColor: 'text-brand-600',
+          iconBg: 'bg-brand-500/10',
+          gradient: 'from-brand-500 to-indigo-500'
         }
       ]
     },
@@ -139,51 +150,7 @@ export const HomeView = () => {
                 <div className="flex-1 h-px bg-gradient-to-l from-transparent via-slate-200 to-transparent"></div>
               </div>
 
-              {sIndex === 0 ? (
-                <div className="flex flex-col xl:flex-row gap-6">
-                  {/* Panel Entry Card */}
-                  <div className="w-full xl:w-[350px] shrink-0">
-                    {section.items.map((card: any) => {
-                      const Icon = card.icon;
-                      return (
-                        <button
-                          key={card.id}
-                          onClick={card.onClick}
-                          className="w-full group relative flex flex-col text-right items-start p-6 sm:p-8 bg-white/50 backdrop-blur-xl rounded-[1.5rem] border border-white/70 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] hover:-translate-y-1.5 transition-all duration-400 ease-out overflow-hidden"
-                        >
-                          <div className={`absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r ${card.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
-                          <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-gradient-to-tr from-slate-100 to-transparent rounded-full opacity-50 group-hover:scale-150 transition-transform duration-700 pointer-events-none"></div>
-
-                          <div className="flex items-center justify-between w-full mb-6">
-                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${card.iconBg} ${card.iconColor} group-hover:scale-110 transition-transform duration-300 shadow-sm relative z-10`}>
-                              <Icon size={28} strokeWidth={2} />
-                            </div>
-                            <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-brand-50 group-hover:text-brand-500 transition-colors shadow-sm">
-                              <ArrowLeft size={18} className="rtl:rotate-180" />
-                            </div>
-                          </div>
-
-                          <div className="relative z-10">
-                            <h4 className="text-xl sm:text-2xl font-black text-slate-800 mb-3 group-hover:text-brand-700 transition-colors">
-                              {card.title}
-                            </h4>
-                            <p className="text-sm font-medium text-slate-500 leading-relaxed mb-4">
-                              {card.description}
-                            </p>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {/* Schedule Table */}
-                  <div className="flex-1 bg-white/50 backdrop-blur-xl rounded-[1.5rem] border border-white/70 shadow-[0_4px_20px_rgb(0,0,0,0.03)] overflow-hidden h-[500px]">
-                    <div className="h-full custom-scrollbar">
-                      <ScheduleView embedded={true} />
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   {section.items.map((card: any) => {
                     const Icon = card.icon;
                     return (
@@ -225,7 +192,6 @@ export const HomeView = () => {
                     );
                   })}
                 </div>
-              )}
             </div>
           ))}
         </div>

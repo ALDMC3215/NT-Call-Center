@@ -691,36 +691,6 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
       {/* Unified Quick Access & Operational Toolbar */}
       <div className="pt-16 md:pt-4 pb-4 w-full flex items-center justify-start gap-3 flex-wrap px-4 md:pr-6 md:pl-[170px]">
 
-        {activeTab === 'queue' && (
-          <div className="flex items-center gap-3 shrink-0">
-            <button
-              onClick={() => {
-                setConfirmModalConfig({
-                  isOpen: true,
-                  title: tr('حذف تمامی شماره‌ها', 'Delete all numbers'),
-                  message: tr('آیا مطمئن هستید که می‌خواهید همه شماره‌های این لیست را حذف کنید؟', 'Are you sure you want to delete all?'),
-                  onConfirm: () => {
-                    calls.filter(c => filteredList.some(f => f.id === c.id)).forEach(c => deleteCall(c.id));
-                    toast.success(tr('لیست پاک شد.', 'List cleared.'));
-                  }
-                });
-              }}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl shadow-sm border transition-colors text-[13px] font-bold bg-white text-rose-600 border-slate-200 hover:bg-rose-50 hover:border-rose-200"
-              title={tr('حذف همه', 'Delete All')}
-            >
-              <Trash2 size={16} strokeWidth={2.5} /> <span>{tr('حذف همه', 'Delete All')}</span>
-            </button>
-            <button
-              onClick={() => setIsManualAddOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl shadow-sm border transition-colors text-[13px] font-bold bg-white text-brand-600 border-slate-200 hover:bg-brand-50 hover:border-brand-200"
-              title={tr('افزودن دستی', 'Add manually')}
-            >
-              <Plus size={16} strokeWidth={2.5} /> <span>{tr('افزودن دستی', 'Add manually')}</span>
-            </button>
-
-            <div className="w-px h-8 bg-slate-300 mx-1 hidden sm:block"></div>
-          </div>
-        )}
 
         <a href="?view=dashboard&tab=queue" onClick={e => { e.preventDefault(); setActiveCallTab('queue'); setPopupView(null); }} className={`flex items-center gap-2 px-4 py-2 rounded-xl shadow-sm border transition-colors text-[13px] font-bold ${activeTab === 'queue' && !popupView ? 'bg-brand-50 border-brand-200 text-brand-700' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'}`}>
           <List size={16} className={activeTab === 'queue' && !popupView ? 'text-brand-600' : 'text-slate-400'} />
@@ -767,7 +737,36 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
           ) : activeTab === 'learning_paths' ? (
              <div className="w-full h-full custom-scrollbar"><LearningPathsModal isOpen={true} onClose={() => {}} embedded={true} /></div>
           ) : (
-          <div className="min-h-0 overflow-x-auto overflow-y-auto custom-select-scroll relative z-10">
+          <div className="flex flex-col h-full min-h-0">
+            {activeTab === 'queue' && (
+              <div className="flex items-center justify-end gap-3 p-3 bg-slate-50/50 border-b border-slate-200 shrink-0">
+                <button
+                  onClick={() => {
+                    setConfirmModalConfig({
+                      isOpen: true,
+                      title: tr('حذف تمامی شماره‌ها', 'Delete all numbers'),
+                      message: tr('آیا مطمئن هستید که می‌خواهید همه شماره‌های این لیست را حذف کنید؟', 'Are you sure you want to delete all?'),
+                      onConfirm: () => {
+                        calls.filter(c => filteredList.some(f => f.id === c.id)).forEach(c => deleteCall(c.id));
+                        toast.success(tr('لیست پاک شد.', 'List cleared.'));
+                      }
+                    });
+                  }}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-[12px] font-bold text-rose-500 hover:bg-rose-50"
+                  title={tr('حذف همه', 'Delete All')}
+                >
+                  <Trash2 size={14} strokeWidth={2.5} /> <span>{tr('حذف همه', 'Delete All')}</span>
+                </button>
+                <button
+                  onClick={() => setIsManualAddOpen(true)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-[12px] font-bold text-brand-600 hover:bg-brand-50"
+                  title={tr('افزودن دستی', 'Add manually')}
+                >
+                  <Plus size={14} strokeWidth={2.5} /> <span>{tr('افزودن دستی', 'Add manually')}</span>
+                </button>
+              </div>
+            )}
+          <div className="flex-1 overflow-x-auto overflow-y-auto custom-select-scroll relative z-10">
             {/* Compact Table View */}
             <table className="w-full text-center border-collapse table-fixed min-w-[700px]">
               <colgroup>
@@ -958,6 +957,7 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                   )}
                 </div>
             )}
+          </div>
           </div>
           )}
         </div>
