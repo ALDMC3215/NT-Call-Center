@@ -17,84 +17,81 @@ interface FlatCourse {
 }
 
 const COURSES_DATA: FlatCourse[] = [
-  // Branch 2, 9-12, Saturday
-  { name: 'PHP 4', teacher: 'کیمیا', status: 'closed', time: '۹ تا ۱۲', day: 'شنبه', branch: 'شعبه ۲' },
-  { name: 'UI/UX خصوصی', teacher: 'فرقانی', status: 'closed', time: '۹ تا ۱۲', day: 'شنبه', branch: 'شعبه ۲' },
-  { name: 'شی‌گرایی ۴', status: 'closed', time: '۹ تا ۱۲', day: 'شنبه', branch: 'شعبه ۲' },
-  { name: 'زبان مهارتی نوجوان', status: 'open', time: '۹ تا ۱۲', day: 'شنبه', branch: 'شعبه ۲' },
-  // Branch 2, 9-12, Sunday
-  { name: 'ابزار خصوصی', teacher: 'فرقانی', status: 'closed', time: '۹ تا ۱۲', day: 'یکشنبه', branch: 'شعبه ۲' },
-  // Branch 2, 9-12, Monday
-  { name: 'هک و امنیت شبکه ۱', teacher: 'جلیلیان', status: 'closed', time: '۹ تا ۱۲', day: 'دوشنبه', branch: 'شعبه ۲' },
-  { name: 'UI/UX خصوصی', teacher: 'فرقانی', status: 'closed', time: '۹ تا ۱۲', day: 'دوشنبه', branch: 'شعبه ۲' },
-  { name: 'PHP 5', status: 'open', time: '۹ تا ۱۲', day: 'دوشنبه', branch: 'شعبه ۲' },
-  { name: 'RNN G3', status: 'open', time: '۹ تا ۱۲', day: 'دوشنبه', branch: 'شعبه ۲' },
-  // Branch 2, 9-12, Wednesday
-  { name: 'زبان مهارتی نوجوان', status: 'open', time: '۹ تا ۱۲', day: 'چهارشنبه', branch: 'شعبه ۲' },
-  // Branch 2, 9-12, Thursday
-  { name: 'هک و امنیت شبکه ۱', teacher: 'جلیلیان', status: 'closed', time: '۹ تا ۱۲', day: 'پنجشنبه', branch: 'شعبه ۲' },
-  { name: 'اسکرچ گروه ۳', note: 'کودکان ۸ سال به پایین', status: 'open', time: '۹ تا ۱۲', day: 'پنجشنبه', branch: 'شعبه ۲' },
-  { name: 'زبان تخصصی کامپیوتر بزرگسال', status: 'open', time: '۹ تا ۱۲', day: 'پنجشنبه', branch: 'شعبه ۲' },
-  { name: 'پایتون ۲۸', status: 'open', time: '۹ تا ۱۲', day: 'پنجشنبه', branch: 'شعبه ۲' },
-
-  // Branch 2, 15-18, Saturday
-  { name: 'برنامه‌نویسی موبایل ۹', teacher: 'دکتر زارع', status: 'closed', time: '۱۵ تا ۱۸', day: 'شنبه', branch: 'شعبه ۲' },
+  // شعبه ۲ - شنبه
+  { name: 'PHP 4', teacher: 'کیمیا', status: 'closed', time: '۹ تا ۱۲', day: 'شنبه', branch: 'شعبه ۲', note: '۱۰ تا ۱۳' },
+  { name: 'UI/UX خصوصی', teacher: 'فرقانی', status: 'closed', time: '۹ تا ۱۲', day: 'شنبه', branch: 'شعبه ۲', note: '۹:۳۰ تا ۱۱:۳۰' },
+  { name: 'زبان مهارتی نوجوان', status: 'open', time: '۹ تا ۱۲', day: 'شنبه', branch: 'شعبه ۲', note: '۱۰ تا ۱۱:۳۰' },
+  { name: 'شی‌گرایی ۴', status: 'closed', time: '۹ تا ۱۲', day: 'شنبه', branch: 'شعبه ۲', note: '۱۰ تا ۱۳' },
+  { name: 'موبایل ۹', teacher: 'دکتر زارع', status: 'closed', time: '۱۵ تا ۱۸', day: 'شنبه', branch: 'شعبه ۲', note: '۱۶ تا ۲۰' },
   { name: 'پایتون نوجوان ۹', status: 'closed', time: '۱۵ تا ۱۸', day: 'شنبه', branch: 'شعبه ۲' },
-  // Branch 2, 15-18, Sunday
-  { name: 'نتورک پلاس ۷', teacher: 'شایقی‌فرد', status: 'closed', time: '۱۵ تا ۱۸', day: 'یکشنبه', branch: 'شعبه ۲' },
-  { name: 'بازی‌سازی نوجوان گروه ۶', status: 'open', time: '۱۵ تا ۱۸', day: 'یکشنبه', branch: 'شعبه ۲' },
-  { name: 'پایتون نوجوان گروه ۱۰', status: 'open', time: '۱۵ تا ۱۸', day: 'یکشنبه', branch: 'شعبه ۲' },
-  { name: 'UI/UX گروه ۷', status: 'open', time: '۱۵ تا ۱۸', day: 'یکشنبه', branch: 'شعبه ۲' },
-  // Branch 2, 15-18, Monday
-  { name: 'علم داده ۷', teacher: 'دکتر زارع', status: 'closed', time: '۱۵ تا ۱۸', day: 'دوشنبه', branch: 'شعبه ۲' },
-  { name: 'Node.js', status: 'closed', time: '۱۵ تا ۱۸', day: 'دوشنبه', branch: 'شعبه ۲' },
-  { name: 'علم داده ۹', teacher: 'دکتر زارع', status: 'open', time: '۱۵ تا ۱۸', day: 'دوشنبه', branch: 'شعبه ۲' },
-  // Branch 2, 15-18, Tuesday
-  { name: 'ICDL گروه ۹', teacher: 'رابعینیا', status: 'closed', time: '۱۵ تا ۱۸', day: 'سه‌شنبه', branch: 'شعبه ۲' },
-  { name: 'ابزار هوش مصنوعی ۱۴', teacher: 'فرقانی', status: 'closed', time: '۱۵ تا ۱۸', day: 'سه‌شنبه', branch: 'شعبه ۲' },
-  { name: 'پایگاه داده ۸', teacher: 'کیمیا', status: 'closed', time: '۱۵ تا ۱۸', day: 'سه‌شنبه', branch: 'شعبه ۲' },
-  { name: 'علم داده و یادگیری ماشین گروه ۸', status: 'closed', time: '۱۵ تا ۱۸', day: 'سه‌شنبه', branch: 'شعبه ۲' },
-  { name: 'زبان تخصصی کامپیوتر نوجوان', status: 'open', time: '۱۵ تا ۱۸', day: 'سه‌شنبه', branch: 'شعبه ۲' },
-  { name: 'ICDL گروه ۱۰', teacher: 'رابعینیا', status: 'open', time: '۱۵ تا ۱۸', day: 'سه‌شنبه', branch: 'شعبه ۲' },
-  // Branch 2, 15-18, Wednesday
-  { name: 'یادگیری عمیق ۵', teacher: 'دکتر زارع', status: 'closed', time: '۱۵ تا ۱۸', day: 'چهارشنبه', branch: 'شعبه ۲' },
-  { name: 'وردپرس ۶ نوجوان', status: 'open', time: '۱۵ تا ۱۸', day: 'چهارشنبه', branch: 'شعبه ۲' },
-  { name: 'پایگاه داده ۹', status: 'open', time: '۱۵ تا ۱۸', day: 'چهارشنبه', branch: 'شعبه ۲' },
-  // Branch 2, 15-18, Thursday
-  { name: 'React & Next.js', status: 'closed', time: '۱۵ تا ۱۸', day: 'پنجشنبه', branch: 'شعبه ۲' },
-
-  // Branch 2, 18-21, Saturday
   { name: 'برنامه‌نویسی موبایل ۱۰', status: 'closed', time: '۱۸ تا ۲۱', day: 'شنبه', branch: 'شعبه ۲' },
   { name: 'ICDL گروه ۱۰', teacher: 'رابعینیا', status: 'closed', time: '۱۸ تا ۲۱', day: 'شنبه', branch: 'شعبه ۲' },
   { name: 'فتوشاپ گروه ۳', status: 'open', time: '۱۸ تا ۲۱', day: 'شنبه', branch: 'شعبه ۲' },
-  // Branch 2, 18-21, Sunday
+
+  // شعبه ۲ - یکشنبه
+  { name: 'ابزار خصوصی', teacher: 'فرقانی', status: 'closed', time: '۹ تا ۱۲', day: 'یکشنبه', branch: 'شعبه ۲', note: '۱۰ تا ۱۳' },
+  { name: 'نتورک پلاس ۷', teacher: 'شایقی‌فرد', status: 'closed', time: '۱۵ تا ۱۸', day: 'یکشنبه', branch: 'شعبه ۲' },
+  { name: 'بازی‌سازی نوجوان گروه ۶', status: 'open', time: '۱۵ تا ۱۸', day: 'یکشنبه', branch: 'شعبه ۲' },
+  { name: 'پایتون نوجوان گروه ۱۰', status: 'open', time: '۱۵ تا ۱۸', day: 'یکشنبه', branch: 'شعبه ۲' },
+  { name: 'UI/UX ۷', status: 'open', time: '۱۵ تا ۱۸', day: 'یکشنبه', branch: 'شعبه ۲' },
   { name: 'پک فرانت ۱۰', teacher: 'روبی', status: 'closed', time: '۱۸ تا ۲۱', day: 'یکشنبه', branch: 'شعبه ۲' },
   { name: 'وردپرس ۵', teacher: 'یزدانیان', status: 'closed', time: '۱۸ تا ۲۱', day: 'یکشنبه', branch: 'شعبه ۲' },
   { name: 'ویژن ۵', teacher: 'دکتر زارع', status: 'open', time: '۱۸ تا ۲۱', day: 'یکشنبه', branch: 'شعبه ۲' },
   { name: 'DRF-Django', status: 'open', time: '۱۸ تا ۲۱', day: 'یکشنبه', branch: 'شعبه ۲' },
-  // Branch 2, 18-21, Monday
-  { name: 'UI/UX گروه ۶', status: 'closed', time: '۱۸ تا ۲۱', day: 'دوشنبه', branch: 'شعبه ۲' },
-  // Branch 2, 18-21, Tuesday
+
+  // شعبه ۲ - دوشنبه
+  { name: 'هک و امنیت شبکه ۱', teacher: 'جلیلیان', status: 'closed', time: '۹ تا ۱۲', day: 'دوشنبه', branch: 'شعبه ۲', note: '۱۳ تا ۱۵' },
+  { name: 'UI/UX خصوصی', teacher: 'فرقانی', status: 'closed', time: '۹ تا ۱۲', day: 'دوشنبه', branch: 'شعبه ۲', note: '۹:۳۰ تا ۱۱:۳۰' },
+  { name: 'PHP 5', status: 'open', time: '۹ تا ۱۲', day: 'دوشنبه', branch: 'شعبه ۲', note: '۱۰ تا ۱۳' },
+  { name: 'RNN G3', status: 'open', time: '۹ تا ۱۲', day: 'دوشنبه', branch: 'شعبه ۲', note: '۱۰ تا ۱۳' },
+  { name: 'علم داده ۷', teacher: 'دکتر زارع', status: 'closed', time: '۱۵ تا ۱۸', day: 'دوشنبه', branch: 'شعبه ۲', note: '۱۶ تا ۲۰' },
+  { name: 'Node.js', status: 'closed', time: '۱۵ تا ۱۸', day: 'دوشنبه', branch: 'شعبه ۲', note: '۱۶:۳۰ تا ۲۰:۳۰' },
+  { name: 'علم داده ۹', teacher: 'دکتر زارع', status: 'open', time: '۱۵ تا ۱۸', day: 'دوشنبه', branch: 'شعبه ۲', note: '۱۶ تا ۲۰' },
+  { name: 'UI/UX 6', status: 'closed', time: '۱۸ تا ۲۱', day: 'دوشنبه', branch: 'شعبه ۲' },
+
+  // شعبه ۲ - سه‌شنبه
+  { name: 'ICDL گروه ۹', teacher: 'رابعینیا', status: 'closed', time: '۱۵ تا ۱۸', day: 'سه‌شنبه', branch: 'شعبه ۲' },
+  { name: 'ابزار هوش مصنوعی ۱۴', teacher: 'فرقانی', status: 'closed', time: '۱۵ تا ۱۸', day: 'سه‌شنبه', branch: 'شعبه ۲', note: '۱۶ تا ۱۸' },
+  { name: 'پایگاه داده ۸', teacher: 'کیمیا', status: 'closed', time: '۱۵ تا ۱۸', day: 'سه‌شنبه', branch: 'شعبه ۲' },
+  { name: 'علم داده و یادگیری ماشین گروه ۸', status: 'closed', time: '۱۵ تا ۱۸', day: 'سه‌شنبه', branch: 'شعبه ۲' },
+  { name: 'زبان تخصصی کامپیوتر نوجوان', status: 'open', time: '۱۵ تا ۱۸', day: 'سه‌شنبه', branch: 'شعبه ۲', note: '۱۶ تا ۱۸' },
+  { name: 'ICDL گروه ۱۰', teacher: 'رابعینیا', status: 'open', time: '۱۵ تا ۱۸', day: 'سه‌شنبه', branch: 'شعبه ۲' },
   { name: 'پک فرانت ۱۰', teacher: 'روبی', status: 'closed', time: '۱۸ تا ۲۱', day: 'سه‌شنبه', branch: 'شعبه ۲' },
   { name: 'پایتون ۲۲', teacher: 'دکتر زارع', status: 'closed', time: '۱۸ تا ۲۱', day: 'سه‌شنبه', branch: 'شعبه ۲' },
   { name: 'ابزار هوش مصنوعی گروه ۱۵', status: 'open', time: '۱۸ تا ۲۱', day: 'سه‌شنبه', branch: 'شعبه ۲' },
   { name: 'برنامه‌نویسی موبایل ۱۱', status: 'open', time: '۱۸ تا ۲۱', day: 'سه‌شنبه', branch: 'شعبه ۲' },
-  // Branch 2, 18-21, Wednesday
+
+  // شعبه ۲ - چهارشنبه
+  { name: 'زبان مهارتی نوجوان', status: 'open', time: '۹ تا ۱۲', day: 'چهارشنبه', branch: 'شعبه ۲', note: '۱۰ تا ۱۱:۳۰' },
+  { name: 'یادگیری عمیق ۵', teacher: 'دکتر زارع', status: 'closed', time: '۱۵ تا ۱۸', day: 'چهارشنبه', branch: 'شعبه ۲', note: '۱۶ تا ۲۰' },
+  { name: 'وردپرس ۶ نوجوان', status: 'open', time: '۱۵ تا ۱۸', day: 'چهارشنبه', branch: 'شعبه ۲' },
+  { name: 'پایگاه داده ۹', status: 'open', time: '۱۵ تا ۱۸', day: 'چهارشنبه', branch: 'شعبه ۲' },
   { name: 'پایتون ۲۴', teacher: 'سالار', status: 'closed', time: '۱۸ تا ۲۱', day: 'چهارشنبه', branch: 'شعبه ۲' },
   { name: 'ICDL گروه ۱۰', teacher: 'رابعینیا', status: 'closed', time: '۱۸ تا ۲۱', day: 'چهارشنبه', branch: 'شعبه ۲' },
   { name: 'ابزار هوش مصنوعی ۱۲', teacher: 'فرقانی', status: 'closed', time: '۱۸ تا ۲۱', day: 'چهارشنبه', branch: 'شعبه ۲' },
 
-  // Branch 1, 16-20, Saturday
+  // شعبه ۲ - پنجشنبه
+  { name: 'هک و امنیت شبکه ۱', teacher: 'جلیلیان', status: 'closed', time: '۹ تا ۱۲', day: 'پنجشنبه', branch: 'شعبه ۲', note: '۱۲ تا ۱۴' },
+  { name: 'اسکرچ گروه ۳', status: 'open', time: '۹ تا ۱۲', day: 'پنجشنبه', branch: 'شعبه ۲', note: '۸ سال به پایین (۱۰ تا ۱۳)' },
+  { name: 'زبان تخصصی کامپیوتر بزرگسال', status: 'open', time: '۹ تا ۱۲', day: 'پنجشنبه', branch: 'شعبه ۲' },
+  { name: 'پایتون ۲۸', status: 'open', time: '۹ تا ۱۲', day: 'پنجشنبه', branch: 'شعبه ۲', note: '۹ تا ۱۳' },
+  { name: 'React & Next.js', status: 'closed', time: '۱۵ تا ۱۸', day: 'پنجشنبه', branch: 'شعبه ۲', note: '۱۵:۳۰ تا ۱۹:۳۰' },
+
+  // شعبه ۱ - شنبه
   { name: 'نتورک پلاس ۸', status: 'open', time: '۱۶ تا ۲۰', day: 'شنبه', branch: 'شعبه ۱' },
   { name: 'پایتون ۲۷', status: 'open', time: '۱۶ تا ۲۰', day: 'شنبه', branch: 'شعبه ۱' },
-  // Branch 1, 16-20, Sunday
+
+  // شعبه ۱ - یکشنبه
   { name: 'پایتون ۲۵', status: 'closed', time: '۱۶ تا ۲۰', day: 'یکشنبه', branch: 'شعبه ۱' },
-  // Branch 1, 16-20, Monday
+
+  // شعبه ۱ - دوشنبه
   { name: 'پک فرانت ۹', status: 'open', time: '۱۶ تا ۲۰', day: 'دوشنبه', branch: 'شعبه ۱' },
   { name: 'پایتون ۲۶', status: 'open', time: '۱۶ تا ۲۰', day: 'دوشنبه', branch: 'شعبه ۱' },
-  // Branch 1, 16-20, Tuesday
-  { name: 'پایتون نوجوان گروه ۸', note: '۱۶ تا ۱۹', status: 'closed', time: '۱۶ تا ۲۰', day: 'سه‌شنبه', branch: 'شعبه ۱' },
-  // Branch 1, 16-20, Wednesday
+
+  // شعبه ۱ - سه‌شنبه
+  { name: 'پایتون نوجوان گروه ۸', status: 'closed', time: '۱۶ تا ۲۰', day: 'سه‌شنبه', branch: 'شعبه ۱', note: '۱۶ تا ۱۹' },
+
+  // شعبه ۱ - چهارشنبه
   { name: 'یادگیری عمیق گروه ۶', status: 'open', time: '۱۶ تا ۲۰', day: 'چهارشنبه', branch: 'شعبه ۱' },
 ];
 
