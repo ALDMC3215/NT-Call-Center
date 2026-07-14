@@ -378,7 +378,7 @@ export const ManagerDashboard: React.FC = () => {
   const formatTime = (iso: string | null) => iso ? new Date(iso).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' }) : '-';
 
   return (
-    <div className="flex flex-col w-full h-screen bg-slate-50 overflow-hidden text-slate-800" dir="rtl">
+    <div className="flex flex-col w-full h-screen bg-slate-50 dark:bg-slate-900 overflow-hidden text-slate-800" dir="rtl">
       
       {/* ── Top bar ──────────────────────────────────────────────── */}
       <header className="w-full shrink-0 bg-white/90 backdrop-blur-md border-b border-slate-200 z-10" dir="ltr">

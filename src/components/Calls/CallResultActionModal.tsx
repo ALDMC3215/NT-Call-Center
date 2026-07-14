@@ -87,15 +87,15 @@ export const CallResultActionModal: React.FC<CallResultActionModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm overflow-y-auto">
-      <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl flex flex-col my-auto relative">
-        <div className="flex items-center justify-between bg-slate-50 px-6 py-4 border-b border-slate-100 rounded-t-2xl">
-          <h3 className="text-lg font-bold text-slate-800">
+      <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-slate-800 shadow-2xl flex flex-col my-auto relative">
+        <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-900/50 px-6 py-4 border-b border-slate-100 dark:border-slate-700/50 rounded-t-2xl">
+          <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">
             {mode === 'initial' ? 'ثبت نتیجه تماس' : 'ارسال به پیگیری‌ها'}
           </h3>
           <button
             onClick={resetAndClose}
             disabled={isSubmitting}
-            className="rounded-full p-2 text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors"
+            className="rounded-full p-2 text-slate-400 dark:text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
@@ -104,12 +104,12 @@ export const CallResultActionModal: React.FC<CallResultActionModalProps> = ({
         <div className="p-6">
           {mode === 'initial' ? (
             <div className="flex flex-col gap-4">
-              <p className="text-slate-600 text-sm text-center mb-2">
+              <p className="text-slate-600 dark:text-slate-400 text-sm text-center mb-2">
                 لطفاً مرحله بعدی برای این مخاطب را انتخاب کنید:
               </p>
               <button
                 onClick={() => setMode('followup')}
-                className="w-full py-3 px-4 bg-amber-50 text-amber-700 border border-amber-200 rounded-xl hover:bg-amber-100 font-medium transition-colors"
+                className="w-full py-3 px-4 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-700/50 rounded-xl hover:bg-amber-100 dark:hover:bg-amber-900/50 font-medium transition-colors"
               >
                 ارسال به پیگیری‌ها
               </button>

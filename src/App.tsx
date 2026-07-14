@@ -268,7 +268,7 @@ export default function App() {
       <ToastProvider />
 
       <ClickSpark sparkColor={sparkColor} sparkSize={8} sparkRadius={25} sparkCount={6} duration={500}>
-        <div className="selection:bg-brand-200 relative w-full h-screen font-sans antialiased text-primary bg-slate-50 flex flex-col overflow-hidden">
+        <div className="selection:bg-brand-200 relative w-full h-screen font-sans antialiased text-primary bg-slate-50 dark:bg-slate-900 flex flex-col overflow-hidden">
           <div className="relative z-10 w-full h-full flex flex-col">
             <AnimatePresence mode="wait">
 
@@ -309,7 +309,7 @@ export default function App() {
 
               {/* 6. Active admin, manager panel ─────────────────────── */}
               {authStatus === 'active_admin' && !adminTriedAgent && (
-                <motion.div key="manager-panel" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15, ease: 'easeOut' }} className="w-full h-screen overflow-hidden bg-slate-50 flex flex-col" dir={direction}>
+                <motion.div key="manager-panel" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15, ease: 'easeOut' }} className="w-full h-screen overflow-hidden bg-slate-50 dark:bg-slate-900 flex flex-col" dir={direction}>
                   <React.Suspense fallback={<LoadingSpinner />}><ManagerDashboard /></React.Suspense>
                 </motion.div>
               )}
@@ -326,7 +326,7 @@ export default function App() {
                       <div className="absolute top-4 left-4 z-50 pointer-events-none">
                         <button 
                           onClick={() => setCurrentView('home')}
-                          className="pointer-events-auto flex items-center gap-2 px-4 py-2 rounded-full bg-white/90 backdrop-blur-xl border border-slate-200 shadow-md text-slate-700 hover:text-brand-600 hover:bg-white hover:scale-105 transition-all duration-300"
+                          className="pointer-events-auto flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 hover:text-brand-600 hover:bg-slate-50 transition-colors"
                           title="بازگشت به مرکز فرماندهی (Esc / Alt + ⬅)"
                         >
                           <Home size={18} />

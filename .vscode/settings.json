@@ -1,3 +1,4 @@
 {
-    "terminal.integrated.defaultProfile.windows": "Command Prompt"
+    "terminal.integrated.defaultProfile.windows": "Command Prompt",
+    "css.lint.unknownAtRules": "ignore"
 }

@@ -28,7 +28,7 @@ import NTLogo from '../../NT Logo.svg';
 type CallTab = 'queue' | 'today' | 'followup' | 'blacklist' | 'courses';
 
 export const AppHeader = () => {
-  const { currentView, setCurrentView, profile, activeCallTab, setActiveCallTab } = useAppContext();
+  const { currentView, setCurrentView, profile, activeCallTab, setActiveCallTab, isDarkMode, toggleDarkMode } = useAppContext();
   const { signOut } = useAuth();
   const { tr, direction } = useLocale();
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
@@ -91,7 +91,7 @@ export const AppHeader = () => {
 
   return (
     <>
-      <header className="w-full shrink-0 z-30 bg-white/80 backdrop-blur-xl border-b border-slate-200 shadow-sm">
+      <header className="w-full shrink-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-700 shadow-sm">
         <div className="flex items-center justify-between w-full h-14 px-4 md:px-6 relative" dir="ltr">
 
           {/* 🔘🔘 LEFT: Logo 🔘🔘🔘🔘🔘🔘🔘🔘🔘🔘🔘🔘🔘🔘🔘🔘🔘🔘🔘🔘🔘🔘🔘🔘🔘🔘🔘 */}
@@ -99,7 +99,7 @@ export const AppHeader = () => {
             <div className="w-8 h-8 flex items-center justify-center transition-colors">
               <img src={NTLogo} alt="Novin Tech Logo" className="w-full h-full object-contain" />
             </div>
-            <span className="text-slate-900 font-extrabold text-sm hidden md:block tracking-wide transition-colors">
+            <span className="text-slate-900 dark:text-slate-100 font-extrabold text-sm hidden md:block tracking-wide transition-colors">
               Novin Tech Panel
             </span>
           </div>
@@ -113,7 +113,7 @@ export const AppHeader = () => {
                 <>
                   <button
                     onClick={() => setLearningPathsOpen(true)}
-                    className="flex flex-row-reverse items-center gap-1.5 px-3 h-8 rounded-md text-[13px] transition-all whitespace-nowrap font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:ring-offset-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent"
+                    className="flex flex-row-reverse items-center gap-1.5 px-3 h-8 rounded-md text-[13px] transition-all whitespace-nowrap font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:ring-offset-1 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent"
                   >
                     <Route size={14} />
                     <span className="hidden xl:inline">{tr('مسیرها', 'Learning Paths')}</span>
@@ -129,8 +129,8 @@ export const AppHeader = () => {
                     onClick={() => setCurrentView('admin')}
                     className={`flex flex-row-reverse items-center gap-1.5 px-3 h-8 rounded-md text-[13px] transition-all whitespace-nowrap font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:ring-offset-1 ${
                       currentView === 'admin'
-                        ? 'bg-brand-50 text-brand-600 border border-brand-200'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
+                        ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-600 dark:text-brand-300 border border-brand-200 dark:border-brand-800'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent'
                     }`}
                   >
                     <Settings size={14} />
@@ -165,8 +165,8 @@ export const AppHeader = () => {
                     }}
                     className={`flex flex-row-reverse items-center gap-1.5 px-3 h-8 rounded-md text-[13px] transition-all whitespace-nowrap font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:ring-offset-1 ${
                       isActive
-                        ? 'bg-brand-50 text-brand-600 border border-brand-200'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
+                        ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-600 dark:text-brand-300 border border-brand-200 dark:border-brand-800'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent'
                     }`}
                   >
                     {item.icon}
@@ -181,15 +181,25 @@ export const AppHeader = () => {
           <div className="flex items-center gap-2 shrink-0">
 
             {/* Live Clock */}
-            <div className="hidden lg:flex flex-row items-center justify-center gap-2 px-3 py-1.5 bg-surface-hover rounded-md border border-border/50 mr-2">
-              <span className="text-xs font-medium text-slate-500">
+            <div className="hidden lg:flex flex-row items-center justify-center gap-2 px-3 py-1.5 bg-slate-50 dark:bg-slate-800 rounded-md border border-slate-200 dark:border-slate-700 mr-2">
+              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
                 {time.toLocaleDateString('fa-IR', { weekday: 'long', day: 'numeric', month: 'long' })}
               </span>
-              <div className="w-px h-3 bg-border"></div>
-              <span className="text-[13px] font-semibold text-brand-600 tracking-wider">
+              <div className="w-px h-3 bg-slate-200 dark:bg-slate-700"></div>
+              <span className="text-[13px] font-semibold text-brand-600 dark:text-brand-400 tracking-wider">
                 {time.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
               </span>
             </div>
+
+            {/* Theme Toggle */}
+            <button
+              type="button"
+              onClick={toggleDarkMode}
+              title={isDarkMode ? tr('حالت روشن', 'Light Mode') : tr('حالت تاریک', 'Dark Mode')}
+              className="flex items-center justify-center w-8 h-8 rounded-md text-slate-500 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all mr-1"
+            >
+              {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
 
             {/* Logout button */}
             <button
@@ -197,7 +207,7 @@ export const AppHeader = () => {
               type="button"
               onClick={() => setLogoutConfirmOpen(true)}
               title={tr('خروج از حساب', 'Logout')}
-              className="flex items-center justify-center w-8 h-8 rounded-md text-slate-500 hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-200 transition-all"
+              className="flex items-center justify-center w-8 h-8 rounded-md text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 border border-transparent hover:border-red-200 dark:hover:border-red-800 transition-all"
             >
               <LogOut size={16} />
             </button>

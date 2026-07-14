@@ -77,6 +77,8 @@ interface AppContextType {
   cancelContactTask: (taskId: string) => Promise<ContactTask>;
   getMyContactTaskSummary: (targetDate?: string) => Promise<ContactTaskSummary>;
   recordCallAttemptWithTask: (input: RecordCallAttemptWithTaskInput) => Promise<RecordCallAttemptWithTaskResult>;
+  isDarkMode: boolean;
+  toggleDarkMode: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -271,6 +273,32 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const setEnableFluid = useCallback((val: boolean) => {
     localStorage.setItem('fluid_enabled', JSON.stringify(val));
     setEnableFluidState(val);
+  }, []);
+
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('app_theme');
+      if (saved) return saved === 'dark';
+      // Default to light mode per user request, or could use matchMedia
+      return false;
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
+
+  const toggleDarkMode = useCallback(() => {
+    setIsDarkMode(prev => {
+      const newValue = !prev;
+      localStorage.setItem('app_theme', newValue ? 'dark' : 'light');
+      return newValue;
+    });
   }, []);
 
   const setProfile = useCallback((p: Profile) => {
@@ -727,8 +755,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }, [profile]);
   const contextValue = React.useMemo(() => ({
     profile, calls, isLoadingCalls, callsError, blacklist, currentView, setCurrentView, popupView, setPopupView, activeCallTab, setActiveCallTab, setProfile, logout, addCall, updateCall, deleteCall, clearAllCalls, bulkAddCalls, importData, wipeAllData, importedData, setImportedData, addToBlacklist, removeFromBlacklist, isBlacklisted, restoreBackup, setContactWorkList, recordAttempt, enableFluid, setEnableFluid, accentColor, setAccentColor, layoutMargin, setLayoutMargin, sparkColor, setSparkColor,
-    getMyContactTasks, createContactTask, createContactTaskWithDetails, updateContactTaskDetails, rescheduleContactTask, completeContactTask, cancelContactTask, getMyContactTaskSummary, recordCallAttemptWithTask
-  }), [profile, calls, isLoadingCalls, callsError, blacklist, currentView, setCurrentView, popupView, setPopupView, activeCallTab, setActiveCallTab, setProfile, logout, addCall, updateCall, deleteCall, clearAllCalls, bulkAddCalls, importData, wipeAllData, importedData, setImportedData, addToBlacklist, removeFromBlacklist, isBlacklisted, restoreBackup, setContactWorkList, recordAttempt, enableFluid, setEnableFluid, accentColor, setAccentColor, layoutMargin, setLayoutMargin, sparkColor, setSparkColor, getMyContactTasks, createContactTask, createContactTaskWithDetails, updateContactTaskDetails, rescheduleContactTask, completeContactTask, cancelContactTask, getMyContactTaskSummary, recordCallAttemptWithTask]);
+    getMyContactTasks, createContactTask, createContactTaskWithDetails, updateContactTaskDetails, rescheduleContactTask, completeContactTask, cancelContactTask, getMyContactTaskSummary, recordCallAttemptWithTask,
+    isDarkMode, toggleDarkMode
+  }), [profile, calls, isLoadingCalls, callsError, blacklist, currentView, setCurrentView, popupView, setPopupView, activeCallTab, setActiveCallTab, setProfile, logout, addCall, updateCall, deleteCall, clearAllCalls, bulkAddCalls, importData, wipeAllData, importedData, setImportedData, addToBlacklist, removeFromBlacklist, isBlacklisted, restoreBackup, setContactWorkList, recordAttempt, enableFluid, setEnableFluid, accentColor, setAccentColor, layoutMargin, setLayoutMargin, sparkColor, setSparkColor, getMyContactTasks, createContactTask, createContactTaskWithDetails, updateContactTaskDetails, rescheduleContactTask, completeContactTask, cancelContactTask, getMyContactTaskSummary, recordCallAttemptWithTask, isDarkMode, toggleDarkMode]);
 
   return (
     <AppContext.Provider value={contextValue}>

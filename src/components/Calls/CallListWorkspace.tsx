@@ -764,7 +764,7 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
 
   if (isLoadingCalls && !hasInitialCallsLoaded) {
     return (
-      <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50" dir={direction}>
+      <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900" dir={direction}>
         <div className="text-slate-500 font-medium">{tr('در حال بارگذاری اطلاعات تماس‌ها از سرور ابری...', 'Loading call data from cloud server...')}</div>
       </div>
     );
@@ -772,14 +772,14 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
 
   if (callsError && !hasInitialCallsLoaded) {
     return (
-      <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50" dir={direction}>
+      <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900" dir={direction}>
         <div className="text-rose-500 font-medium">{callsError}</div>
       </div>
     );
   }
 
   return (
-    <div className="w-full h-full flex flex-col pb-4 hide-scrollbar relative bg-slate-50" dir={direction}>
+    <div className="w-full h-full flex flex-col pb-4 hide-scrollbar relative bg-slate-50 dark:bg-slate-900" dir={direction}>
       {callsError && hasInitialCallsLoaded && (
         <div className="w-full max-w-3xl mx-auto mt-4 bg-rose-50 text-rose-600 px-4 py-3 rounded-2xl text-[13.5px] font-medium text-center border border-rose-200 shadow-sm animate-pulse">
           {callsError}
@@ -789,11 +789,11 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
       <div className="pt-16 md:pt-4 pb-4 w-full flex items-center justify-start gap-3 flex-wrap px-4 md:pr-6 md:pl-[170px]">
 
 
-        <a href="?view=dashboard&tab=queue" onClick={e => { e.preventDefault(); setActiveCallTab('queue'); setPopupView(null); }} className={`flex items-center gap-2 px-4 py-2 rounded-xl shadow-sm border transition-colors text-[13px] font-bold ${activeTab === 'queue' && !popupView ? 'bg-brand-50 border-brand-200 text-brand-700' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'}`}>
+        <a href="?view=dashboard&tab=queue" onClick={e => { e.preventDefault(); setActiveCallTab('queue'); setPopupView(null); }} className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-colors text-[13px] font-bold ${activeTab === 'queue' && !popupView ? 'bg-brand-50 border-brand-200 text-brand-700' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'}`}>
           <List size={16} className={activeTab === 'queue' && !popupView ? 'text-brand-600' : 'text-slate-400'} />
           لیست شماره‌ها
         </a>
-        <a href="?view=dashboard&tab=today" onClick={e => { e.preventDefault(); setActiveCallTab('today'); setPopupView(null); }} className={`flex items-center gap-2 px-4 py-2 rounded-xl shadow-sm border transition-colors text-[13px] font-bold ${activeTab === 'today' && !popupView ? 'bg-brand-50 border-brand-200 text-brand-700' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'}`}>
+        <a href="?view=dashboard&tab=today" onClick={e => { e.preventDefault(); setActiveCallTab('today'); setPopupView(null); }} className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-colors text-[13px] font-bold ${activeTab === 'today' && !popupView ? 'bg-brand-50 border-brand-200 text-brand-700' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'}`}>
           <Activity size={16} className="text-teal-500" />
           فعالیت روزانه
           {calls.filter(c => c.workList === 'today').length > 0 && (
@@ -802,24 +802,24 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
             </span>
           )}
         </a>
-        <a href="?view=dashboard&tab=followup" onClick={e => { e.preventDefault(); setActiveCallTab('followup'); setPopupView(null); }} className={`flex items-center gap-2 px-4 py-2 rounded-xl shadow-sm border transition-colors text-[13px] font-bold ${activeTab === 'followup' && !popupView ? 'bg-brand-50 border-brand-200 text-brand-700' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'}`}>
+        <a href="?view=dashboard&tab=followup" onClick={e => { e.preventDefault(); setActiveCallTab('followup'); setPopupView(null); }} className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-colors text-[13px] font-bold ${activeTab === 'followup' && !popupView ? 'bg-brand-50 border-brand-200 text-brand-700' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'}`}>
           <PhoneForwarded size={16} className="text-orange-500" />
           پیگیری‌ها
         </a>
 
-        <a href="?view=dashboard&tab=courses" onClick={e => { e.preventDefault(); setActiveCallTab('courses'); setPopupView(null); }} className={`flex items-center gap-2 px-4 py-2 rounded-xl shadow-sm border transition-colors text-[13px] font-bold ${activeTab === 'courses' ? 'bg-brand-50 border-brand-200 text-brand-700' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'}`}>
+        <a href="?view=dashboard&tab=courses" onClick={e => { e.preventDefault(); setActiveCallTab('courses'); setPopupView(null); }} className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-colors text-[13px] font-bold ${activeTab === 'courses' ? 'bg-brand-50 border-brand-200 text-brand-700' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'}`}>
           <BookOpen size={16} className="text-blue-500" />
           قیمت دوره‌ها
         </a>
-        <a href="?view=home" onClick={e => { e.preventDefault(); setActiveCallTab('learning_paths'); setPopupView(null); }} className={`flex items-center gap-2 px-4 py-2 rounded-xl shadow-sm border transition-colors text-[13px] font-bold ${activeTab === 'learning_paths' ? 'bg-brand-50 border-brand-200 text-brand-700' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'}`}>
+        <a href="?view=home" onClick={e => { e.preventDefault(); setActiveCallTab('learning_paths'); setPopupView(null); }} className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-colors text-[13px] font-bold ${activeTab === 'learning_paths' ? 'bg-brand-50 border-brand-200 text-brand-700' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'}`}>
           <Route size={16} className="text-purple-500" />
           مسیرهای یادگیری
         </a>
-        <a href="?view=schedule" onClick={e => { e.preventDefault(); setActiveCallTab('schedule'); setPopupView(null); }} className={`flex items-center gap-2 px-4 py-2 rounded-xl shadow-sm border transition-colors text-[13px] font-bold ${activeTab === 'schedule' ? 'bg-brand-50 border-brand-200 text-brand-700' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'}`}>
+        <a href="?view=schedule" onClick={e => { e.preventDefault(); setActiveCallTab('schedule'); setPopupView(null); }} className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-colors text-[13px] font-bold ${activeTab === 'schedule' ? 'bg-brand-50 border-brand-200 text-brand-700' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'}`}>
           <CalendarDays size={16} className="text-indigo-500" />
           برنامه کلاسی
         </a>
-        <a href="?view=intro" onClick={e => { e.preventDefault(); setActiveCallTab('intro'); setPopupView(null); }} className={`flex items-center gap-2 px-4 py-2 rounded-xl shadow-sm border transition-colors text-[13px] font-bold ${activeTab === 'intro' ? 'bg-brand-50 border-brand-200 text-brand-700' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'}`}>
+        <a href="?view=intro" onClick={e => { e.preventDefault(); setActiveCallTab('intro'); setPopupView(null); }} className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-colors text-[13px] font-bold ${activeTab === 'intro' ? 'bg-brand-50 border-brand-200 text-brand-700' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'}`}>
           <MessageSquareQuote size={16} className="text-pink-500" />
           متن معرفی
         </a>
@@ -887,7 +887,7 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                   <th className="py-2.5 px-2 text-[12px] font-extrabold text-slate-800 tracking-wide">{tr('عملیات', 'Actions')}</th>
                 </tr>
               </thead>
-              <tbody className="text-[13px] font-medium text-slate-800 relative z-0">
+              <tbody className="text-[13px] font-medium text-slate-800 relative">
                 <AnimatePresence>
                 {filteredList.filter(c => !hiddenCalls.has(c.id)).length === 0 ? (
                   <motion.tr key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -901,14 +901,14 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                   return (
                   <motion.tr
                     key={c.id}
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
                     transition={{ duration: 0.2 }}
-                    className={`border-b border-slate-100 transition-colors duration-300 group ${c.isBlacklisted ? 'bg-rose-50/70 hover:bg-rose-100/50' : c.isFollowUp ? 'bg-orange-50/70 hover:bg-orange-100/50' : 'hover:bg-slate-50'} ${fuStatus ? `border-r-4 ${fuStatus.borderCls}` : ''}`}
+                    className={`relative focus-within:z-50 hover:z-40 border-b border-slate-100 transition-colors duration-300 group ${c.isBlacklisted ? 'bg-rose-50/70 hover:bg-rose-100/50' : c.isFollowUp ? 'bg-orange-50/70 hover:bg-orange-100/50' : 'hover:bg-slate-50'} ${fuStatus ? `border-r-4 ${fuStatus.borderCls}` : ''}`}
                   >
                     {/* Phone */}
-                    <td className="py-2 px-1.5 relative whitespace-nowrap">
+                    <td className="py-3 sm:py-4 px-2 relative whitespace-nowrap">
                        <div className="flex flex-col items-center justify-center w-full px-2">
                           <div className="flex items-center justify-center gap-1.5">
                             <span dir="ltr" className="font-bold text-[17px] tracking-widest text-slate-800 group-hover:text-cyan-600 transition-colors">{c.phone}</span>
@@ -929,7 +929,7 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                     </td>
 
                     {/* Call Status & Interested Course */}
-                    <td className="py-2 px-1.5 relative whitespace-nowrap">
+                    <td className="py-3 sm:py-4 px-2 relative whitespace-nowrap">
                        <div className="flex flex-col items-center justify-center gap-2">
                           <TableDropdown
                             value={c.callStatus || ''}
@@ -941,7 +941,7 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                     </td>
 
                     {/* Interested Course */}
-                    <td className="py-2 px-1.5 relative whitespace-nowrap overflow-visible">
+                    <td className="py-3 sm:py-4 px-2 relative whitespace-nowrap overflow-visible">
                        <div className="flex items-center justify-center relative w-full">
                           <CourseAutocomplete 
                             value={c.interestedCourse || ''} 
@@ -951,7 +951,7 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                     </td>
 
                     {/* Consultation */}
-                    <td className="py-2 px-1.5 relative whitespace-nowrap">
+                    <td className="py-3 sm:py-4 px-2 relative whitespace-nowrap">
                        <div className="flex flex-col items-center justify-center gap-2">
                           <TableDropdown
                             value={c.advisory || ''}
@@ -983,56 +983,46 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                     </td>
 
                     {/* Actions */}
-                    <td className="py-2 px-1.5 relative">
-                       <div className="flex flex-row flex-wrap items-center justify-center gap-1.5">
-                           <motion.button
-                             whileHover={{ scale: 1.05 }}
-                             whileTap={{ scale: 0.95 }}
+                    <td className="py-4 sm:py-5 px-2 relative">
+                       <div className="flex flex-row flex-wrap items-center justify-center gap-2">
+                           <button
                              onClick={() => handleSimpleSubmit(c)}
                              disabled={!hasAnyFieldSelected(c) || submittingIds.has(c.id)}
-                             className={`px-2 py-1.5 rounded-lg flex items-center justify-center font-bold text-[10px] transition-all flex-1 min-w-[55px] ${hasAnyFieldSelected(c) ? 'bg-brand-500 text-white hover:bg-brand-600 shadow-sm' : 'bg-slate-100 text-slate-400'}`}
+                             className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold transition-all border ${hasAnyFieldSelected(c) ? 'bg-white border-brand-300 text-brand-600 hover:bg-brand-50' : 'bg-slate-50 border-slate-200 text-slate-400'}`}
                              title={tr('ثبت نتیجه', 'Submit')}
                            >
-                             {submittingIds.has(c.id) ? <Icons.Loader2 size={12} className="animate-spin" /> : <Icons.Check size={14} />}
-                           </motion.button>
+                             {submittingIds.has(c.id) ? <Icons.Loader2 size={16} className="animate-spin" /> : <Icons.Check size={18} />}
+                           </button>
 
-                           <motion.button
-                             whileHover={{ scale: 1.05 }}
-                             whileTap={{ scale: 0.95 }}
+                           <button
                              onClick={() => { updateCall({ ...c, isFollowUp: true, workList: 'followup' }); setContactWorkList(c.id, 'followup'); toast.success(tr('به پیگیری‌ها منتقل شد.', 'Moved to Follow-ups.')); }}
                              disabled={c.isFollowUp || c.isBlacklisted}
-                             className={`px-2 py-1.5 rounded-lg flex items-center justify-center font-bold text-[10px] transition-all flex-1 min-w-[55px] ${!c.isFollowUp && !c.isBlacklisted ? 'bg-orange-100 text-orange-700 hover:bg-orange-200' : 'bg-slate-50 text-slate-300'}`}
+                             className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold transition-all border ${!c.isFollowUp && !c.isBlacklisted ? 'bg-white border-orange-200 text-orange-600 hover:bg-orange-50' : 'bg-slate-50 border-slate-200 text-slate-300'}`}
                              title={tr('پیگیری', 'Follow-up')}
                            >
-                             <Icons.PhoneForwarded size={12} />
-                           </motion.button>
+                             <Icons.PhoneForwarded size={16} />
+                           </button>
 
-
-
-                           <motion.button
-                             whileHover={{ scale: 1.05 }}
-                             whileTap={{ scale: 0.95 }}
+                           <button
                              onClick={() => setNotesModalCall(c)}
-                             className={`px-2 py-1.5 rounded-lg flex items-center justify-center font-bold text-[10px] transition-all flex-1 min-w-[55px] ${c.notes ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+                             className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold transition-all border ${c.notes ? 'bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50 hover:border-slate-300'}`}
                              title={tr('یادداشت', 'Notes')}
                            >
-                             <Icons.MessageSquareQuote size={12} />
-                           </motion.button>
+                             <Icons.MessageSquareQuote size={16} />
+                           </button>
 
                            {(activeTab === 'today' || activeTab === 'followup') && (
-                             <motion.button
-                               whileHover={{ scale: 1.05 }}
-                               whileTap={{ scale: 0.95 }}
+                             <button
                                onClick={() => {
                                  updateCall({ ...c, workList: 'none', isFollowUp: false });
                                  setContactWorkList(c.id, 'none');
                                  toast.success(tr('به لیست اصلی بازگردانده شد.', 'Returned to main list.'));
                                }}
-                               className="px-2 py-1.5 rounded-lg flex items-center justify-center font-bold text-[10px] transition-all flex-1 min-w-[55px] bg-indigo-100 text-indigo-700 hover:bg-indigo-200"
+                               className="w-9 h-9 rounded-xl flex items-center justify-center font-bold transition-all border bg-indigo-50 border-indigo-200 text-indigo-600 hover:bg-indigo-100"
                                title={tr('بازگردانی به لیست اصلی', 'Return to Queue')}
                              >
-                               <Icons.RotateCcw size={12} />
-                             </motion.button>
+                               <Icons.RotateCcw size={16} />
+                             </button>
                            )}
                        </div>
                     </td>

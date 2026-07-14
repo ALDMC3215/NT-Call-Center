@@ -60,13 +60,13 @@ export const ContactTaskEditorModal: React.FC<ContactTaskEditorModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm overflow-y-auto">
-      <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl flex flex-col my-auto relative">
-        <div className="flex items-center justify-between bg-slate-50 px-6 py-4 border-b border-slate-100 rounded-t-2xl">
-          <h3 className="text-lg font-bold text-slate-800">ویرایش پیگیری</h3>
+      <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-slate-800 shadow-2xl flex flex-col my-auto relative">
+        <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-900/50 px-6 py-4 border-b border-slate-100 dark:border-slate-700/50 rounded-t-2xl">
+          <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">ویرایش پیگیری</h3>
           <button
             onClick={onClose}
             disabled={isSubmitting}
-            className="rounded-full p-2 text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors"
+            className="rounded-full p-2 text-slate-400 dark:text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
           >
             <X className="h-5 w-5" />
           </button>

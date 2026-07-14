@@ -106,105 +106,79 @@ export const HomeView = () => {
           gradient: 'from-red-500 to-rose-700'
         } : null,
         {
-          id: 'logout',
-          title: tr('خروج از حساب', 'Logout'),
-          description: tr('پایان نشست فعلی و خروج امن از سیستم', 'End current session and log out securely'),
-          icon: LogOut,
+          id: 'about',
+          title: tr('راهنما', 'About'),
+          description: tr('راهنمای سیستم و درباره ما', 'System help and about us'),
+          icon: Info,
           count: null,
-          onClick: () => { setLogoutConfirmOpen(true); },
-          iconColor: 'text-slate-500',
-          iconBg: 'bg-slate-500/10',
-          gradient: 'from-slate-400 to-slate-500'
+          onClick: () => { setCurrentView('about'); },
+          iconColor: 'text-teal-600',
+          iconBg: 'bg-teal-500/10',
+          gradient: 'from-teal-400 to-emerald-500'
         }
       ].filter(Boolean)
     }
   ];
 
   return (
-    <div className="relative w-full min-h-full flex flex-col hide-scrollbar overflow-x-hidden" dir={direction}>
+    <div className="relative w-full min-h-full flex flex-col hide-scrollbar overflow-x-hidden select-none" dir={direction}>
 
-      {/* Ambient macOS Style Background */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 bg-[#f8f9fa]">
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-300/30 rounded-full blur-[120px]"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-blue-300/30 rounded-full blur-[140px]"></div>
-        <div className="absolute top-[30%] right-[20%] w-[40%] h-[40%] bg-teal-200/30 rounded-full blur-[100px]"></div>
+      {/* Flat Background */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 bg-[#FAFAFA]"></div>
+
+      {/* Floating Logout Button */}
+      <div className="absolute top-6 left-6 sm:top-8 sm:left-8 z-50">
+        <button
+          onClick={() => setLogoutConfirmOpen(true)}
+          className="flex items-center justify-center w-11 h-11 bg-white border border-stone-200 rounded-2xl text-stone-400 hover:text-red-500 hover:border-red-200 hover:bg-red-50 transition-colors"
+          title={tr('خروج از حساب', 'Logout')}
+        >
+          <LogOut size={20} strokeWidth={2.2} />
+        </button>
       </div>
 
-      <div className="relative z-10 w-full max-w-6xl mx-auto flex flex-col pt-8 md:pt-12 pb-24 px-4 sm:px-6 md:px-8">
+      <div className="relative z-10 w-full max-w-6xl mx-auto flex flex-col pt-12 md:pt-16 pb-24 px-4 sm:px-6 md:px-8">
 
-        {/* Welcome Header - Glassmorphic */}
-        <div className="mb-8 md:mb-14 flex flex-col md:flex-row md:items-center justify-between gap-6">
-           <div>
-             <span className="inline-block px-3 py-1 bg-white/50 backdrop-blur-md border border-white/60 rounded-full text-[10px] sm:text-xs font-bold tracking-widest text-slate-500 uppercase mb-3 sm:mb-4 shadow-sm">
-               Command Center
-             </span>
-             <h2 className="text-2xl sm:text-3xl md:text-5xl font-extrabold text-slate-800 tracking-tight mb-2 sm:mb-3">
-               {tr('سلام،', 'Hello,')} <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-indigo-600">{profile?.name}</span>
-             </h2>
-             <p className="text-slate-500 font-medium text-sm sm:text-lg max-w-xl">
-               {tr('به پنل کارشناسی نوین تک خوش اومدی ✨', 'Welcome to NovinTech Operator Panel ✨')}
-             </p>
-           </div>
-           <div className="hidden md:flex w-20 h-20 rounded-[1.75rem] bg-white/40 backdrop-blur-2xl border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.06)] items-center justify-center rotate-3 hover:rotate-0 transition-transform duration-500">
-             <Activity className="text-brand-600 drop-shadow-sm" size={36} strokeWidth={1.5} />
-           </div>
-        </div>
+        {/* Welcome Header */}
+         <div className="mb-12 md:mb-16 flex flex-col items-center text-center justify-center gap-2">
+            <span className="inline-block px-4 py-1.5 bg-white border border-stone-200 rounded-full text-[10px] sm:text-xs font-bold tracking-widest text-stone-500 uppercase mb-2">
+              Command Center
+            </span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-stone-800 tracking-tight mb-2">
+              {tr('سلام،', 'Hello,')} <span className="text-indigo-600">{profile?.name}</span>
+            </h2>
+            <p className="text-stone-500 font-medium text-sm sm:text-lg max-w-xl">
+              {tr('به پنل کارشناسی نوین تک خوش اومدی ✨', 'Welcome to NovinTech Operator Panel ✨')}
+            </p>
+         </div>
 
         {/* Render sections */}
-        <div className="flex flex-col gap-12">
-          {sections.map((section, sIndex) => (
-            <div key={section.title} className="w-full">
-              <div className="flex items-center gap-4 mb-6">
-                <h3 className="text-xl font-bold text-slate-800">
-                  {section.title}
-                </h3>
-                <div className="flex-1 h-px bg-gradient-to-l from-transparent via-slate-200 to-transparent"></div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                  {section.items.map((card: any) => {
-                    const Icon = card.icon;
-                    return (
-                        <button
-                        key={card.id}
-                        onClick={card.onClick}
-                        className="group relative flex flex-col text-right items-start p-5 sm:p-6 bg-white/50 backdrop-blur-xl rounded-[1.5rem] border border-white/70 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] hover:-translate-y-1.5 transition-all duration-400 ease-out overflow-hidden"
-                      >
-                      {/* Top Gradient Highlight */}
-                      <div className={`absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r ${card.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
-
-                      <div className="w-full flex items-center justify-between mb-4">
-                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${card.iconBg} ${card.iconColor} shadow-sm group-hover:scale-110 transition-transform duration-500`}>
-                          <Icon size={24} strokeWidth={2} />
-                        </div>
-                        {card.count !== null && (
-                          <div className="flex flex-col items-center justify-center min-h-[40px] bg-white/60 px-2.5 py-1 rounded-xl border border-white/80 shadow-sm">
-                            <span className="text-[9px] font-bold text-slate-400 tracking-wider mb-0.5">{tr('تعداد', 'Count')}</span>
-                            <span className={`text-base font-black leading-none ${card.count > 0 ? 'text-slate-800' : 'text-slate-300'}`}>
-                              {card.count}
-                            </span>
-                          </div>
-                        )}
+        {/* Unified App Grid */}
+        <div className="w-full mt-4 sm:mt-10">
+          <div className="flex flex-wrap justify-center gap-x-6 gap-y-10 sm:gap-x-10 sm:gap-y-12 max-w-[800px] mx-auto">
+            {sections.flatMap(s => s.items).map((card: any) => {
+              const Icon = card.icon;
+              return (
+                <button
+                  key={card.id}
+                  onClick={card.onClick}
+                  className="group flex flex-col items-center gap-3 w-[72px] sm:w-[90px] outline-none"
+                >
+                  <div className="w-[72px] h-[72px] sm:w-[90px] sm:h-[90px] rounded-[1.25rem] sm:rounded-[1.6rem] flex items-center justify-center bg-white border border-stone-200 group-hover:bg-stone-50 group-hover:border-stone-300 group-hover:scale-[1.03] transition-all duration-200 relative">
+                    <Icon size={36} strokeWidth={1.5} className={card.iconColor} />
+                    {card.count !== null && card.count > 0 && (
+                      <div className="absolute -top-2 -right-2 bg-red-500 text-white text-[12px] font-bold px-1.5 min-w-[24px] h-[24px] flex items-center justify-center rounded-full border-2 border-[#FAFAFA]">
+                        {card.count}
                       </div>
-
-                      <div className="w-full pl-10">
-                        <h3 className="font-extrabold text-[16px] text-slate-800 group-hover:text-brand-600 transition-colors">
-                          {card.title}
-                        </h3>
-                      </div>
-
-                      {/* Hover Arrow Overlay */}
-                      <div className="absolute bottom-5 left-5 opacity-0 group-hover:opacity-100 transform translate-x-4 group-hover:translate-x-0 transition-all duration-400">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center bg-white shadow-md ${card.iconColor}`}>
-                          <ArrowLeft size={16} strokeWidth={2.5} />
-                        </div>
-                      </div>
-                      </button>
-                    );
-                  })}
-                </div>
-            </div>
-          ))}
+                    )}
+                  </div>
+                  <span className="text-[12px] sm:text-[14px] font-semibold text-stone-700 group-hover:text-stone-900 transition-colors text-center leading-tight">
+                    {card.title}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 

@@ -181,9 +181,25 @@
     --theme-brand-900: #0c4a6e;
   }
 
+  .dark {
+    --color-bg-base: #0f172a; /* slate-900 */
+    --color-surface: #1e293b; /* slate-800 */
+    --color-surface-hover: #334155; /* slate-700 */
+    --color-border: #334155; /* slate-700 */
+    --color-border-muted: #1e293b; /* slate-800 */
+    --color-border-strong: #475569; /* slate-600 */
+
+    --color-text-primary: #f8fafc; /* slate-50 */
+    --color-text-secondary: #cbd5e1; /* slate-300 */
+    --color-text-muted: #94a3b8; /* slate-400 */
+  }
+
   /* Shadow override intentionally kept minimal — gradient override removed
      (it was stripping bg-clip-text gradients and making hero text invisible) */
 }
+
+/* Enable class-based dark mode in Tailwind v4 */
+@custom-variant dark (&:where(.dark, .dark *));
   body {
     font-family: var(--app-font);
     background-color: var(--color-bg-base);
