@@ -70,50 +70,112 @@ export const AboutView = () => {
         {/* Logic Blocks Grid */}
         <div className="grid grid-cols-1 gap-6 opacity-0 animate-fade-in-up stagger-2">
 
+          {/* Section 1 */}
           <div className="bg-white border border-slate-200 rounded-[1.5rem] p-6 shadow-sm hover:shadow-md transition-shadow">
             <h3 className="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
                 <Info className="text-blue-500" size={18} />
               </div>
-              قوانین جدید سیستم و نحوه انجام کار
+              ۱. شروع کار با لیست شماره‌ها و جستجو
             </h3>
-            <div className="space-y-6 text-[14px] text-slate-700 font-medium leading-relaxed">
-              <div>
-                <h4 className="font-bold text-slate-800 mb-2">۱. جستجو و یافتن شماره‌ها</h4>
-                <p>در لیست اصلی (شماره‌ها)، پیگیری‌ها و فعالیت‌ها می‌توانید با استفاده از <strong>جعبه جستجو (Search Box)</strong> بالای لیست، شماره مورد نظر خود را به سرعت پیدا کنید. این جستجو روی شماره تلفن‌ها انجام می‌شود.</p>
-              </div>
+            <div className="text-[14px] text-slate-700 font-medium leading-relaxed">
+              <p>در لیست اصلی (شماره‌ها)، پیگیری‌ها و فعالیت‌ها می‌توانید با استفاده از <strong>جعبه جستجو (Search Box)</strong> بالای لیست، شماره مورد نظر خود را به سرعت پیدا کنید. این جستجو روی شماره تلفن‌ها انجام می‌شود.</p>
+              <p className="mt-2">همچنین دکمه <strong>«ثبت همه»</strong> در پایین صفحه به شما اجازه می‌دهد زمانی که چند ردیف را پر کرده‌اید، همه را یک‌جا ثبت کنید تا سرعت کارتان بالاتر برود.</p>
+            </div>
+          </div>
 
-              <div>
-                <h4 className="font-bold text-slate-800 mb-2">۲. روند ثبت نتیجه تماس</h4>
-                <p>برای هر شماره، ابتدا باید <strong>نتیجه تماس</strong> (پاسخ داد، پاسخ نداد، اشغال، خاموش و غیره) را مشخص کنید.</p>
-                <ul className="list-disc pr-5 mt-2 space-y-1 text-slate-600">
-                  <li>اگر مخاطب <strong>پاسخ داد</strong>، باید مشخص کنید که <strong>مشاوره حضوری</strong> می‌خواهد یا خیر.</li>
-                  <li>در صورت تمایل به مشاوره حضوری («بله»)، گزینه‌های انتخاب <strong>تاریخ</strong>، <strong>ساعت</strong> و تیک <strong>«در دفتر نوشته شد»</strong> برای شما نمایش داده می‌شود.</li>
-                  <li>می‌توانید <strong>وضعیت ثبت‌نام</strong> مخاطب را نیز به طور دقیق مشخص کنید (ثبت‌نام کرد، قطعی نیست، قصد ندارد، ...).</li>
-                </ul>
+          {/* Section 2 */}
+          <div className="bg-white border border-slate-200 rounded-[1.5rem] p-6 shadow-sm hover:shadow-md transition-shadow">
+            <h3 className="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
+                <LayoutGrid className="text-indigo-500" size={18} />
               </div>
+              ۲. عملیات هر شماره (منوی سه‌نقطه‌ای)
+            </h3>
+            <div className="text-[14px] text-slate-700 font-medium leading-relaxed">
+              <p>برای خلوت‌تر شدن جدول و راحتی شما، تمام عملیات‌های مربوط به هر شماره در <strong>منوی سه‌نقطه‌ای (⋮)</strong> قرار گرفته است. با کلیک روی آن به موارد زیر دسترسی دارید:</p>
+              <ul className="list-disc pr-5 mt-2 space-y-1 text-slate-600">
+                <li><strong>ثبت نتیجه:</strong> ثبت نهایی وضعیت تماس.</li>
+                <li><strong>ثبت تلاش تماس:</strong> برای مواقعی که فقط می‌خواهید یک تماس ناموفق (مثل عدم پاسخگویی) را گزارش کنید.</li>
+                <li><strong>پیگیری:</strong> انتقال شماره به لیست پیگیری‌ها.</li>
+                <li><strong>یادداشت:</strong> نوشتن توضیحات اضافه.</li>
+                <li><strong>بازگردانی:</strong> در برخی بخش‌ها برای برگرداندن شماره به لیست اصلی استفاده می‌شود.</li>
+                <li><strong>حذف کامل:</strong> (قرمزرنگ) برای پاک کردن همیشگی شماره. این عملیات غیرقابل بازگشت است و فقط زمانی استفاده کنید که شماره اشتباه، تستی یا غیرضروری است.</li>
+              </ul>
+            </div>
+          </div>
 
-              <div>
-                <h4 className="font-bold text-slate-800 mb-2">۳. دکمه «ثبت نتیجه» (تیک سبز)</h4>
-                <p>تغییر گزینه‌های فرم (مثل دوره‌ها، وضعیت، یادداشت) روی سیستم ذخیره می‌شود، اما تا زمانی که روی دکمه <strong>«ثبت نتیجه» (تیک سبز)</strong> کلیک نکنید، گزارش تماس شما (Attempt) ثبت نهایی <strong>نمی‌شود</strong>. پس از کلیک روی این دکمه:</p>
-                <ul className="list-disc pr-5 mt-2 space-y-1 text-slate-600">
-                  <li>شماره از «لیست شماره‌ها» خارج شده و به تب <strong>فعالیت</strong> (امروز) منتقل می‌شود.</li>
-                  <li>در بخش فعالیت، شماره‌ها به صورت <strong>گروه‌بندی شده بر اساس روز</strong> نمایش داده می‌شوند تا نظم بهتری داشته باشند.</li>
-                  <li>عملکرد شما برای مدیران در داشبورد ثبت می‌شود.</li>
-                </ul>
+          {/* Section 3 */}
+          <div className="bg-white border border-slate-200 rounded-[1.5rem] p-6 shadow-sm hover:shadow-md transition-shadow">
+            <h3 className="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
+                <CheckCircle2 className="text-emerald-500" size={18} />
               </div>
+              ۳. ثبت نتیجه و وضعیت ثبت‌نام
+            </h3>
+            <div className="text-[14px] text-slate-700 font-medium leading-relaxed">
+              <p>فیلد <strong>«نتیجه تماس»</strong> وضعیت اصلی ارتباط را مشخص می‌کند:</p>
+              <ul className="list-disc pr-5 mt-2 mb-4 space-y-1 text-slate-600">
+                <li>اگر نیاز به ادامه ارتباط باشد، <strong>«پیگیری»</strong> را انتخاب کنید.</li>
+                <li>اگر مخاطب علاقه‌ای ندارد، <strong>«عدم تمایل»</strong> را انتخاب کنید.</li>
+              </ul>
+              <p>در بخش <strong>«ثبت‌نام»</strong> نیز وضعیت نهایی را مشخص کنید:</p>
+              <ul className="list-disc pr-5 mt-2 space-y-1 text-slate-600">
+                <li><strong>ثبت‌نام کرد:</strong> وقتی ثبت‌نام قطعی شده است.</li>
+                <li><strong>قصد ثبت‌نام دارد:</strong> وقتی مخاطب علاقه جدی دارد اما هنوز نهایی نکرده است.</li>
+                <li><strong>ثبت‌نام نکرد:</strong> وقتی ثبت‌نام منتفی شده است.</li>
+              </ul>
+            </div>
+          </div>
 
-              <div>
-                <h4 className="font-bold text-slate-800 mb-2">۴. انتقال به پیگیری و بازگردانی</h4>
-                <p>شماره‌هایی که نیاز به تماس مجدد دارند را با استفاده از دکمه نارنجی‌رنگ (آیکون تلفن) به بخش <strong>پیگیری‌ها</strong> منتقل کنید. اگر یک شماره را به اشتباه تماس گرفتید یا ثبت کردید، در بخش «فعالیت» یا «پیگیری‌ها» دکمه آبی‌رنگ <strong>بازگردانی (آیکون فلش چرخان)</strong> را بزنید تا شماره دوباره به «لیست شماره‌ها» برگردد.</p>
+          {/* Section 4 */}
+          <div className="bg-white border border-slate-200 rounded-[1.5rem] p-6 shadow-sm hover:shadow-md transition-shadow">
+            <h3 className="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
+                <Clock className="text-amber-500" size={18} />
               </div>
+              ۴. فرآیند «ثبت تلاش تماس» و محدودیت‌ها
+            </h3>
+            <div className="text-[14px] text-slate-700 font-medium leading-relaxed">
+              <p>اگر با مخاطب تماس گرفتید اما پاسخ نداد، از گزینه <strong>«ثبت تلاش تماس»</strong> استفاده کنید تا تلاش شما در گزارش ثبت شود؛ اما پیگیری همچنان باز بماند.</p>
+              <ul className="list-disc pr-5 mt-2 mb-4 space-y-1 text-slate-600">
+                <li>تعداد تلاش‌های انجام‌شده (مثل <strong>۲ تلاش</strong>) در کنار منوی سه‌نقطه‌ای نمایش داده می‌شود و ساعت آخرین تلاش نیز آپدیت می‌شود.</li>
+                <li>این عدد اطلاعات مهمی برای گزارش‌گیری مدیر سیستم است و توسط کاربر قابل کسر نیست.</li>
+                <li>ثبت تلاش تماس، وظایف پیگیری را حذف یا کامل نمی‌کند.</li>
+              </ul>
+              <h4 className="font-bold text-slate-800 mt-4 mb-2">قوانین ثبت تلاش (جلوگیری از خطای انسانی):</h4>
+              <p>برای کنترل کیفیت گزارش‌ها، سیستم محدودیت‌هایی دارد:</p>
+              <ul className="list-disc pr-5 mt-2 space-y-1 text-slate-600">
+                <li>ثبت سریع و پشت‌سرهم مسدود است و پیغام «برای ثبت تلاش بعدی کمی صبر کنید» نشان داده می‌شود.</li>
+                <li>اگر در یک روز چند تلاش برای یک شماره ثبت شود، سیستم از شما <strong>دلیل (مثل: خاموش بود، جواب نداد، در دسترس نبود)</strong> را می‌پرسد.</li>
+              </ul>
+            </div>
+          </div>
 
+          {/* Section 5 */}
+          <div className="bg-white border border-slate-200 rounded-[1.5rem] p-6 shadow-sm hover:shadow-md transition-shadow">
+            <h3 className="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center">
+                <Calendar className="text-rose-500" size={18} />
+              </div>
+              ۵. فعالیت، پیگیری‌ها و مشاوره‌ها
+            </h3>
+            <div className="text-[14px] text-slate-700 font-medium leading-relaxed space-y-4">
               <div>
-                <h4 className="font-bold text-slate-800 mb-2">۵. حذف کامل شماره</h4>
-                <p>در صورتی که نیاز است یک شماره برای همیشه و <strong>کاملا از کل سیستم</strong> (از همه لیست‌ها و فعالیت‌ها) پاک شود تا امکان ثبت مجدد آن فراهم باشد، می‌توانید از دکمه قرمزرنگ <strong>حذف کامل (آیکون سطل زباله)</strong> در ستون عملیات‌ها استفاده کنید. دقت کنید این عملیات غیرقابل بازگشت است.</p>
+                <h4 className="font-bold text-slate-800 mb-1">بخش فعالیت:</h4>
+                <p>این بخش کارهای انجام‌شده توسط شما را نشان می‌دهد (مثل تماس‌های ثبت‌شده و تلاش‌های تماس). لیست بر اساس روزها مرتب شده است.</p>
+              </div>
+              <div>
+                <h4 className="font-bold text-slate-800 mb-1">بخش پیگیری‌ها:</h4>
+                <p>شماره‌هایی که نیاز به ارتباط مجدد دارند در این بخش قرار می‌گیرند. اگر فقط تلاش ناموفق داشتید «ثبت تلاش تماس» را بزنید و اگر کار به نتیجه رسید، با استفاده از «ثبت نتیجه» وضعیت را نهایی کنید.</p>
+              </div>
+              <div>
+                <h4 className="font-bold text-slate-800 mb-1">مشاوره‌های کارشناس:</h4>
+                <p>در صورتی که تیک «مشاوره حضوری» را فعال کنید، می‌توانید تاریخ و ساعت مراجعه را تعیین کنید. سیستم در ثبت‌های بعدی یا تغییر وضعیت نتیجه تماس، اطلاعات مشاوره را برای شما حفظ خواهد کرد.</p>
               </div>
             </div>
           </div>
+
         </div>
 
         {/* قوانین و نکات کاری */}
