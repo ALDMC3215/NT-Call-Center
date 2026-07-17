@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { COURSE_CATEGORIES, CourseItem } from '../../data/courses';
 import * as Icons from 'lucide-react';
 import { useLocale } from '../../hooks/useLocale';
+import { applyCertificateFee } from '../../utils/format';
 import { CourseDetailsModal } from './CourseDetailsModal';
 import { fetchCourseDataDynamic } from '../../utils/scraper';
 import { customToast as toast } from '../UI/toast';
@@ -187,20 +188,28 @@ export const CoursesView = ({ externalSearchQuery = '', isModal, onClose, embedd
 
   const filteredSubcategories = allSubcategories.map(sub => ({
     ...sub,
-    courses: sub.courses.filter(course => 
+    courses: sub.courses.filter(course => course.isActive !== false && (
       fuzzyMatch(activeSearchQuery, course.title) || 
       fuzzyMatch(activeSearchQuery, course.description) ||
       (course.schedules && course.schedules.some((s: string) => fuzzyMatch(activeSearchQuery, s)))
-    )
+    ))
   })).filter(sub => sub.courses.length > 0);
 
   const filteredCourses = filteredSubcategories.flatMap(sub => 
     sub.courses.map(course => ({
       ...course,
+      price: applyCertificateFee(course.price),
+      originalPrice: applyCertificateFee(course.originalPrice),
       subcategoryTitle: sub.title,
       categoryIconName: sub.categoryIconName || 'Folder'
     }))
-  );
+  ).map((c, i) => ({ ...c, _origIdx: i })).sort((a, b) => {
+    const aHasSchedule = a.schedules && a.schedules.length > 0;
+    const bHasSchedule = b.schedules && b.schedules.length > 0;
+    if (aHasSchedule && !bHasSchedule) return -1;
+    if (!aHasSchedule && bHasSchedule) return 1;
+    return a._origIdx - b._origIdx;
+  });
 
   // If search changes, clear selection to show results in grid if needed,
   // or just stay in the category if still valid.
@@ -217,34 +226,39 @@ export const CoursesView = ({ externalSearchQuery = '', isModal, onClose, embedd
   const categoryColors = ['#aadb9f', '#88c4a5', '#7089a9'];
 
   return (
-    <div className="relative w-full h-full flex flex-col bg-[#f8fafc] overflow-hidden" dir={direction}>
-      {/* Top Header */}
-      <div className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shrink-0 z-20 shadow-sm flex-wrap gap-4">
-        <div className="flex items-center gap-3 shrink-0">
-          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-            <Icons.BookOpen size={22} strokeWidth={2.5} />
+    <div className={`w-full h-full flex flex-col ${isModal ? 'bg-slate-50' : 'bg-transparent'} relative z-10`} dir={direction}>
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 md:p-6 lg:p-8 bg-white border-b border-slate-200 shrink-0 relative z-20 shadow-sm">
+        <div className="flex flex-col gap-1 order-1 md:order-none">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center text-brand-600 shadow-sm border border-brand-100">
+              <Icons.BookOpen size={20} strokeWidth={2.5} />
+            </div>
+            <h1 className="text-xl md:text-2xl font-extrabold text-slate-800 tracking-tight">
+              {tr('دوره‌های آموزشی', 'Courses Prices')}
+            </h1>
           </div>
-          <div>
-            <h1 className="text-lg font-black text-slate-800 leading-tight">{tr('\u0642\u06cc\u0645\u062a \u062f\u0648\u0631\u0647\u200c\u0647\u0627', 'Course Prices')}</h1>
-            <p className="text-xs font-medium text-slate-500 mt-0.5">{tr('\u0645\u0634\u0627\u0647\u062f\u0647 \u0644\u06cc\u0633\u062a \u0648 \u0642\u06cc\u0645\u062a \u0628\u0647\u200c\u0631\u0648\u0632 \u062f\u0648\u0631\u0647\u200c\u0647\u0627\u06cc \u0622\u0645\u0648\u0632\u0634\u06cc', 'View updated list and prices of courses')}</p>
-          </div>
+          <p className="text-sm font-medium text-slate-500 mr-14">
+            {tr('مشاهده لیست و قیمت به‌روز دوره‌های آموزشی', 'View updated list and prices of courses')}
+          </p>
         </div>
 
-        {/* Search Input */}
-        <div className="relative w-full md:max-w-md group order-3 md:order-none mt-2 md:mt-0">
-            <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-slate-500/60 group-focus-within:text-brand-500 transition-colors">
-              <Icons.Search size={16} strokeWidth={2.5} />
-            </div>
-            <input
-              type="text"
-              value={internalSearchQuery}
-              onChange={e => setInternalSearchQuery(e.target.value)}
-              placeholder={tr('جستجو در نام دوره‌ها...', 'Search courses...')}
-              dir={direction}
-              className="w-full h-10 bg-slate-50 border border-slate-200 rounded-xl pr-10 pl-10 text-[13px] font-medium text-slate-900 placeholder:text-slate-500 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/10 transition-all shadow-sm"
-            />
-            {internalSearchQuery && (
-              <button
+        <div className="flex-1 w-full max-w-md order-3 md:order-none relative group">
+            {(!externalSearchQuery) && (
+              <input 
+                type="text"
+                placeholder={tr('جستجوی دوره، دسته‌بندی یا سکشن...', 'Search course, category or section...')}
+                value={internalSearchQuery}
+                onChange={(e) => setInternalSearchQuery(e.target.value)}
+                className="w-full h-10 bg-slate-50 border border-slate-200 rounded-xl pr-10 pl-10 text-[13px] font-medium text-slate-900 placeholder:text-slate-500 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/10 transition-all shadow-sm"
+              />
+            )}
+            {(!externalSearchQuery) && (
+              <Icons.Search size={18} className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-slate-500/60 group-focus-within:text-brand-500 transition-colors" />
+            )}
+            
+            {internalSearchQuery && !externalSearchQuery && (
+              <button 
                 onClick={() => setInternalSearchQuery('')}
                 className="absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-all cursor-pointer"
               >
@@ -274,7 +288,7 @@ export const CoursesView = ({ externalSearchQuery = '', isModal, onClose, embedd
           </div>
         )}
       </div>
-      {/* Content Area - Vertical Layout */}
+
       <div className="flex-1 overflow-y-auto overflow-x-hidden hide-scrollbar relative z-10 p-4 md:p-6 lg:p-8">
         <AnimatePresence mode="wait">
           <motion.div
@@ -285,7 +299,7 @@ export const CoursesView = ({ externalSearchQuery = '', isModal, onClose, embedd
             transition={{ duration: 0.2 }}
             className="flex flex-col gap-4 w-full"
           >
-            {filteredSubcategories.length === 0 ? (
+            {filteredCourses.length === 0 ? (
               <div className="flex flex-col items-center justify-center w-full py-20 text-center">
                 <Icons.Layers size={48} className="text-slate-400 mb-4" strokeWidth={1.5} />
                 <p className="text-slate-500 font-medium">{tr('هیچ دوره‌ای با این عنوان یافت نشد.', 'No courses found.')}</p>
@@ -308,12 +322,13 @@ export const CoursesView = ({ externalSearchQuery = '', isModal, onClose, embedd
                 </div>
 
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 w-full pb-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 w-full pb-8 items-stretch">
                   {filteredCourses.map((course, idx) => {
                     return (
                       <div 
                         key={idx} 
-                        className="flex flex-col p-4 bg-white border border-slate-200 rounded-2xl relative overflow-hidden group hover:border-brand-500/30 hover:shadow-md transition-all duration-300 min-h-[72px]"
+                        onClick={() => setSelectedCourse(course)}
+                        className="flex flex-col h-full p-4 bg-white border border-slate-200 rounded-2xl relative overflow-hidden group hover:border-brand-500/30 hover:shadow-md transition-all duration-300 min-h-[72px] cursor-pointer"
                       >
                         {/* Left ticket notched decor */}
                         <div className="absolute top-[36px] -translate-y-1/2 -left-2.5 w-5 h-5 rounded-full bg-[#f8fafc] border-r border-slate-200 z-20"></div>
@@ -340,7 +355,7 @@ export const CoursesView = ({ externalSearchQuery = '', isModal, onClose, embedd
 
                         {/* Schedules / Active Sections */}
                         {course.schedules && course.schedules.length > 0 && (
-                          <div className="w-full mt-3 pt-3 border-t border-dashed border-slate-200 flex flex-col gap-1.5 relative z-10">
+                          <div className="w-full mt-auto pt-3 border-t border-dashed border-slate-200 flex flex-col gap-1.5 relative z-10">
                              {course.schedules.map((sched: string, sIdx: number) => {
                                 const badges = parseSchedule(sched);
                                 return (

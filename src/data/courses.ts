@@ -1,4 +1,5 @@
 export interface CourseItem {
+  isActive?: boolean;
   id: string;
   title: string;
   description: string;
@@ -137,7 +138,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "description": "یادگیری ماشین و علم داده یک حوزه مهم در علوم کامپیوتر و هوش مصنوعی است که به ماشین‌ها و سیستم‌های کامپیوتری اس. به طور کلی، هدف از یادگیری ماشین، توسعه",
             "fullDescription": "یادگیری ماشین و علم داده یک حوزه مهم در علوم کامپیوتر و هوش مصنوعی است که به ماشین‌ها و سیستم‌های کامپیوتری اس. به طور کلی، هدف از یادگیری ماشین، توسعه",
             "sections": [],
-            "price": "7,435,000 تومان",
+            "price": "8,265,000 تومان",
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/icdl/",
             "schedules": [
@@ -192,6 +193,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
           {
             "id": "course-27",
             "title": "ماتریکس جامع طلا و جواهر",
+            "isActive": false,
             "description": "آموزش حرفه‌ای طراحی طلا و جواهر با ماتریکس یک مسیر آموزشی کامل و پروژه‌محور است که از مفاهیم پایه تا تکنیک‌های پیشرفته طراحی جواهرات دیجیتال را پوشش می‌دهد.",
             "fullDescription": "آموزش حرفه‌ای طراحی طلا و جواهر با ماتریکس یک مسیر آموزشی کامل و پروژه‌محور است که از مفاهیم پایه تا تکنیک‌های پیشرفته طراحی جواهرات دیجیتال را پوشش می‌دهد.",
             "sections": [],
@@ -708,7 +710,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "description": "پک فرانت اند مقدماتی (,HTML و CSS )چیست؟",
             "fullDescription": "پک فرانت اند مقدماتی (,HTML و CSS )چیست؟",
             "sections": [],
-            "price": "8,743,500 تومان",
+            "price": "9,715,000 تومان",
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/front-end/",
             "schedules": [
@@ -823,6 +825,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
           {
             "id": "course-0",
             "title": "حسابداری مقدماتی",
+            "isActive": false,
             "description": "توضیحات کوتاه در دسترس نیست.",
             "fullDescription": "توضیحات کامل در دسترس نیست.",
             "price": "ناموجود",
@@ -841,6 +844,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
           {
             "id": "course-16",
             "title": "آموزش نرم افزار سپیدار و کاربرد اکسل در حسابداری (مقدماتی)",
+            "isActive": false,
             "description": "توضیحات کوتاه در دسترس نیست.",
             "fullDescription": "توضیحات کامل در دسترس نیست.",
             "price": "ناموجود",
