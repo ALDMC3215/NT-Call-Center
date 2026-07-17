@@ -4,6 +4,7 @@ import { ShieldBan, Trash2, Plus, Search, UserMinus } from 'lucide-react';
 import { customToast as toast } from '../UI/toast';
 import { ConfirmDialog } from '../Shared/ConfirmDialog';
 import { useLocale } from '../../hooks/useLocale';
+import { formatPhoneNumber } from '../../utils/format';
 
 export const BlacklistView = () => {
   const { blacklist, addToBlacklist, removeFromBlacklist, setCurrentView, layoutMargin } = useAppContext();
@@ -110,7 +111,7 @@ export const BlacklistView = () => {
                {filteredList.map(entry => (
              <div key={entry.phone} className="flex flex-col p-3 bg-surface-hover/80 border border-border rounded-lg hover:border-rose-500/50 hover:bg-rose-900/20 transition-all group gap-2">
                 <div className="flex items-center justify-between">
-                   <span className="font-bold text-slate-800 tracking-wider text-[15px]" dir="ltr">{entry.phone}</span>
+                   <span className="font-extrabold text-slate-800 tracking-[0.1em] text-[16px]" dir="ltr">{formatPhoneNumber(entry.phone)}</span>
                    <button
                       onClick={() => setPhoneToDelete(entry.phone)}
                       className="text-muted hover:text-rose-400 p-1.5 rounded-lg hover:bg-rose-900/40 transition-colors opacity-0 group-hover:opacity-100"

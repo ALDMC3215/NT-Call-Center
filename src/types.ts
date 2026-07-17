@@ -35,6 +35,8 @@ export interface CallRecord {
   advisoryDate?: string | null;
   advisoryTime?: string | null;
   interestedCourse?: string | null;
+  registered?: string | null;
+  consultationConfirmed?: boolean;
   notes: string;
   createdAt: string;
   /** ترتیب ورود شماره از فایل اکسل یا ورود دستی */
@@ -62,6 +64,8 @@ export interface CallAttempt {
   advisoryDate?: string | null;
   advisoryTime?: string | null;
   interestedCourse?: string | null;
+  registered?: string | null;
+  consultationConfirmed?: boolean;
   notes?: string;
 }
 

@@ -45,17 +45,7 @@ export const HomeView = () => {
           iconBg: 'bg-indigo-500/10',
           gradient: 'from-indigo-500 to-blue-500'
         },
-        {
-          id: 'schedule',
-          title: tr('برنامه کلاسی', 'Schedule'),
-          description: tr('لیست تمامی دوره‌های در حال برگزاری و ثبت‌نام', 'List of all running and registering courses'),
-          icon: CalendarDays,
-          count: null,
-          onClick: () => { setCurrentView('dashboard'); setActiveCallTab('schedule'); },
-          iconColor: 'text-brand-600',
-          iconBg: 'bg-brand-500/10',
-          gradient: 'from-brand-500 to-indigo-500'
-        },
+
         {
           id: 'negotiation',
           title: tr('تکنیک‌های مذاکره', 'Negotiation Techniques'),
@@ -107,8 +97,8 @@ export const HomeView = () => {
         } : null,
         {
           id: 'about',
-          title: tr('راهنما', 'About'),
-          description: tr('راهنمای سیستم و درباره ما', 'System help and about us'),
+          title: tr('راهنمای سیستم', 'System Guide'),
+          description: tr('راهنمای سیستم و توضیحات گردش کار', 'System help and workflow'),
           icon: Info,
           count: null,
           onClick: () => { setCurrentView('about'); },

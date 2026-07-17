@@ -16,6 +16,7 @@ import {
 import { customToast as toast } from '../UI/toast';
 import * as XLSX from 'xlsx';
 import { toJalali } from '../../utils/jalali';
+import { formatPhoneNumber } from '../../utils/format';
 
 const DUTY_LABELS: Record<string, string> = {
   early_week: 'مدیر اول هفته',
@@ -680,7 +681,7 @@ export const ManagerDashboard: React.FC = () => {
                        return (
                          <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
                            <td className="p-3 font-extrabold whitespace-nowrap text-slate-900">{item.fullName || '—'}</td>
-                           <td className="p-3 whitespace-nowrap" dir="ltr">{item.phone || '—'}</td>
+                           <td className="p-3 whitespace-nowrap text-[13px] font-extrabold tracking-[0.1em] text-slate-800" dir="ltr">{formatPhoneNumber(item.phone || '') || '—'}</td>
                            <td className="p-3 whitespace-nowrap"><span className="bg-slate-100 px-2 py-1 rounded-md text-[10px] font-bold">{item.callStatus || '—'}</span></td>
                            <td className="p-3 whitespace-nowrap"><span className="bg-slate-100 px-2 py-1 rounded-md text-[10px] font-bold">{item.registered || '—'}</span></td>
                            <td className="p-3 min-w-[140px]">{item.courses && item.courses.length > 0 ? <div className="flex flex-wrap gap-1">{item.courses.map((c:string, i:number) => <span key={i} className="bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap">{c}</span>)}</div> : '—'}</td>

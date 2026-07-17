@@ -5,6 +5,7 @@ import { customToast as toast } from '../UI/toast';
 import { ConfirmDialog } from '../Shared/ConfirmDialog';
 import { useLocale } from '../../hooks/useLocale';
 import { storage } from '../../utils/storage';
+import { formatPhoneNumber } from '../../utils/format';
 
 export const TrashView = () => {
   const { direction, tr } = useLocale();
@@ -79,7 +80,7 @@ export const TrashView = () => {
               ) : (
                 filteredList.map((entry) => (
                   <tr key={entry.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                    <td className="py-3 px-4 text-sm font-bold text-slate-800" dir="ltr">{entry.phone}</td>
+                    <td className="py-3 px-4 text-sm font-bold text-slate-800" dir="ltr">{formatPhoneNumber(entry.phone)}</td>
                     <td className="py-3 px-4 text-sm text-secondary">{entry.fullName || '—'}</td>
                     <td className="py-3 px-4 text-xs text-muted" dir="ltr">
                        {entry.deletedAt ? new Date(entry.deletedAt).toLocaleString('fa-IR') : '—'}

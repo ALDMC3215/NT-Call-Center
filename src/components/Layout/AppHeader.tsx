@@ -64,12 +64,12 @@ export const AppHeader = () => {
   // Blacklist as a full page lives here (not as a dashboard tab)
   // 🔘🔘 Unified Header Items 🔘🔘
   const headerItems = [
-    { id: 'today',    label: tr('فعالیت روزانه', 'Today'), icon: <Calendar size={14} />, type: 'tab' },
+    { id: 'today',    label: tr('فعالیت', 'Today'), icon: <Calendar size={14} />, type: 'tab' },
     { id: 'followup', label: tr('پیگیری ها', 'Follow-ups'), icon: <PhoneForwarded size={14} />, type: 'tab' },
     { id: 'courses',  label: tr('دوره ها',   'Courses'),    icon: <BookOpen size={14} />, type: 'tab' },
     { id: 'queue',    label: tr('شماره ها',  'Numbers'),    icon: <Phone size={14} />, type: 'tab' },
     { id: 'settings', label: tr('تنظیمات', 'Settings'), icon: <Settings size={14} />, type: 'menu' },
-    { id: 'about',    label: tr('راهنما', 'Guide'), icon: <Info size={14} />, type: 'menu' },
+    { id: 'about',    label: tr('راهنمای سیستم', 'System Guide'), icon: <Info size={14} />, type: 'menu' },
     { id: 'home',     label: tr('خانه', 'Home'), icon: <Monitor size={14} />, type: 'home' },
   ];
 
@@ -77,7 +77,7 @@ export const AppHeader = () => {
     blacklist: tr('لیست سیاه', 'Blacklist'),
     profile:   tr('پروفایل',   'Profile'),
     settings:  tr('تنظیمات',   'Settings'),
-    about:     tr('راهنما',    'Guide'),
+    about:     tr('راهنمای سیستم',    'System Guide'),
     admin:     tr('مدیریت',    'Admin'),
   };
   const viewLabel = viewLabels[currentView] || tr('داشبورد', 'Dashboard');

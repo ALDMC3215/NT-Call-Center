@@ -8,6 +8,7 @@ import { CallRecord } from '../../types';
 import { customToast as toast } from '../UI/toast';
 import Select from '../UI/Select';
 import GlowHover from '../UI/GlowHover';
+import { formatPhoneNumber } from '../../utils/format';
 
 const clamp = (val: number, min: number, max: number) => Math.min(Math.max(val, min), max);
 
@@ -169,7 +170,7 @@ export const OrbitalCardView: React.FC<{ calls: CallRecord[] }> = ({ calls }) =>
                   <UserCircle2 size={48} className={`mb-4 transition-colors ${isTop ? 'text-cyan-400' : 'text-secondary'}`} />
                   
                   <span dir="ltr" className={`text-4xl font-extrabold tracking-widest drop- transition-colors ${isTop ? 'text-white' : 'text-secondary'}`}>
-                    {card.phone}
+                    {formatPhoneNumber(card.phone)}
                   </span>
                   
                   {isTop ? (

@@ -47,8 +47,9 @@ interface AppContextType {
   setProfile: (p: Profile) => void;
   logout: () => void;
   addCall: (call: Omit<CallRecord, 'id' | 'createdAt'>) => void;
-  updateCall: (call: CallRecord) => void;
-  deleteCall: (id: string) => void;
+  updateCall: (updatedCall: CallRecord) => Promise<void>;
+  deleteCall: (id: string) => Promise<boolean>;
+  hardDeleteCall: (id: string, phone: string) => Promise<boolean>;
   clearAllCalls: () => void;
   bulkAddCalls: (callsArray: Omit<CallRecord, 'id' | 'createdAt'>[]) => void;
   importData: (profile: Profile, calls: CallRecord[]) => void;
@@ -59,7 +60,7 @@ interface AppContextType {
   isBlacklisted: (phone: string) => boolean;
   restoreBackup: (p: Profile, importedCalls: CallRecord[], importedBlacklist: BlacklistEntry[]) => void;
   setContactWorkList: (contactId: string, destination: 'none' | 'today' | 'followup') => Promise<boolean>;
-  recordAttempt: (id: string, values: Pick<CallRecord, 'fullName' | 'callStatus' | 'advisory' | 'notes'>) => Promise<boolean>;
+  recordAttempt: (id: string, values: Pick<CallRecord, 'fullName' | 'callStatus' | 'advisory' | 'notes' | 'advisoryDate' | 'advisoryTime' | 'interestedCourse' | 'registered' | 'consultationConfirmed'>) => Promise<boolean>;
   enableFluid: boolean;
   setEnableFluid: (val: boolean) => void;
   accentColor: string;
@@ -159,6 +160,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             advisoryDate: c.advisory_date || null,
             advisoryTime: c.advisory_time || null,
             interestedCourse: c.courses && c.courses.length > 0 ? c.courses[0] : null,
+            registered: c.registered || '',
+            consultationConfirmed: c.consultation_confirmed || false,
             notes: c.notes || '',
             createdAt: c.created_at,
             queueOrder: c.queue_order,
@@ -364,9 +367,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         p_advisory: updatedCall.advisory || null,
         p_advisory_date: updatedCall.advisoryDate || null,
         p_advisory_time: updatedCall.advisoryTime || null,
-        p_registered: null,
+        p_registered: updatedCall.registered || null,
         p_notes: updatedCall.notes || null,
-        p_queue_order: updatedCall.queueOrder || null
+        p_queue_order: updatedCall.queueOrder || null,
+        p_consultation_confirmed: updatedCall.consultationConfirmed || false
       });
 
       if (error) console.error("Error updating contact:", error);
@@ -464,7 +468,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [profile]);
 
-  const recordAttempt = useCallback(async (id: string, values: Pick<CallRecord, 'fullName' | 'callStatus' | 'advisory' | 'notes' | 'advisoryDate' | 'advisoryTime' | 'interestedCourse'>): Promise<boolean> => {
+  const recordAttempt = useCallback(async (id: string, values: Pick<CallRecord, 'fullName' | 'callStatus' | 'advisory' | 'notes' | 'advisoryDate' | 'advisoryTime' | 'interestedCourse' | 'registered' | 'consultationConfirmed'>): Promise<boolean> => {
     if (!profile) return false;
     reportMeaningfulActivity(profile.sessionId);
     const s = values.callStatus;
@@ -498,8 +502,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         p_advisory: values.advisory || null,
         p_advisory_date: values.advisoryDate || null,
         p_advisory_time: values.advisoryTime || null,
-        p_registered: null,
-        p_notes: values.notes || null
+        p_registered: values.registered || null,
+        p_notes: values.notes || null,
+        p_consultation_confirmed: values.consultationConfirmed || false
       });
 
       if (error) {
@@ -545,6 +550,26 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     storage.removeFromBlacklist(phone);
     setBlacklistState(storage.getBlacklist());
   }, [profile]);
+
+  const hardDeleteCall = useCallback(async (id: string, phone: string): Promise<boolean> => {
+    if (!profile) return false;
+    reportMeaningfulActivity(profile.sessionId);
+
+    try {
+      const { error } = await supabase.rpc('hard_delete_contact', { p_id: id });
+      if (error) {
+        console.error("Error hard deleting contact:", error);
+        return false;
+      }
+      setCallsState(prev => prev.filter(c => c.id !== id));
+      updateFollowUpInStorage(profile, id, undefined);
+      removeFromBlacklist(phone);
+      return true;
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
+  }, [profile, updateFollowUpInStorage, removeFromBlacklist]);
 
   const isBlacklisted = useCallback((phone: string) => {
     return blacklist.some(b => b.phone === phone);
@@ -754,10 +779,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     return data as unknown as ContactTaskSummary;
   }, [profile]);
   const contextValue = React.useMemo(() => ({
-    profile, calls, isLoadingCalls, callsError, blacklist, currentView, setCurrentView, popupView, setPopupView, activeCallTab, setActiveCallTab, setProfile, logout, addCall, updateCall, deleteCall, clearAllCalls, bulkAddCalls, importData, wipeAllData, importedData, setImportedData, addToBlacklist, removeFromBlacklist, isBlacklisted, restoreBackup, setContactWorkList, recordAttempt, enableFluid, setEnableFluid, accentColor, setAccentColor, layoutMargin, setLayoutMargin, sparkColor, setSparkColor,
+    profile, calls, isLoadingCalls, callsError, blacklist, currentView, setCurrentView, popupView, setPopupView, activeCallTab, setActiveCallTab, setProfile, logout, addCall, updateCall, deleteCall, hardDeleteCall, clearAllCalls, bulkAddCalls, importData, wipeAllData, importedData, setImportedData, addToBlacklist, removeFromBlacklist, isBlacklisted, restoreBackup, setContactWorkList, recordAttempt, enableFluid, setEnableFluid, accentColor, setAccentColor, layoutMargin, setLayoutMargin, sparkColor, setSparkColor,
     getMyContactTasks, createContactTask, createContactTaskWithDetails, updateContactTaskDetails, rescheduleContactTask, completeContactTask, cancelContactTask, getMyContactTaskSummary, recordCallAttemptWithTask,
     isDarkMode, toggleDarkMode
-  }), [profile, calls, isLoadingCalls, callsError, blacklist, currentView, setCurrentView, popupView, setPopupView, activeCallTab, setActiveCallTab, setProfile, logout, addCall, updateCall, deleteCall, clearAllCalls, bulkAddCalls, importData, wipeAllData, importedData, setImportedData, addToBlacklist, removeFromBlacklist, isBlacklisted, restoreBackup, setContactWorkList, recordAttempt, enableFluid, setEnableFluid, accentColor, setAccentColor, layoutMargin, setLayoutMargin, sparkColor, setSparkColor, getMyContactTasks, createContactTask, createContactTaskWithDetails, updateContactTaskDetails, rescheduleContactTask, completeContactTask, cancelContactTask, getMyContactTaskSummary, recordCallAttemptWithTask, isDarkMode, toggleDarkMode]);
+  }), [profile, calls, isLoadingCalls, callsError, blacklist, currentView, setCurrentView, popupView, setPopupView, activeCallTab, setActiveCallTab, setProfile, logout, addCall, updateCall, deleteCall, hardDeleteCall, clearAllCalls, bulkAddCalls, importData, wipeAllData, importedData, setImportedData, addToBlacklist, removeFromBlacklist, isBlacklisted, restoreBackup, setContactWorkList, recordAttempt, enableFluid, setEnableFluid, accentColor, setAccentColor, layoutMargin, setLayoutMargin, sparkColor, setSparkColor, getMyContactTasks, createContactTask, createContactTaskWithDetails, updateContactTaskDetails, rescheduleContactTask, completeContactTask, cancelContactTask, getMyContactTaskSummary, recordCallAttemptWithTask, isDarkMode, toggleDarkMode]);
 
   return (
     <AppContext.Provider value={contextValue}>

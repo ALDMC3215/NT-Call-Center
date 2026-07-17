@@ -31,7 +31,7 @@ export const AboutView = () => {
           </div>
           <div>
             <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-1">
-              {tr('راهنمای جامع پنل نوین تک', 'Novin Tech Panel Guide')}
+              {tr('راهنمای سیستم', 'System Guide')}
             </h2>
             <p className="text-[14px] text-slate-500 font-medium">
               {tr('این صفحه به شما کمک می‌کند تا جریان کار سیستم، روند ثبت فعالیت‌ها و قوانین کاری را بهتر بشناسید.', 'This page helps you understand the system workflow, activity registration process, and workplace rules.')}
@@ -67,101 +67,53 @@ export const AboutView = () => {
           </div>
         </div>
 
-        {/* Info Blocks Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 opacity-0 animate-fade-in-up stagger-2">
+        {/* Logic Blocks Grid */}
+        <div className="grid grid-cols-1 gap-6 opacity-0 animate-fade-in-up stagger-2">
 
-          {/* منطق ثبت تماس و فعالیت */}
           <div className="bg-white border border-slate-200 rounded-[1.5rem] p-6 shadow-sm hover:shadow-md transition-shadow">
             <h3 className="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
                 <Info className="text-blue-500" size={18} />
               </div>
-              منطق ثبت تماس و فعالیت
+              قوانین جدید سیستم و نحوه انجام کار
             </h3>
-            <ul className="space-y-4 text-[14px] text-slate-700 font-medium leading-relaxed">
-              <li className="flex gap-3 items-start"><div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0"></div><span>تغییر گزینه‌های فرم (مثل دوره‌ها، وضعیت، یادداشت) به تنهایی تماس محسوب <strong>نمی‌شود</strong>.</span></li>
-              <li className="flex gap-3 items-start"><div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0"></div><span>فقط با کلیک روی دکمه <strong>«ثبت نتیجه»</strong> یک تلاش (Attempt) واقعی ثبت می‌شود.</span></li>
-              <li className="flex gap-3 items-start"><div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0"></div><span>پس از ثبت نهایی، تماس در <strong>فعالیت روزانه</strong> قرار می‌گیرد.</span></li>
-              <li className="flex gap-3 items-start"><div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0"></div><span>در آمار مدیران، هر ثبت نتیجه به عنوان یک تلاش جداگانه محاسبه می‌شود.</span></li>
-            </ul>
-          </div>
-
-          {/* پیگیری‌ها چگونه کار می‌کنند؟ */}
-          <div className="bg-white border border-slate-200 rounded-[1.5rem] p-6 shadow-sm hover:shadow-md transition-shadow">
-            <h3 className="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
-                <Clock className="text-amber-500" size={18} />
+            <div className="space-y-6 text-[14px] text-slate-700 font-medium leading-relaxed">
+              <div>
+                <h4 className="font-bold text-slate-800 mb-2">۱. جستجو و یافتن شماره‌ها</h4>
+                <p>در لیست اصلی (شماره‌ها)، پیگیری‌ها و فعالیت‌ها می‌توانید با استفاده از <strong>جعبه جستجو (Search Box)</strong> بالای لیست، شماره مورد نظر خود را به سرعت پیدا کنید. این جستجو روی شماره تلفن‌ها انجام می‌شود.</p>
               </div>
-              پیگیری‌ها چگونه کار می‌کنند؟
-            </h3>
-            <p className="text-[14px] text-slate-700 font-medium leading-relaxed mb-4">
-              پیگیری‌ها برای شماره‌هایی است که هنوز نتیجه نهایی آن‌ها مشخص نیست. وضعیت‌های <strong>غیر قطعی</strong> در لیست باقی می‌مانند.
-            </p>
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4 text-[13px] text-amber-800 font-bold shadow-sm">
-              نکته مهم: تغییر گزینه‌ها به‌تنهایی پیگیری را نمی‌بندد؛ ثبت نتیجه نهایی لازم است.
-            </div>
-            <p className="text-[14px] text-slate-700 font-medium leading-relaxed">
-              ثبت وضعیت‌های قطعی مثل <span className="font-bold">«ثبت نام کرد»</span>، <span className="font-bold">«ثبت نام نکرد»</span> یا <span className="font-bold">«قصد ندارد»</span>، پیگیری را می‌بندد و آن را به بخش عملکرد شما اضافه می‌کند.
-            </p>
-          </div>
-        </div>
 
-        {/* بخش‌های اصلی پنل */}
-        <div className="bg-white border border-slate-200 rounded-[1.5rem] p-6 shadow-sm opacity-0 animate-fade-in-up stagger-3">
-          <h3 className="text-base font-bold text-slate-800 mb-5 flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
-              <LayoutGrid className="text-indigo-500" size={18} />
-            </div>
-            بخش‌های اصلی پنل
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[
-              { title: 'لیست شماره', icon: Phone, desc: 'لیست اصلی مخاطبین برای تماس اولیه.' },
-              { title: 'پیگیری ها', icon: ListTodo, desc: 'مخاطبینی که نیاز به تماس مجدد دارند.' },
-              { title: 'دوره‌ها', icon: BookOpen, desc: 'مشاهده قیمت و جزئیات دوره‌های آموزشی.' },
-              { title: 'فعالیت روزانه', icon: Calendar, desc: 'گزارش تماس‌ها و عملکردهای روز جاری.' },
-              { title: 'لیست سیاه', icon: PhoneOff, desc: 'شماره‌های مسدود شده و غیرقابل تماس.' },
-              { title: 'تنظیمات', icon: Settings, desc: 'ورود فایل، خروجی و ابزارهای داده.' }
-            ].map((section, idx) => (
-              <div key={idx} className="flex gap-4 p-4 bg-slate-50/50 hover:bg-slate-50 transition-colors border border-slate-100 rounded-xl group">
-                <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-indigo-500 shrink-0 shadow-sm border border-slate-200 group-hover:scale-110 transition-transform">
-                  <section.icon size={20} />
-                </div>
-                <div>
-                  <h4 className="font-bold text-slate-800 text-[15px]">{section.title}</h4>
-                  <p className="text-[13px] text-slate-500 font-medium mt-1 leading-relaxed">{section.desc}</p>
-                </div>
+              <div>
+                <h4 className="font-bold text-slate-800 mb-2">۲. روند ثبت نتیجه تماس</h4>
+                <p>برای هر شماره، ابتدا باید <strong>نتیجه تماس</strong> (پاسخ داد، پاسخ نداد، اشغال، خاموش و غیره) را مشخص کنید.</p>
+                <ul className="list-disc pr-5 mt-2 space-y-1 text-slate-600">
+                  <li>اگر مخاطب <strong>پاسخ داد</strong>، باید مشخص کنید که <strong>مشاوره حضوری</strong> می‌خواهد یا خیر.</li>
+                  <li>در صورت تمایل به مشاوره حضوری («بله»)، گزینه‌های انتخاب <strong>تاریخ</strong>، <strong>ساعت</strong> و تیک <strong>«در دفتر نوشته شد»</strong> برای شما نمایش داده می‌شود.</li>
+                  <li>می‌توانید <strong>وضعیت ثبت‌نام</strong> مخاطب را نیز به طور دقیق مشخص کنید (ثبت‌نام کرد، قطعی نیست، قصد ندارد، ...).</li>
+                </ul>
               </div>
-            ))}
-          </div>
-        </div>
 
-        {/* داده‌ها و منطق برنامه */}
-        <div className="bg-white border border-slate-100 rounded-[2rem] p-6 md:p-8 shadow-sm opacity-0 animate-fade-in-up stagger-4">
-          <h3 className="text-[17px] font-bold text-slate-800 mb-6 flex items-center justify-start gap-3">
-            <div className="w-10 h-10 rounded-[14px] bg-blue-50 flex items-center justify-center">
-              <Shield className="text-blue-500" size={20} strokeWidth={1.5} />
+              <div>
+                <h4 className="font-bold text-slate-800 mb-2">۳. دکمه «ثبت نتیجه» (تیک سبز)</h4>
+                <p>تغییر گزینه‌های فرم (مثل دوره‌ها، وضعیت، یادداشت) روی سیستم ذخیره می‌شود، اما تا زمانی که روی دکمه <strong>«ثبت نتیجه» (تیک سبز)</strong> کلیک نکنید، گزارش تماس شما (Attempt) ثبت نهایی <strong>نمی‌شود</strong>. پس از کلیک روی این دکمه:</p>
+                <ul className="list-disc pr-5 mt-2 space-y-1 text-slate-600">
+                  <li>شماره از «لیست شماره‌ها» خارج شده و به تب <strong>فعالیت</strong> (امروز) منتقل می‌شود.</li>
+                  <li>در بخش فعالیت، شماره‌ها به صورت <strong>گروه‌بندی شده بر اساس روز</strong> نمایش داده می‌شوند تا نظم بهتری داشته باشند.</li>
+                  <li>عملکرد شما برای مدیران در داشبورد ثبت می‌شود.</li>
+                </ul>
+              </div>
+
+              <div>
+                <h4 className="font-bold text-slate-800 mb-2">۴. انتقال به پیگیری و بازگردانی</h4>
+                <p>شماره‌هایی که نیاز به تماس مجدد دارند را با استفاده از دکمه نارنجی‌رنگ (آیکون تلفن) به بخش <strong>پیگیری‌ها</strong> منتقل کنید. اگر یک شماره را به اشتباه تماس گرفتید یا ثبت کردید، در بخش «فعالیت» یا «پیگیری‌ها» دکمه آبی‌رنگ <strong>بازگردانی (آیکون فلش چرخان)</strong> را بزنید تا شماره دوباره به «لیست شماره‌ها» برگردد.</p>
+              </div>
+
+              <div>
+                <h4 className="font-bold text-slate-800 mb-2">۵. حذف کامل شماره</h4>
+                <p>در صورتی که نیاز است یک شماره برای همیشه و <strong>کاملا از کل سیستم</strong> (از همه لیست‌ها و فعالیت‌ها) پاک شود تا امکان ثبت مجدد آن فراهم باشد، می‌توانید از دکمه قرمزرنگ <strong>حذف کامل (آیکون سطل زباله)</strong> در ستون عملیات‌ها استفاده کنید. دقت کنید این عملیات غیرقابل بازگشت است.</p>
+              </div>
             </div>
-            داده‌ها و منطق برنامه
-          </h3>
-          <ul className="grid grid-cols-1 md:grid-cols-2 gap-4 text-[14px] text-slate-600 font-medium leading-[2.2] px-2">
-            <li className="flex gap-3 items-start">
-              <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-[14px] shrink-0"></div>
-              <p>اطلاعات مخاطبین و تاریخچه تماس‌ها در سیستم ابری ذخیره می‌شوند و با <strong>رفرش کردن صفحه</strong> پاک نمی‌شوند.</p>
-            </li>
-            <li className="flex gap-3 items-start">
-              <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-[14px] shrink-0"></div>
-              <p>هر کارشناس تنها لیست کارهای اختصاصی خود را می‌بیند.</p>
-            </li>
-            <li className="flex gap-3 items-start">
-              <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-[14px] shrink-0"></div>
-              <p>مدیران از طریق داشبورد، آمار تماس‌ها و وضعیت کارشناسان را نظارت می‌کنند.</p>
-            </li>
-            <li className="flex gap-3 items-start">
-              <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-[14px] shrink-0"></div>
-              <p>زمان‌بندی پیگیری‌ها در حال حاضر به صورت لایه موقت محلی روی مرورگر عمل می‌کند.</p>
-            </li>
-          </ul>
+          </div>
         </div>
 
         {/* قوانین و نکات کاری */}

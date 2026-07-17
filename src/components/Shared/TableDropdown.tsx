@@ -82,7 +82,7 @@ export const TableDropdown = ({ value, onChange, options, placeholder, disabled 
         onClick={() => setIsOpen(!isOpen)}
         className={`outline-none pl-8 pr-3 py-1.5 rounded-lg border flex items-center gap-2 transition-all cursor-pointer w-full justify-between min-w-[120px] max-w-[150px] ${
           disabled ? 'opacity-60 grayscale cursor-not-allowed border-transparent text-slate-400' :
-          !value ? 'border-transparent hover:border-slate-300 text-[13px] text-slate-500 font-medium' : 'border-slate-300 bg-white hover:bg-slate-50 text-[14px] font-bold text-slate-800'
+          !value ? 'border-slate-200 bg-slate-50 hover:border-slate-300 hover:bg-slate-100 text-[13px] text-slate-600 font-bold' : 'border-slate-300 bg-white hover:bg-slate-50 text-[14px] font-extrabold text-slate-800'
         }`}
       >
         <span className="truncate">{selected ? selected.label : placeholder}</span>

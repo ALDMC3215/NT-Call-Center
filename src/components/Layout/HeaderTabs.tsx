@@ -9,6 +9,7 @@ import { ConfirmDialog } from '../Shared/ConfirmDialog';
 import * as XLSX from 'xlsx';
 import { useLocale } from '../../hooks/useLocale';
 import { isActiveFollowup } from '../../utils/followups';
+import { formatPhoneNumber } from '../../utils/format';
 
 interface TabItem {
   id: 'home' | 'today' | 'dashboard' | 'profile' | 'settings' | 'stats' | 'admin' | 'blacklist';
@@ -19,7 +20,7 @@ interface TabItem {
 const TABS: TabItem[] = [
   { id: 'home', label: 'خانه', icon: Blocks },
   { id: 'dashboard', label: 'شماره ها', icon: LayoutDashboard },
-  { id: 'today', label: 'فعالیت روزانه', icon: CalendarIcon },
+  { id: 'today', label: 'فعالیت', icon: CalendarIcon },
   { id: 'blacklist', label: 'لیست سیاه', icon: ShieldBan },
   { id: 'stats', label: 'آمار', icon: BarChart3 },
   { id: 'admin', label: 'مدیریت', icon: Shield },
@@ -322,7 +323,7 @@ export const HeaderTabs = () => {
                   reminders.map(r => (
                     <div key={r.id} className="flex flex-col p-3 rounded-xl hover:bg-surface-hover border border-transparent hover:border-border cursor-default">
                       <div className="flex items-center justify-between mb-2">
-                         <span className="font-extrabold text-[13px] text-secondary tracking-wider block text-left" dir="ltr">{r.phone}</span>
+                         <span className="font-extrabold text-[14px] text-secondary tracking-[0.1em] block text-left" dir="ltr">{formatPhoneNumber(r.phone)}</span>
                          <span className="text-[11px] font-medium px-2 py-0.5 rounded-xl bg-amber-100 text-amber-800">
                            {tr('موعدرسیده', 'Due')}
                          </span>
