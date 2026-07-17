@@ -67,6 +67,10 @@ export interface CallAttempt {
   registered?: string | null;
   consultationConfirmed?: boolean;
   notes?: string;
+  attemptSource?: 'result_submit' | 'manual_attempt' | 'followup_attempt' | 'task_result_submit' | 'system';
+  manualReason?: string | null;
+  sourceTaskId?: string | null;
+  metadata?: Record<string, any>;
 }
 
 export interface ExportSummary {

@@ -78,6 +78,7 @@ interface AppContextType {
   cancelContactTask: (taskId: string) => Promise<ContactTask>;
   getMyContactTaskSummary: (targetDate?: string) => Promise<ContactTaskSummary>;
   recordCallAttemptWithTask: (input: RecordCallAttemptWithTaskInput) => Promise<RecordCallAttemptWithTaskResult>;
+  logManualCallAttempt: (contactId: string, options?: { sourceTaskId?: string | null; manualReason?: string | null }) => Promise<{ attempt: CallAttempt; attemptCount: number; todayAttemptCount: number; lastAttemptAt: string }>;
   isDarkMode: boolean;
   toggleDarkMode: () => void;
 }
@@ -673,6 +674,59 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     return result;
   }, [profile]);
 
+  const logManualCallAttempt = useCallback(async (contactId: string, options?: { sourceTaskId?: string | null; manualReason?: string | null }) => {
+    if (!profile) throw new Error("Not authenticated");
+    reportMeaningfulActivity(profile.sessionId);
+
+    const jalaliTime = nowJalali();
+    const { data, error } = await supabase.rpc('log_manual_call_attempt', {
+      p_contact_id: contactId,
+      p_jalali_date_time: jalaliTime,
+      p_source_task_id: options?.sourceTaskId || null,
+      p_manual_reason: options?.manualReason || null
+    });
+
+    if (error) {
+      console.error("log_manual_call_attempt failed", error);
+      throw error;
+    }
+    if (!data) throw new Error("No data returned");
+
+    const rawData = data as any;
+    const rawAttempt = rawData.attempt || {};
+
+    const mappedAttempt: CallAttempt = {
+      id: rawAttempt.id,
+      createdAt: rawAttempt.created_at,
+      jalaliDateTime: rawAttempt.jalali_date_time || jalaliTime,
+      callStatus: rawAttempt.call_status,
+      registered: rawAttempt.registered,
+      advisory: rawAttempt.advisory,
+      advisoryDate: rawAttempt.advisory_date,
+      advisoryTime: rawAttempt.advisory_time,
+      notes: rawAttempt.notes,
+      consultationConfirmed: rawAttempt.consultation_confirmed,
+      attemptSource: rawAttempt.attempt_source,
+      manualReason: rawAttempt.manual_reason,
+      sourceTaskId: rawAttempt.source_task_id,
+      metadata: rawAttempt.metadata || {}
+    };
+
+    const result = {
+      attempt: mappedAttempt,
+      attemptCount: rawData.attempt_count || 0,
+      todayAttemptCount: rawData.today_attempt_count || 0,
+      lastAttemptAt: rawData.last_attempt_at || ''
+    };
+
+    setCallsState(prev => prev.map(call => call.id === contactId ? {
+      ...call,
+      attempts: [...(call.attempts || []), result.attempt],
+    } : call));
+
+    return result;
+  }, [profile]);
+
   const createContactTaskWithDetails = useCallback(async (input: CreateContactTaskWithDetailsInput): Promise<ContactTask> => {
     if (!profile) throw new Error("Not authenticated");
 
@@ -780,9 +834,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }, [profile]);
   const contextValue = React.useMemo(() => ({
     profile, calls, isLoadingCalls, callsError, blacklist, currentView, setCurrentView, popupView, setPopupView, activeCallTab, setActiveCallTab, setProfile, logout, addCall, updateCall, deleteCall, hardDeleteCall, clearAllCalls, bulkAddCalls, importData, wipeAllData, importedData, setImportedData, addToBlacklist, removeFromBlacklist, isBlacklisted, restoreBackup, setContactWorkList, recordAttempt, enableFluid, setEnableFluid, accentColor, setAccentColor, layoutMargin, setLayoutMargin, sparkColor, setSparkColor,
-    getMyContactTasks, createContactTask, createContactTaskWithDetails, updateContactTaskDetails, rescheduleContactTask, completeContactTask, cancelContactTask, getMyContactTaskSummary, recordCallAttemptWithTask,
+    getMyContactTasks, createContactTask, createContactTaskWithDetails, updateContactTaskDetails, rescheduleContactTask, completeContactTask, cancelContactTask, getMyContactTaskSummary, recordCallAttemptWithTask, logManualCallAttempt,
     isDarkMode, toggleDarkMode
-  }), [profile, calls, isLoadingCalls, callsError, blacklist, currentView, setCurrentView, popupView, setPopupView, activeCallTab, setActiveCallTab, setProfile, logout, addCall, updateCall, deleteCall, hardDeleteCall, clearAllCalls, bulkAddCalls, importData, wipeAllData, importedData, setImportedData, addToBlacklist, removeFromBlacklist, isBlacklisted, restoreBackup, setContactWorkList, recordAttempt, enableFluid, setEnableFluid, accentColor, setAccentColor, layoutMargin, setLayoutMargin, sparkColor, setSparkColor, getMyContactTasks, createContactTask, createContactTaskWithDetails, updateContactTaskDetails, rescheduleContactTask, completeContactTask, cancelContactTask, getMyContactTaskSummary, recordCallAttemptWithTask, isDarkMode, toggleDarkMode]);
+  }), [profile, calls, isLoadingCalls, callsError, blacklist, currentView, setCurrentView, popupView, setPopupView, activeCallTab, setActiveCallTab, setProfile, logout, addCall, updateCall, deleteCall, hardDeleteCall, clearAllCalls, bulkAddCalls, importData, wipeAllData, importedData, setImportedData, addToBlacklist, removeFromBlacklist, isBlacklisted, restoreBackup, setContactWorkList, recordAttempt, enableFluid, setEnableFluid, accentColor, setAccentColor, layoutMargin, setLayoutMargin, sparkColor, setSparkColor, getMyContactTasks, createContactTask, createContactTaskWithDetails, updateContactTaskDetails, rescheduleContactTask, completeContactTask, cancelContactTask, getMyContactTaskSummary, recordCallAttemptWithTask, logManualCallAttempt, isDarkMode, toggleDarkMode]);
 
   return (
     <AppContext.Provider value={contextValue}>

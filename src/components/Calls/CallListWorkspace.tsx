@@ -335,7 +335,8 @@ export const CallListWorkspace = () => {
     updateContactTaskDetails,
     popupView,
     setPopupView,
-    hardDeleteCall
+    hardDeleteCall,
+    logManualCallAttempt
   } = useAppContext();
   const { tr, valueLabel, direction } = useLocale();
   const [searchQuery, setSearchQuery] = useState('');
@@ -421,6 +422,46 @@ export const CallListWorkspace = () => {
   const [isManualAddOpen, setIsManualAddOpen] = useState(false);
   const [confirmModalConfig, setConfirmModalConfig] = useState<{isOpen: boolean; title: string; message: string; onConfirm: () => void}>({ isOpen: false, title: '', message: '', onConfirm: () => {} });
   const [submittingIds, setSubmittingIds] = useState<Set<string>>(new Set());
+  const [loggingAttemptIds, setLoggingAttemptIds] = useState<Set<string>>(new Set());
+  const [manualReasonModal, setManualReasonModal] = useState<{ isOpen: boolean; call: CallRecord | null; sourceTaskId: string | null }>({ isOpen: false, call: null, sourceTaskId: null });
+  const [manualReasonInput, setManualReasonInput] = useState('');
+
+  const handleLogManualAttempt = async (c: CallRecord, reason?: string) => {
+    if (loggingAttemptIds.has(c.id)) return;
+    setLoggingAttemptIds(prev => new Set(prev).add(c.id));
+
+    let sourceTaskId: string | null = null;
+    if (activeTab === 'followup') {
+      const task = tasks.find(t => t.contact_id === c.id && t.status === 'pending');
+      if (task) {
+        sourceTaskId = task.id;
+      }
+    }
+
+    try {
+      await logManualCallAttempt(c.id, { sourceTaskId, manualReason: reason || null });
+      toast.success(tr('تلاش تماس ثبت شد', 'Call attempt logged'));
+      if (manualReasonModal.isOpen) {
+        setManualReasonModal({ isOpen: false, call: null, sourceTaskId: null });
+        setManualReasonInput('');
+      }
+    } catch (e: any) {
+      if (e.message && e.message.includes('نوشتن دلیل الزامی است')) {
+        setManualReasonModal({ isOpen: true, call: c, sourceTaskId });
+      } else if (e.message && e.message.includes('صبر کنید')) {
+        toast.error(tr('برای ثبت تلاش بعدی کمی صبر کنید.', 'Please wait a bit before the next attempt.'));
+      } else {
+        toast.error(e.message || tr('خطا در ثبت تلاش تماس', 'Error logging call attempt'));
+      }
+    } finally {
+      setLoggingAttemptIds(prev => {
+        const next = new Set(prev);
+        next.delete(c.id);
+        return next;
+      });
+    }
+  };
+
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -990,7 +1031,7 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                     let workedDisplayDate = 'بدون تاریخ';
                     let workedDisplayTime = '';
                     if (c.attempts && c.attempts.length > 0) {
-                        const parts = c.attempts[c.attempts.length - 1].jalaliDateTime.split(' ');
+                        const parts = (c.attempts[c.attempts.length - 1].jalaliDateTime || '').split(' ');
                         workedDisplayDate = parts[0] || 'بدون تاریخ';
                         workedDisplayTime = parts[1] || '';
                     }
@@ -1029,7 +1070,7 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                                const lastAttempt = c.attempts[c.attempts.length - 1];
                                let timeStr = null;
                                if (lastAttempt.jalaliDateTime && lastAttempt.jalaliDateTime !== 'Invalid Date' && lastAttempt.jalaliDateTime.includes(':')) {
-                                   timeStr = lastAttempt.jalaliDateTime.split(' ')[1] || lastAttempt.jalaliDateTime;
+                                   timeStr = (lastAttempt.jalaliDateTime || '').split(' ')[1] || lastAttempt.jalaliDateTime;
                                } else if (lastAttempt.createdAt) {
                                    const d = new Date(lastAttempt.createdAt);
                                    if (!isNaN(d.getTime())) {
@@ -1133,10 +1174,11 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                        </div>
                     </td>
 
-                    {/* Actions */}
+                     {/* Actions */}
                     <td className="py-4 sm:py-5 px-2 relative">
                        <div className="flex justify-center">
                           <TableActionMenu
+                            attemptCount={c.attempts?.length || 0}
                             actions={[
                               {
                                 id: 'submit',
@@ -1145,6 +1187,14 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                                 onClick: () => handleSimpleSubmit(c),
                                 variant: hasAnyFieldSelected(c) ? 'primary' : 'default',
                                 disabled: !hasAnyFieldSelected(c) || submittingIds.has(c.id)
+                              },
+                              {
+                                id: 'log_manual_attempt',
+                                label: tr('ثبت تلاش تماس', 'Log Attempt'),
+                                icon: loggingAttemptIds.has(c.id) ? <Icons.Loader2 size={14} className="animate-spin" /> : <Icons.Activity size={14} />,
+                                onClick: () => handleLogManualAttempt(c),
+                                variant: 'default',
+                                disabled: loggingAttemptIds.has(c.id)
                               },
                               {
                                 id: 'followup',
@@ -1262,6 +1312,59 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
         title={confirmModalConfig.title}
         message={confirmModalConfig.message}
       />
+
+      <AnimatePresence>
+        {manualReasonModal.isOpen && manualReasonModal.call && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" dir="rtl">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setManualReasonModal({ isOpen: false, call: null, sourceTaskId: null })} className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" />
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-white rounded-2xl w-full max-w-md relative z-10 overflow-hidden shadow-xl border border-slate-200">
+              <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                  <Icons.MessageSquare size={18} className="text-brand-500" />
+                  {tr('دلیل تلاش مجدد', 'Reason for Attempt')}
+                </h3>
+                <button onClick={() => setManualReasonModal({ isOpen: false, call: null, sourceTaskId: null })} className="text-slate-400 hover:text-slate-600 transition-colors">
+                  <Icons.X size={20} />
+                </button>
+              </div>
+              <div className="p-5">
+                <p className="text-[13px] text-slate-600 mb-4 leading-relaxed">
+                  برای این شماره امروز چند تلاش ثبت شده است. لطفاً دلیل تلاش مجدد را بنویسید.
+                </p>
+                <input
+                  type="text"
+                  autoFocus
+                  value={manualReasonInput}
+                  onChange={(e) => setManualReasonInput(e.target.value)}
+                  placeholder="مثلاً: جواب نداد، خاموش بود، بعداً تماس بگیرد"
+                  className="w-full h-11 px-3 text-[13px] border border-slate-200 rounded-xl focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 outline-none transition-all"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && manualReasonInput.trim()) {
+                      handleLogManualAttempt(manualReasonModal.call!, manualReasonInput.trim());
+                    }
+                  }}
+                />
+              </div>
+              <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+                <button
+                  onClick={() => setManualReasonModal({ isOpen: false, call: null, sourceTaskId: null })}
+                  className="px-5 py-2.5 rounded-xl font-medium text-[13px] text-slate-600 hover:bg-slate-200 transition-colors"
+                >
+                  انصراف
+                </button>
+                <button
+                  onClick={() => handleLogManualAttempt(manualReasonModal.call!, manualReasonInput.trim())}
+                  disabled={!manualReasonInput.trim() || loggingAttemptIds.has(manualReasonModal.call.id)}
+                  className="px-6 py-2.5 bg-brand-500 text-white rounded-xl font-medium text-[13px] hover:bg-brand-600 transition-colors disabled:opacity-50 flex items-center gap-2"
+                >
+                  {loggingAttemptIds.has(manualReasonModal.call.id) ? <Icons.Loader2 size={16} className="animate-spin" /> : null}
+                  ثبت تلاش
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
       {/* Render Quick Access Modals */}
       <AnimatePresence>
          {popupView && (

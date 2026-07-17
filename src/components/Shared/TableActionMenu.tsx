@@ -14,9 +14,10 @@ export interface TableAction {
 interface TableActionMenuProps {
   actions: TableAction[];
   disabled?: boolean;
+  attemptCount?: number;
 }
 
-export const TableActionMenu = ({ actions, disabled }: TableActionMenuProps) => {
+export const TableActionMenu = ({ actions, disabled, attemptCount }: TableActionMenuProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [coords, setCoords] = useState({ top: 0, left: 0, direction: 'down' as 'down' | 'up' });
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -78,14 +79,19 @@ export const TableActionMenu = ({ actions, disabled }: TableActionMenuProps) => 
   if (visibleActions.length === 0) return <div className="w-9 h-9" />;
 
   return (
-    <div ref={wrapperRef} className="inline-flex items-center text-right">
+    <div ref={wrapperRef} className="inline-flex items-center gap-1.5 text-right">
+      {attemptCount !== undefined && attemptCount > 0 && (
+        <span className="text-[11px] font-medium text-slate-500 bg-slate-100 px-2 h-6 flex items-center justify-center rounded-lg border border-slate-200 whitespace-nowrap">
+          {attemptCount} تلاش
+        </span>
+      )}
       <button
         disabled={disabled}
         onClick={(e) => {
           e.stopPropagation();
           setIsOpen(!isOpen);
         }}
-        className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all border ${
+        className={`w-9 h-9 shrink-0 rounded-xl flex items-center justify-center transition-all border ${
           isOpen ? 'bg-slate-200 text-slate-900 border-slate-300' : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200 hover:text-slate-900 hover:border-slate-300'
         } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
         title="عملیات بیشتر"
