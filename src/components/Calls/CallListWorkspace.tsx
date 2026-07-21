@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { useAppContext } from '../../hooks/useAppContext';
+import { toJalali } from '../../utils/jalali';
 import { useLocale } from '../../hooks/useLocale';
 import { CallRecord, ContactTask, ContactTaskType } from '../../types';
 import { CallResultActionModal } from './CallResultActionModal';
@@ -731,25 +732,36 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
         consultationConfirmed: call.consultationConfirmed
       });
 
+      const nowIso = new Date().toISOString();
+
       if (call.callStatus === 'ناموجود') {
         addToBlacklist(call.phone, 'ناموجود بودن');
         await deleteCall(call.id);
-        toast.success(tr('در لیست سیاه ثبت و از لیست حذف شد.', 'Blacklisted and deleted.'), {
-          duration: 3000
-        });
+        toast.success(tr('در لیست سیاه ثبت و از لیست حذف شد.', 'Blacklisted and deleted.'), { duration: 3000 });
       } else if (call.callStatus === 'عدم تمایل') {
         addToBlacklist(call.phone, 'عدم تمایل');
         updateCall({ ...call, workList: 'today', isFollowUp: false });
         setContactWorkList(call.id, 'today');
-        toast.success(tr('در لیست سیاه و فعالیت ثبت شد.', 'Blacklisted and moved to Daily Activity.'), {
-          duration: 3000
-        });
+        toast.success(tr('در لیست سیاه و فعالیت ثبت شد.', 'Blacklisted and moved to Activity.'), { duration: 3000 });
+      } else if (call.callStatus === 'جواب نداد') {
+        updateCall({ ...call, workList: 'today', isFollowUp: true, followUpAddedAt: nowIso, isBlacklisted: false });
+        setContactWorkList(call.id, 'today');
+        toast.success(tr('در پیگیری‌ها و فعالیت ثبت شد.', 'Moved to Follow-ups and Activity.'));
+      } else if (call.callStatus === 'پاسخ داد') {
+        const needsFollowUp = (call.advisory === 'حضوری' || call.advisory === 'تلفنی') || call.registered === 'مردد';
+        if (needsFollowUp) {
+           updateCall({ ...call, workList: 'today', isFollowUp: true, followUpAddedAt: nowIso, isBlacklisted: false });
+           setContactWorkList(call.id, 'today');
+           toast.success(tr('نیاز به پیگیری مجدد دارد و در فعالیت ثبت شد.', 'Needs follow-up, moved to Activity.'));
+        } else {
+           updateCall({ ...call, workList: 'today', isFollowUp: false, isBlacklisted: false });
+           setContactWorkList(call.id, 'today');
+           toast.success(tr('با موفقیت ثبت و به فعالیت منتقل شد.', 'Saved and moved to Daily Activity.'));
+        }
       } else {
         updateCall({ ...call, workList: 'today', isFollowUp: false });
         setContactWorkList(call.id, 'today');
-        toast.success(tr('با موفقیت ثبت و به فعالیت منتقل شد.', 'Saved and moved to Daily Activity.'), {
-          duration: 3000
-        });
+        toast.success(tr('با موفقیت ثبت و به فعالیت منتقل شد.', 'Saved and moved to Daily Activity.'), { duration: 3000 });
       }
     } catch (err) {
        toast.error(tr('خطا در ثبت نتیجه', 'Error'));
@@ -1039,15 +1051,6 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                   <th className="py-2.5 px-2 text-[12px] font-extrabold text-slate-800 tracking-wide whitespace-nowrap">{tr('ثبت نام', 'Registration')}</th>
                   <th className="py-2.5 px-2 text-[12px] font-extrabold text-slate-800 tracking-wide">
                      <div className="flex flex-col items-center justify-center gap-1.5">
-                        {/* 
-                        <button
-                           onClick={handleSubmitAll}
-                           className="bg-brand-500 hover:bg-brand-600 text-white p-1.5 rounded-lg transition-colors shadow-sm"
-                           title={tr('ثبت همه', 'Submit All')}
-                        >
-                           <Icons.CheckCheck size={14} />
-                        </button>
-                        */}
                         {tr('عملیات', 'Actions')}
                      </div>
                   </th>
@@ -1100,19 +1103,15 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
 
                     const fuStatus = activeTab === 'followup' ? getFollowUpStatus(c.nextFollowUpAt) : null;
                     
-                    let rightBorderCls = '';
+                    let rowColorIndicator = 'bg-blue-500';
                     if (c.advisory === 'حضوری' && c.advisoryDate) {
-                        rightBorderCls = 'border-r-4 border-fuchsia-500';
-                    } else if (activeTab === 'followup') {
-                        rightBorderCls = 'border-r-4 border-orange-500';
-                    } else if (activeTab === 'today') {
-                        if (c.callStatus === 'عدم تمایل' || c.advisory === 'عدم تمایل') {
-                            rightBorderCls = 'border-r-4 border-rose-500';
-                        } else if (c.registered === 'ثبت نام کرد') {
-                            rightBorderCls = 'border-r-4 border-emerald-500';
-                        }
-                    } else if (activeTab === 'queue') {
-                        rightBorderCls = 'border-r-4 border-blue-500';
+                        rowColorIndicator = 'bg-fuchsia-500';
+                    } else if (c.isFollowUp) {
+                        rowColorIndicator = 'bg-orange-500';
+                    } else if (c.callStatus === 'عدم تمایل' || c.advisory === 'عدم تمایل') {
+                        rowColorIndicator = 'bg-rose-500';
+                    } else if (c.registered === 'ثبت نام کرد') {
+                        rowColorIndicator = 'bg-emerald-500';
                     }
 
                     rows.push(
@@ -1122,10 +1121,11 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.2 }}
-                    className={`relative focus-within:z-50 hover:z-40 border-b border-slate-200 transition-colors duration-300 group ${c.isBlacklisted ? 'bg-rose-50 hover:bg-rose-100/70' : 'bg-white hover:bg-slate-50'} ${rightBorderCls}`}
+                    className={`relative focus-within:z-50 hover:z-40 border-b border-slate-200 transition-colors duration-300 group ${c.isBlacklisted ? 'bg-rose-50 hover:bg-rose-100/70' : 'bg-white hover:bg-slate-50'}`}
                   >
                     {/* Phone */}
                     <td className="py-3 sm:py-4 px-2 relative whitespace-nowrap">
+                       <div className={`absolute top-0 bottom-0 right-0 w-1.5 ${rowColorIndicator}`} />
                        <div className="flex flex-col items-center justify-center w-full px-2">
                           <div className="flex items-center justify-center relative w-full mx-auto px-4 min-h-[30px] gap-2">
                             {c.notes && (
@@ -1245,76 +1245,59 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
 
                      {/* Actions */}
                     <td className="py-4 sm:py-5 px-2 relative">
-                       <div className="flex justify-center">
-                          <TableActionMenu
-                            attemptCount={c.attempts?.length || 0}
-                            actions={[
-                              {
-                                id: 'submit',
-                                label: tr('ثبت نتیجه', 'Submit'),
-                                icon: submittingIds.has(c.id) ? <Icons.Loader2 size={14} className="animate-spin" /> : <Icons.Check size={14} />,
-                                onClick: () => handleSimpleSubmit(c),
-                                variant: hasAnyFieldSelected(c) ? 'primary' : 'default',
-                                disabled: !hasAnyFieldSelected(c) || submittingIds.has(c.id)
-                              },
-                              ...(activeTab === 'followup' ? [{
-                                id: 'log_manual_attempt',
-                                label: tr('ثبت تلاش تماس', 'Log Attempt'),
-                                icon: loggingAttemptIds.has(c.id) ? <Icons.Loader2 size={14} className="animate-spin" /> : <Icons.Phone size={14} />,
-                                onClick: () => handleLogManualAttempt(c),
-                                variant: 'default' as const,
-                                disabled: loggingAttemptIds.has(c.id)
-                              }] : []),
-                              {
-                                id: 'followup',
-                                label: tr('پیگیری شود', 'Follow-up'),
-                                icon: <Icons.PhoneForwarded size={14} />,
-                                onClick: () => { updateCall({ ...c, isFollowUp: true, workList: 'followup' }); setContactWorkList(c.id, 'followup'); toast.success(tr('به پیگیری‌ها منتقل شد.', 'Moved to Follow-ups.')); },
-                                variant: 'warning',
-                                disabled: c.isFollowUp || c.isBlacklisted
-                              },
-                              {
-                                id: 'notes',
-                                label: tr('افزودن یادداشت', 'Notes'),
-                                icon: <Icons.MessageSquareQuote size={14} />,
-                                onClick: () => setNotesModalCall(c),
-                                variant: c.notes ? 'warning' : 'default'
-                              },
-                              ...(activeTab === 'today' || activeTab === 'followup' ? [{
-                                id: 'return_to_queue',
-                                label: tr('بازگردانی به لیست اصلی', 'Return to Queue'),
-                                icon: <Icons.RotateCcw size={14} />,
-                                onClick: () => {
-                                  updateCall({ ...c, workList: 'none', isFollowUp: false });
-                                  setContactWorkList(c.id, 'none');
-                                  toast.success(tr('به لیست اصلی بازگردانده شد.', 'Returned to main list.'));
-                                },
-                                variant: 'default' as const
-                              }] : []),
-                              {
-                                id: 'hard_delete',
-                                label: tr('حذف شماره', 'Hard Delete'),
-                                icon: <Icons.Trash2 size={14} />,
-                                onClick: () => {
-                                  setConfirmModalConfig({
-                                    isOpen: true,
-                                    title: tr('حذف کامل شماره', 'Hard Delete'),
-                                    message: tr('این شماره و همه اطلاعات کاری مربوط به آن، از جمله پیگیری‌ها و تلاش‌های تماس، حذف می‌شود. این عملیات قابل بازگشت نیست. آیا مطمئن هستید؟', 'This number and all related data will be deleted. Are you sure?'),
-                                    onConfirm: async () => {
-                                      try {
-                                        await hardDeleteCall(c.id);
-                                        setHiddenCalls(prev => new Set(prev).add(c.id));
-                                        toast.success(tr('شماره برای همیشه حذف شد.', 'Number permanently deleted.'));
-                                      } catch (err) {
-                                        toast.error(tr('خطا در حذف کامل شماره', 'Error hard deleting number.'));
-                                      }
-                                    }
-                                  });
-                                },
-                                variant: 'danger'
-                              }
-                            ]}
-                          />
+                       <div className="flex justify-center items-center gap-1.5">
+                          {/* Submit Button */}
+                          <button
+                            onClick={() => handleSimpleSubmit(c)}
+                            disabled={!hasAnyFieldSelected(c) || submittingIds.has(c.id)}
+                            title={tr('ثبت نتیجه', 'Submit Result')}
+                            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all shadow-sm border
+                              ${hasAnyFieldSelected(c) && !submittingIds.has(c.id) 
+                                ? 'bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300 hover:shadow-md' 
+                                : 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed'}`}
+                          >
+                            {submittingIds.has(c.id) ? (
+                              <Icons.Loader2 size={16} className="animate-spin" />
+                            ) : (
+                              <Icons.Check size={16} strokeWidth={3} />
+                            )}
+                          </button>
+                          
+                          {/* Notes Button */}
+                          <button
+                            onClick={() => setNotesModalCall(c)}
+                            title={tr('افزودن یادداشت', 'Notes')}
+                            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all shadow-sm border
+                              ${c.notes 
+                                ? 'bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100 hover:border-amber-300 hover:shadow-md' 
+                                : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50 hover:border-slate-300 hover:shadow-md'}`}
+                          >
+                            <Icons.MessageSquareQuote size={15} />
+                          </button>
+
+                          {/* Delete Button */}
+                          <button
+                            onClick={() => {
+                              setConfirmModalConfig({
+                                isOpen: true,
+                                title: tr('حذف کامل شماره', 'Hard Delete'),
+                                message: tr('این شماره و همه اطلاعات کاری مربوط به آن، از جمله پیگیری‌ها و تلاش‌های تماس، حذف می‌شود. این عملیات قابل بازگشت نیست. آیا مطمئن هستید؟', 'This number and all related data will be deleted. Are you sure?'),
+                                onConfirm: async () => {
+                                  try {
+                                    await hardDeleteCall(c.id);
+                                    setHiddenCalls(prev => new Set(prev).add(c.id));
+                                    toast.success(tr('شماره برای همیشه حذف شد.', 'Number permanently deleted.'));
+                                  } catch (err) {
+                                    toast.error(tr('خطا در حذف کامل شماره', 'Error hard deleting number.'));
+                                  }
+                                }
+                              });
+                            }}
+                            title={tr('حذف شماره', 'Delete')}
+                            className="w-8 h-8 rounded-lg flex items-center justify-center bg-white text-rose-500 border border-slate-200 hover:bg-rose-50 hover:border-rose-300 transition-all shadow-sm hover:shadow-md"
+                          >
+                            <Icons.Trash2 size={15} />
+                          </button>
                        </div>
                     </td>
                   </motion.tr>

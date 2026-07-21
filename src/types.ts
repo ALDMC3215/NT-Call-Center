@@ -47,6 +47,8 @@ export interface CallRecord {
   nextFollowUpAt?: string;
   /** وضعیت پیگیری مجدد به صورت سوئیچ روشن/خاموش */
   isFollowUp?: boolean;
+  /** تاریخ اضافه‌شدن به لیست پیگیری */
+  followUpAddedAt?: string | null;
   isBlacklisted?: boolean;
   /** Manual work list properties */
   workList?: 'none' | 'today';

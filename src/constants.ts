@@ -1,6 +1,6 @@
 import { COURSE_CATEGORIES } from './data/courses';
 
-export const CALL_STATUSES = ['پیگیری', 'عدم تمایل', 'جواب نداد'];
+export const CALL_STATUSES = ['پاسخ داد', 'عدم تمایل', 'جواب نداد'];
 export const LINK_OPTIONS  = ['ارسال شد', 'ارسال نشد', 'عدم تمایل'];
 
 // Flatten all course titles into a single array for dropdowns
