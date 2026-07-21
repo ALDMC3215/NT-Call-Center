@@ -1260,18 +1260,25 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
 
                           {/* Log Attempt Button (Followups only) */}
                           {activeTab === 'followup' && (
-                            <button
-                              onClick={() => handleLogManualAttempt(c)}
-                              disabled={loggingAttemptIds.has(c.id)}
-                              title={tr('ثبت تلاش تماس', 'Log Attempt')}
-                              className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center bg-white text-indigo-500 border border-slate-200 hover:bg-indigo-50 hover:border-indigo-300 transition-all shadow-sm hover:shadow-md"
-                            >
-                              {loggingAttemptIds.has(c.id) ? (
-                                <Icons.Loader2 size={15} className="animate-spin text-indigo-500" />
-                              ) : (
-                                <Icons.Phone size={15} />
+                            <div className="relative shrink-0">
+                              <button
+                                onClick={() => handleLogManualAttempt(c)}
+                                disabled={loggingAttemptIds.has(c.id)}
+                                title={tr('ثبت تلاش تماس', 'Log Attempt')}
+                                className="w-8 h-8 rounded-lg flex items-center justify-center bg-white text-indigo-500 border border-slate-200 hover:bg-indigo-50 hover:border-indigo-300 transition-all shadow-sm hover:shadow-md"
+                              >
+                                {loggingAttemptIds.has(c.id) ? (
+                                  <Icons.Loader2 size={15} className="animate-spin text-indigo-500" />
+                                ) : (
+                                  <Icons.Phone size={15} />
+                                )}
+                              </button>
+                              {c.attempts && c.attempts.length > 0 && (
+                                <span className="absolute -top-1.5 -right-1.5 bg-indigo-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-sm pointer-events-none">
+                                  {c.attempts.length}
+                                </span>
                               )}
-                            </button>
+                            </div>
                           )}
                           
                           {/* Notes Button */}
