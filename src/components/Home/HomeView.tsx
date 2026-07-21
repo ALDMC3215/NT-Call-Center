@@ -19,14 +19,16 @@ export const HomeView = () => {
   const counts = useMemo(() => {
     let followupCount = 0;
     let todayCount = 0;
+    let queueCount = 0;
     const now = new Date();
     const todayStr = now.toISOString().split('T')[0];
 
     for (const c of calls) {
       if (c.workList === 'followup') followupCount++;
       if (c.workList === 'today' && c.workListDate === todayStr) todayCount++;
+      if (c.workList === 'none' && !c.isBlacklisted) queueCount++;
     }
-    return { followupCount, todayCount, totalCount: calls.length };
+    return { followupCount, todayCount, queueCount };
   }, [calls]);
 
   // Define categorized sections
@@ -39,7 +41,7 @@ export const HomeView = () => {
           title: tr('پنل شماره‌گیری', 'Dialing Panel'),
           description: tr('ورود به پنل اصلی برای مدیریت تماس‌ها، پیگیری‌ها و دسترسی به ابزارهای کارشناسی', 'Enter main panel for call management, follow-ups, and expert tools'),
           icon: Phone,
-          count: counts.totalCount,
+          count: counts.queueCount,
           onClick: () => { setCurrentView('dashboard'); setActiveCallTab('queue'); },
           iconColor: 'text-indigo-600',
           iconBg: 'bg-indigo-500/10',
