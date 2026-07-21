@@ -1128,11 +1128,6 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                        <div className={`absolute top-0 bottom-0 right-0 w-1.5 ${rowColorIndicator}`} />
                        <div className="flex flex-col items-center justify-center w-full px-2">
                           <div className="flex items-center justify-center relative w-full mx-auto px-4 min-h-[30px] gap-2">
-                            {c.notes && (
-                               <div className="absolute right-0 top-1/2 -translate-y-1/2 text-amber-500" title={tr('دارای یادداشت', 'Has notes')}>
-                                  <Icons.MessageSquareQuote size={14} />
-                               </div>
-                            )}
                             <span dir="ltr" className="font-bold text-[19px] tracking-[0.15em] text-slate-800 group-hover:text-cyan-600 transition-colors z-10">{formatPhoneNumber(c.phone)}</span>
                           </div>
                           <input
