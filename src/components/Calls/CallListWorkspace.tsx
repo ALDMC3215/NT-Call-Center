@@ -1040,7 +1040,7 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                 <col className="w-[140px]" /> {/* Interested Course */}
                 <col className="w-[200px]" /> {/* Consultation */}
                 <col className="w-[150px]" /> {/* Registration */}
-                <col className="w-[80px]" /> {/* Actions */}
+                <col className="w-[160px]" /> {/* Actions */}
               </colgroup>
               <thead className="sticky top-0 bg-slate-100 border-b-2 border-slate-200 z-20">
                 <tr>
@@ -1251,7 +1251,7 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                             onClick={() => handleSimpleSubmit(c)}
                             disabled={!hasAnyFieldSelected(c) || submittingIds.has(c.id)}
                             title={tr('ثبت نتیجه', 'Submit Result')}
-                            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all shadow-sm border
+                            className={`shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-all shadow-sm border
                               ${hasAnyFieldSelected(c) && !submittingIds.has(c.id) 
                                 ? 'bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300 hover:shadow-md' 
                                 : 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed'}`}
@@ -1262,12 +1262,28 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                               <Icons.Check size={16} strokeWidth={3} />
                             )}
                           </button>
+
+                          {/* Log Attempt Button (Followups only) */}
+                          {activeTab === 'followup' && (
+                            <button
+                              onClick={() => handleLogManualAttempt(c)}
+                              disabled={loggingAttemptIds.has(c.id)}
+                              title={tr('ثبت تلاش تماس', 'Log Attempt')}
+                              className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center bg-white text-indigo-500 border border-slate-200 hover:bg-indigo-50 hover:border-indigo-300 transition-all shadow-sm hover:shadow-md"
+                            >
+                              {loggingAttemptIds.has(c.id) ? (
+                                <Icons.Loader2 size={15} className="animate-spin text-indigo-500" />
+                              ) : (
+                                <Icons.Phone size={15} />
+                              )}
+                            </button>
+                          )}
                           
                           {/* Notes Button */}
                           <button
                             onClick={() => setNotesModalCall(c)}
                             title={tr('افزودن یادداشت', 'Notes')}
-                            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all shadow-sm border
+                            className={`shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-all shadow-sm border
                               ${c.notes 
                                 ? 'bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100 hover:border-amber-300 hover:shadow-md' 
                                 : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50 hover:border-slate-300 hover:shadow-md'}`}
@@ -1294,7 +1310,7 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                               });
                             }}
                             title={tr('حذف شماره', 'Delete')}
-                            className="w-8 h-8 rounded-lg flex items-center justify-center bg-white text-rose-500 border border-slate-200 hover:bg-rose-50 hover:border-rose-300 transition-all shadow-sm hover:shadow-md"
+                            className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center bg-white text-rose-500 border border-slate-200 hover:bg-rose-50 hover:border-rose-300 transition-all shadow-sm hover:shadow-md"
                           >
                             <Icons.Trash2 size={15} />
                           </button>
