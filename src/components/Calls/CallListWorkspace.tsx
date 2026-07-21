@@ -1274,7 +1274,7 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                                 )}
                               </button>
                               {c.attempts && c.attempts.length > 0 && (
-                                <span className="absolute -top-1.5 -right-1.5 bg-indigo-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-sm pointer-events-none">
+                                <span className="absolute -top-1 -right-1 bg-indigo-500 text-white text-[9px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center shadow-sm pointer-events-none leading-none">
                                   {c.attempts.length}
                                 </span>
                               )}
