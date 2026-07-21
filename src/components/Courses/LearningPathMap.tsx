@@ -1,352 +1,189 @@
-import React, { useCallback, useState, useEffect, useRef } from 'react';
-import {
-  ReactFlow,
-  ReactFlowProvider,
-  useNodesState,
-  useEdgesState,
-  addEdge,
-  Connection,
-  Edge,
-  Node,
-  Background,
-  Controls,
-  MiniMap,
-  Panel,
-  useReactFlow,
-} from '@xyflow/react';
-import '@xyflow/react/dist/style.css';
-import dagre from 'dagre';
-import { initialNodes, initialEdges } from '../../data/learningPathsData';
-import { MindmapNode } from './MindmapNode';
-import { customToast as toast } from '../UI/toast';
-import * as Icons from 'lucide-react';
-import { v4 as uuidv4 } from 'uuid';
+import React, { useMemo, useRef, useEffect } from 'react';
+import { initialNodes, initialEdges, Node } from '../../data/learningPathsData';
 
-const nodeTypes = {
-  mindmap: MindmapNode,
-};
-
-const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'LR') => {
-  const dagreGraph = new dagre.graphlib.Graph();
-  dagreGraph.setDefaultEdgeLabel(() => ({}));
-
-  // LR means Left to Right
-  dagreGraph.setGraph({ rankdir: direction, align: 'DL', ranksep: 200, nodesep: 40 });
-
-  nodes.forEach((node) => {
-    // Estimating dimensions for dagre
-    dagreGraph.setNode(node.id, { width: 160, height: 50 });
-  });
-
-  edges.forEach((edge) => {
-    dagreGraph.setEdge(edge.source, edge.target);
-  });
-
-  dagre.layout(dagreGraph);
-
-  nodes.forEach((node) => {
-    const nodeWithPosition = dagreGraph.node(node.id);
-    // We are shifting the dagre node position (anchor=center center) to the top left
-    // so it matches the React Flow node anchor point (top left).
-    node.position = {
-      x: nodeWithPosition.x - 70, // half width
-      y: nodeWithPosition.y - 20, // half height
-    };
-
-    return node;
-  });
-
-  return { nodes, edges };
-};
-
-const COLORS = {
-  root: '#c7c2ff',
-  level1: '#c4d7f5',
-  level2: '#b8e3d6',
-  level3: '#b1f0c2',
-};
-
-const getColorByDepth = (depth: number) => {
-  if (depth === 0) return COLORS.root;
-  if (depth === 1) return COLORS.level1;
-  if (depth === 2) return COLORS.level2;
-  return COLORS.level3;
-};
-
-const MindmapFlow = () => {
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [editMode, setEditMode] = useState(false);
-  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
-  const [editLabel, setEditLabel] = useState('');
-
-  const { fitView, getNodes, getEdges } = useReactFlow();
-
-  // Load from local storage or defaults
-  useEffect(() => {
-    const savedNodes = localStorage.getItem('mindmap_nodes');
-    const savedEdges = localStorage.getItem('mindmap_edges');
-    
-    let loadedNodes = initialNodes;
-    let loadedEdges = initialEdges;
-
-    if (savedNodes && savedEdges) {
-      try {
-        loadedNodes = JSON.parse(savedNodes);
-        loadedEdges = JSON.parse(savedEdges);
-      } catch (e) {
-        console.error('Failed to parse saved mindmap data', e);
-      }
-    }
-
-    const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
-      loadedNodes,
-      loadedEdges,
-      'LR'
-    );
-    setNodes(layoutedNodes);
-    setEdges(layoutedEdges);
-    
-    // Slight delay to allow nodes to render before fitting view
-    setTimeout(() => fitView({ padding: 0.2 }), 100);
-  }, [setNodes, setEdges, fitView]);
-
-  const onConnect = useCallback(
-    (params: Connection | Edge) => {
-      setEdges((eds) => addEdge({ ...params, animated: true, style: { stroke: '#94a3b8', strokeWidth: 1.5 } } as any, eds));
-    },
-    [setEdges],
-  );
-
-  const saveToLocal = (currentNodes: Node[], currentEdges: Edge[]) => {
-    localStorage.setItem('mindmap_nodes', JSON.stringify(currentNodes));
-    localStorage.setItem('mindmap_edges', JSON.stringify(currentEdges));
-  };
-
-  const handleSave = () => {
-    saveToLocal(nodes, edges);
-    toast.success('نقشه راه با موفقیت ذخیره شد.');
-    setEditMode(false);
-  };
-
-  const handleReset = () => {
-    const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
-      initialNodes,
-      initialEdges,
-      'LR'
-    );
-    setNodes(layoutedNodes);
-    setEdges(layoutedEdges);
-    localStorage.removeItem('mindmap_nodes');
-    localStorage.removeItem('mindmap_edges');
-    toast.success('نقشه راه به حالت اولیه بازگردانی شد.');
-    setTimeout(() => fitView({ padding: 0.2 }), 100);
-  };
-
-  const handleNodeClick = (_: any, node: Node) => {
-    if (!editMode) return;
-    setSelectedNode(node);
-    setEditLabel(node.data.label as string);
-  };
-
-  const handlePaneClick = () => {
-    setSelectedNode(null);
-  };
-
-  const updateNodeLabel = () => {
-    if (!selectedNode) return;
-    const newNodes = nodes.map((n) => {
-      if (n.id === selectedNode.id) {
-        n.data = { ...n.data, label: editLabel };
-      }
-      return n;
-    });
-    setNodes(newNodes);
-    setSelectedNode({ ...selectedNode, data: { ...selectedNode.data, label: editLabel } });
-  };
-
-  const addNode = () => {
-    if (!selectedNode) {
-      toast.error('ابتدا یک گره را به عنوان والد انتخاب کنید');
-      return;
-    }
-
-    const parentDepth = (selectedNode.data.level as number) || 0;
-    const newDepth = parentDepth + 1;
-    const newNodeId = `node-${uuidv4()}`;
-    
-    const newNode: Node = {
-      id: newNodeId,
-      type: 'mindmap',
-      position: { x: selectedNode.position.x + 200, y: selectedNode.position.y }, // rough placement before relayout
-      data: {
-        label: 'گره جدید',
-        level: newDepth,
-        color: getColorByDepth(newDepth)
-      }
-    };
-
-    const newEdge: Edge = {
-      id: `e-${selectedNode.id}-${newNodeId}`,
-      source: selectedNode.id,
-      target: newNodeId,
-      animated: true,
-      style: { stroke: '#94a3b8', strokeWidth: 1.5 }
-    };
-
-    const updatedNodes = [...nodes, newNode];
-    const updatedEdges = [...edges, newEdge];
-    
-    // Automatically relayout
-    const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(updatedNodes, updatedEdges, 'LR');
-    
-    setNodes(layoutedNodes);
-    setEdges(layoutedEdges);
-    
-    setTimeout(() => fitView({ padding: 0.2 }), 100);
-  };
-
-  const deleteNode = () => {
-    if (!selectedNode) return;
-    
-    // Collect all descendants to delete them too
-    const nodesToDelete = new Set<string>();
-    const collectDescendants = (nodeId: string) => {
-      nodesToDelete.add(nodeId);
-      const children = edges.filter(e => e.source === nodeId).map(e => e.target);
-      children.forEach(child => collectDescendants(child));
-    };
-    
-    collectDescendants(selectedNode.id);
-    
-    const remainingNodes = nodes.filter(n => !nodesToDelete.has(n.id));
-    const remainingEdges = edges.filter(e => !nodesToDelete.has(e.source) && !nodesToDelete.has(e.target));
-    
-    const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(remainingNodes, remainingEdges, 'LR');
-    setNodes(layoutedNodes);
-    setEdges(layoutedEdges);
-    setSelectedNode(null);
-    
-    setTimeout(() => fitView({ padding: 0.2 }), 100);
-  };
-
-  const onLayout = useCallback(
-    () => {
-      const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
-        nodes,
-        edges,
-        'LR'
-      );
-      setNodes([...layoutedNodes]);
-      setEdges([...layoutedEdges]);
-      setTimeout(() => fitView({ padding: 0.2 }), 100);
-    },
-    [nodes, edges, setNodes, setEdges, fitView]
-  );
-
-  return (
-    <div className="w-full h-full flex flex-col relative bg-slate-50 font-[YekanBakh]">
-      {editMode && (
-        <div className="absolute top-4 right-4 z-10 bg-white p-4 rounded-2xl shadow-xl border border-slate-200 w-[300px]" dir="rtl">
-          <h3 className="font-extrabold text-[15px] mb-4 text-slate-800 border-b border-slate-100 pb-2">ویرایش نقشه راه</h3>
-          
-          {selectedNode ? (
-            <div className="flex flex-col gap-3">
-              <div>
-                <label className="text-[12px] font-bold text-slate-500 mb-1 block">نام گره:</label>
-                <div className="flex gap-2">
-                  <input 
-                    type="text" 
-                    value={editLabel}
-                    onChange={(e) => setEditLabel(e.target.value)}
-                    className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-medium outline-none focus:border-brand-500"
-                  />
-                  <button onClick={updateNodeLabel} className="bg-brand-500 text-white p-2 rounded-xl hover:bg-brand-600 transition-colors">
-                    <Icons.Check size={16} />
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex gap-2 mt-2">
-                <button 
-                  onClick={addNode}
-                  className="flex-1 flex items-center justify-center gap-1.5 bg-emerald-50 text-emerald-600 border border-emerald-200 py-2 rounded-xl text-[12px] font-bold hover:bg-emerald-100 transition-colors"
-                >
-                  <Icons.Plus size={14} />
-                  زیرشاخه جدید
-                </button>
-                <button 
-                  onClick={deleteNode}
-                  className="flex-1 flex items-center justify-center gap-1.5 bg-rose-50 text-rose-600 border border-rose-200 py-2 rounded-xl text-[12px] font-bold hover:bg-rose-100 transition-colors"
-                >
-                  <Icons.Trash2 size={14} />
-                  حذف گره
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="text-center text-slate-400 text-[13px] py-4 bg-slate-50 rounded-xl border border-slate-100">
-              برای ویرایش، روی یکی از گره‌ها کلیک کنید.
-            </div>
-          )}
-
-          <div className="mt-4 pt-3 border-t border-slate-100 flex flex-col gap-2">
-             <div className="flex gap-2">
-               <button onClick={onLayout} className="flex-1 flex items-center justify-center gap-1 text-[12px] font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 py-2 rounded-xl transition-colors">
-                 <Icons.LayoutGrid size={14} />
-                 مرتب‌سازی
-               </button>
-               <button onClick={handleSave} className="flex-1 flex items-center justify-center gap-1 text-[12px] font-bold text-white bg-slate-800 hover:bg-slate-900 py-2 rounded-xl transition-colors shadow-sm">
-                 <Icons.Save size={14} />
-                 ذخیره
-               </button>
-             </div>
-             <button onClick={handleReset} className="w-full flex items-center justify-center gap-1 text-[12px] font-bold text-amber-600 bg-amber-50 hover:bg-amber-100 border border-amber-200 py-2 rounded-xl transition-colors">
-               <Icons.RotateCcw size={14} />
-               بازگردانی به حالت اولیه
-             </button>
-          </div>
-        </div>
-      )}
-
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        nodeTypes={nodeTypes}
-        onNodeClick={handleNodeClick}
-        onPaneClick={handlePaneClick}
-        fitView
-        className="bg-slate-50"
-        nodesDraggable={editMode}
-        nodesConnectable={editMode}
-        elementsSelectable={editMode}
-      >
-        <Background color="#cbd5e1" gap={20} size={1} />
-        {!editMode && (
-          <Panel position="top-right" className="m-4">
-             <button 
-               onClick={() => setEditMode(true)}
-               className="flex items-center gap-2 bg-white text-brand-600 border border-brand-200 shadow-sm hover:shadow-md hover:bg-brand-50 px-4 py-2.5 rounded-2xl font-bold text-[13px] transition-all"
-               dir="rtl"
-             >
-               <Icons.Settings2 size={16} />
-               شخصی‌سازی مسیرها
-             </button>
-          </Panel>
-        )}
-        <Controls showInteractive={false} className="bg-white border-slate-200 rounded-xl shadow-sm overflow-hidden" />
-      </ReactFlow>
-    </div>
-  );
-};
+interface TreeNode {
+  node: Node;
+  children: TreeNode[];
+}
 
 export const LearningPathMap = () => {
+  const tree = useMemo(() => {
+    const nodeMap = new Map<string, TreeNode>();
+    initialNodes.forEach(n => nodeMap.set(n.id, { node: n, children: [] }));
+    
+    initialEdges.forEach(edge => {
+      const parent = nodeMap.get(edge.source);
+      const child = nodeMap.get(edge.target);
+      if (parent && child) {
+        parent.children.push(child);
+      }
+    });
+    
+    return nodeMap.get('root');
+  }, []);
+
+  const renderTree = (treeNode: TreeNode) => {
+    return (
+      <li key={treeNode.node.id}>
+        <div className="flex justify-center z-10 relative">
+          <div 
+            className="px-5 py-2.5 rounded-lg text-[13px] md:text-[14px] text-slate-700 bg-white border border-slate-300 whitespace-nowrap shadow-sm hover:border-slate-400 transition-colors"
+            dir="rtl" // Ensure text inside cards is RTL
+          >
+            {treeNode.node.data.label}
+          </div>
+        </div>
+        {treeNode.children.length > 0 && (
+          <ul>
+            {treeNode.children.map(child => renderTree(child))}
+          </ul>
+        )}
+      </li>
+    );
+  };
+
+  // Add drag-to-scroll functionality for better UX
+  const scrollRef = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    const slider = scrollRef.current;
+    if (!slider) return;
+
+    let isDown = false;
+    let startX: number;
+    let startY: number;
+    let scrollLeft: number;
+    let scrollTop: number;
+
+    const onMouseDown = (e: MouseEvent) => {
+      isDown = true;
+      slider.classList.add('cursor-grabbing');
+      startX = e.pageX - slider.offsetLeft;
+      startY = e.pageY - slider.offsetTop;
+      scrollLeft = slider.scrollLeft;
+      scrollTop = slider.scrollTop;
+    };
+    const onMouseLeave = () => {
+      isDown = false;
+      slider.classList.remove('cursor-grabbing');
+    };
+    const onMouseUp = () => {
+      isDown = false;
+      slider.classList.remove('cursor-grabbing');
+    };
+    const onMouseMove = (e: MouseEvent) => {
+      if (!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - slider.offsetLeft;
+      const y = e.pageY - slider.offsetTop;
+      const walkX = (x - startX) * 2; // Scroll-fast
+      const walkY = (y - startY) * 2;
+      slider.scrollLeft = scrollLeft - walkX;
+      slider.scrollTop = scrollTop - walkY;
+    };
+
+    slider.addEventListener('mousedown', onMouseDown);
+    slider.addEventListener('mouseleave', onMouseLeave);
+    slider.addEventListener('mouseup', onMouseUp);
+    slider.addEventListener('mousemove', onMouseMove);
+
+    return () => {
+      slider.removeEventListener('mousedown', onMouseDown);
+      slider.removeEventListener('mouseleave', onMouseLeave);
+      slider.removeEventListener('mouseup', onMouseUp);
+      slider.removeEventListener('mousemove', onMouseMove);
+    };
+  }, []);
+
   return (
-    <ReactFlowProvider>
-      <MindmapFlow />
-    </ReactFlowProvider>
+    <div 
+      ref={scrollRef}
+      className="w-full h-full overflow-auto bg-slate-50 cursor-grab active:cursor-grabbing p-8 md:p-16 select-none" 
+      dir="ltr" // LTR is crucial for the CSS tree lines to render correctly
+    >
+      <style dangerouslySetInnerHTML={{__html: `
+        .org-tree {
+          display: flex;
+          justify-content: center;
+        }
+        .org-tree ul {
+          display: flex;
+          padding-top: 28px;
+          position: relative;
+          margin: 0;
+          padding-left: 0;
+          padding-right: 0;
+        }
+        .org-tree li {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          position: relative;
+          padding-top: 28px;
+          padding-left: 10px;
+          padding-right: 10px;
+        }
+        .org-tree ul::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 2px;
+          height: 28px;
+          background-color: #cbd5e1;
+        }
+        .org-tree li::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 2px;
+          background-color: #cbd5e1;
+        }
+        .org-tree li:first-child::before {
+          left: 50%;
+        }
+        .org-tree li:last-child::before {
+          right: 50%;
+        }
+        .org-tree li:only-child::before {
+          display: none;
+        }
+        .org-tree li::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 2px;
+          height: 28px;
+          background-color: #cbd5e1;
+        }
+        .org-tree li:only-child {
+          padding-top: 0;
+        }
+        .org-tree li:only-child::after {
+          display: none;
+        }
+        /* Root overrides */
+        .org-tree > ul {
+          padding-top: 0;
+        }
+        .org-tree > ul::before {
+          display: none;
+        }
+      `}} />
+
+      {/* w-max and mx-auto ensure it centers if small, but allows full scrolling if large, without clipping the left side */}
+      <div className="w-max mx-auto pb-32 org-tree">
+        {tree && (
+          <ul>
+            {renderTree(tree)}
+          </ul>
+        )}
+      </div>
+    </div>
   );
 };

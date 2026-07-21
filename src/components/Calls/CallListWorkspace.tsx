@@ -348,6 +348,7 @@ export const CallListWorkspace = () => {
   const [actionModalCall, setActionModalCall] = useState<CallRecord | null>(null);
   const [editModalTask, setEditModalTask] = useState<ContactTask | null>(null);
   const [hiddenCalls, setHiddenCalls] = useState<Set<string>>(new Set());
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
 
   const handleDelete = React.useCallback((c: CallRecord) => {
     setConfirmModalConfig({
@@ -600,6 +601,7 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
     } else if (targetDay.getTime() === tomorrow.getTime()) {
       return { priority: 'upcoming', label: 'فردا', borderCls: 'border-r-blue-400', bgCls: 'bg-blue-50 text-blue-600 border-blue-200' };
     } else {
+      if (isNaN(date.getTime())) return { priority: 'none', label: 'بدون زمان', borderCls: 'border-r-slate-200', bgCls: 'bg-slate-50 text-slate-500 border-slate-200' };
       const d = new DateObject({ date, calendar: persian, locale: persian_fa });
       return {
         priority: 'upcoming',
@@ -762,7 +764,7 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
   };
 
   const handleSubmitAll = () => {
-    const toSubmit = filteredList.filter(c => !hiddenCalls.has(c.id) && hasAnyFieldSelected(c));
+    const toSubmit = displayedList.filter(c => !hiddenCalls.has(c.id) && hasAnyFieldSelected(c));
     if (toSubmit.length === 0) return toast.info(tr('موردی برای ثبت وجود ندارد.', 'No items to submit.'));
     toSubmit.forEach(c => handleSimpleSubmit(c));
   };
@@ -784,7 +786,7 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
      }
   };
 
-  const filteredList = useMemo(() => {
+  const baseFilteredList = useMemo(() => {
     let list = calls;
     const limits = getDayLimits();
     const tehranToday = (new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tehran" }))).toISOString().split('T')[0];
@@ -796,7 +798,7 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
     } else if (activeTab === 'followup') {
       list = list.filter(c => c.isFollowUp && !c.isBlacklisted && c.workList !== 'today');
     } else if (activeTab === 'consultations') {
-      list = list.filter(c => c.advisory === 'بله');
+      list = list.filter(c => c.advisory === 'بله' || c.advisory === 'حضوری');
     }
 
     if (searchQuery.trim()) {
@@ -818,6 +820,14 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
       return String(a.id).localeCompare(String(b.id));
     });
   }, [calls, activeTab, searchQuery, tasks]);
+
+  const displayedList = useMemo(() => {
+    let list = baseFilteredList;
+    if (statusFilter.length > 0 && activeTab === 'followup') {
+      list = list.filter(c => statusFilter.includes(c.callStatus || 'نامشخص'));
+    }
+    return list;
+  }, [baseFilteredList, statusFilter, activeTab]);
 
   if (isLoadingCalls && !hasInitialCallsLoaded) {
     return (
@@ -848,24 +858,32 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
 
         <a href="?view=dashboard&tab=queue" onClick={e => { e.preventDefault(); setActiveCallTab('queue'); setPopupView(null); }} className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-colors text-[13px] font-bold ${activeTab === 'queue' && !popupView ? 'bg-emerald-700 border-emerald-700 text-white' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-600'}`}>
           <List size={16} className={activeTab === 'queue' && !popupView ? 'text-white' : 'text-slate-400'} />
-          لیست شماره‌ها
+          لیست
         </a>
-        <a href="?view=dashboard&tab=today" onClick={e => { e.preventDefault(); setActiveCallTab('today'); setPopupView(null); }} className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-colors text-[13px] font-bold ${activeTab === 'today' && !popupView ? 'bg-emerald-700 border-emerald-700 text-white' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-600'}`}>
-          <Activity size={16} className={activeTab === 'today' && !popupView ? 'text-white' : 'text-slate-400'} />
-          فعالیت
-          {calls.filter(c => c.workList === 'today').length > 0 && (
-            <span className={activeTab === 'today' && !popupView ? 'bg-white text-emerald-700 text-[10px] px-1.5 py-0.5 rounded-md min-w-[20px] text-center font-extrabold' : 'bg-slate-200 text-slate-700 text-[10px] px-1.5 py-0.5 rounded-md min-w-[20px] text-center'}>
-              {calls.filter(c => c.workList === 'today').length}
+        
+        <a href="?view=dashboard&tab=followup" onClick={e => { e.preventDefault(); setActiveCallTab('followup'); setPopupView(null); }} className={`relative flex items-center gap-2 px-4 py-2 rounded-xl border transition-colors text-[13px] font-bold ${activeTab === 'followup' && !popupView ? 'bg-emerald-700 border-emerald-700 text-white' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-600'}`}>
+          <PhoneForwarded size={16} className={activeTab === 'followup' && !popupView ? 'text-white' : 'text-slate-400'} />
+          لیست پیگیری
+          {calls.filter(c => c.isFollowUp && !c.isBlacklisted && c.workList !== 'today').length > 0 && (
+            <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] bg-orange-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border border-white px-1 shadow-sm">
+              {calls.filter(c => c.isFollowUp && !c.isBlacklisted && c.workList !== 'today').length}
             </span>
           )}
         </a>
-        <a href="?view=dashboard&tab=followup" onClick={e => { e.preventDefault(); setActiveCallTab('followup'); setPopupView(null); }} className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-colors text-[13px] font-bold ${activeTab === 'followup' && !popupView ? 'bg-emerald-700 border-emerald-700 text-white' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-600'}`}>
-          <PhoneForwarded size={16} className={activeTab === 'followup' && !popupView ? 'text-white' : 'text-slate-400'} />
-          پیگیری‌ها
-        </a>
+
         <a href="?view=dashboard&tab=consultations" onClick={e => { e.preventDefault(); setActiveCallTab('consultations'); setPopupView(null); }} className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-colors text-[13px] font-bold ${activeTab === 'consultations' && !popupView ? 'bg-emerald-700 border-emerald-700 text-white' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-600'}`}>
           <Users size={16} className={activeTab === 'consultations' && !popupView ? 'text-white' : 'text-slate-400'} />
-          مشاوره‌های کارشناس
+          لیست مشاوره
+        </a>
+
+        <a href="?view=dashboard&tab=today" onClick={e => { e.preventDefault(); setActiveCallTab('today'); setPopupView(null); }} className={`relative flex items-center gap-2 px-4 py-2 rounded-xl border transition-colors text-[13px] font-bold ${activeTab === 'today' && !popupView ? 'bg-emerald-700 border-emerald-700 text-white' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-600'}`}>
+          <Activity size={16} className={activeTab === 'today' && !popupView ? 'text-white' : 'text-slate-400'} />
+          فعالیت
+          {calls.filter(c => c.workList === 'today').length > 0 && (
+            <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] bg-blue-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border border-white px-1 shadow-sm">
+              {calls.filter(c => c.workList === 'today').length}
+            </span>
+          )}
         </a>
 
         <a href="?view=dashboard&tab=courses" onClick={e => { e.preventDefault(); setActiveCallTab('courses'); setPopupView(null); }} className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-colors text-[13px] font-bold ${activeTab === 'courses' ? 'bg-emerald-700 border-emerald-700 text-white' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-600'}`}>
@@ -935,7 +953,7 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                             title: tr('حذف تمامی شماره‌ها', 'Delete all numbers'),
                             message: tr('آیا مطمئن هستید که می‌خواهید همه شماره‌های این لیست را حذف کنید؟', 'Are you sure you want to delete all?'),
                             onConfirm: () => {
-                              calls.filter(c => filteredList.some(f => f.id === c.id)).forEach(c => deleteCall(c.id));
+                              calls.filter(c => displayedList.some(f => f.id === c.id)).forEach(c => deleteCall(c.id));
                               toast.success(tr('لیست پاک شد.', 'List cleared.'));
                             }
                           });
@@ -957,7 +975,7 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                   {activeTab === 'consultations' && (
                     <button
                       onClick={async () => {
-                        const toExport = filteredList.filter(c => !hiddenCalls.has(c.id));
+                        const toExport = displayedList.filter(c => !hiddenCalls.has(c.id));
                         if (toExport.length === 0) return toast.info(tr('موردی برای خروجی وجود ندارد.', 'No items to export.'));
                         await exportConsultationsToExcel(toExport, toExport.length);
                         toast.success(tr('فایل اکسل با موفقیت ایجاد شد.', 'Excel created successfully.'));
@@ -972,25 +990,56 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
               </div>
             )}
           <div className="flex-1 overflow-x-auto overflow-y-auto custom-select-scroll relative z-10">
+            {activeTab === 'followup' && (
+              <div className="flex items-center gap-4 py-2 px-4 bg-slate-50 border-b border-slate-200 sticky left-0 right-0">
+                {(() => {
+                  const visible = baseFilteredList.filter(c => !hiddenCalls.has(c.id));
+                  const statusCounts: Record<string, number> = {};
+                  visible.forEach(c => {
+                    const st = c.callStatus || 'نامشخص';
+                    statusCounts[st] = (statusCounts[st] || 0) + 1;
+                  });
+                  return Object.entries(statusCounts).map(([status, count]) => {
+                    const isActive = statusFilter.includes(status);
+                    return (
+                      <button 
+                        key={status} 
+                        onClick={() => {
+                          setStatusFilter(prev => {
+                            if (prev.includes(status)) return prev.filter(s => s !== status);
+                            return [...prev, status];
+                          });
+                        }}
+                        className={`flex items-center gap-1.5 text-[12px] font-bold px-3 py-1 rounded-full whitespace-nowrap shadow-sm transition-colors border ${isActive ? 'bg-cyan-50 text-cyan-700 border-cyan-200' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'}`}
+                      >
+                         <span>{status}:</span>
+                         <span className={isActive ? 'text-cyan-700' : 'text-brand-600'}>{count}</span>
+                      </button>
+                    );
+                  });
+                })()}
+              </div>
+            )}
             {/* Compact Table View */}
-            <table className="w-full text-center border-collapse table-fixed min-w-[700px]">
+            <table className="w-full text-center border-collapse table-fixed min-w-[1000px]">
               <colgroup>
                 <col className="w-[180px]" /> {/* Phone/Name */}
-                <col className="w-[180px]" /> {/* Interested Course */}
+                <col className="w-[150px]" /> {/* Call Result */}
+                <col className="w-[140px]" /> {/* Interested Course */}
+                <col className="w-[200px]" /> {/* Consultation */}
                 <col className="w-[150px]" /> {/* Registration */}
-                <col className="w-[180px]" /> {/* Consultation */}
-                <col className="w-[130px]" /> {/* Call Result */}
-                <col className="w-[60px]" /> {/* Actions */}
+                <col className="w-[80px]" /> {/* Actions */}
               </colgroup>
               <thead className="sticky top-0 bg-slate-100 border-b-2 border-slate-200 z-20">
                 <tr>
                   <th className="py-2.5 px-2 text-[12px] font-extrabold text-slate-800 tracking-wide whitespace-nowrap">{tr('شماره تماس', 'Phone')}</th>
-                  <th className="py-2.5 px-2 text-[12px] font-extrabold text-slate-800 tracking-wide whitespace-nowrap">{tr('دوره مدنظر', 'Course')}</th>
-                  <th className="py-2.5 px-2 text-[12px] font-extrabold text-slate-800 tracking-wide whitespace-nowrap">{tr('ثبت نام', 'Registration')}</th>
-                  <th className="py-2.5 px-2 text-[12px] font-extrabold text-slate-800 tracking-wide whitespace-nowrap">{tr('مشاوره حضوری', 'Consultation')}</th>
                   <th className="py-2.5 px-2 text-[12px] font-extrabold text-slate-800 tracking-wide whitespace-nowrap">{tr('نتیجه تماس', 'Call Result')}</th>
+                  <th className="py-2.5 px-2 text-[12px] font-extrabold text-slate-800 tracking-wide whitespace-nowrap">{tr('دوره مدنظر', 'Course')}</th>
+                  <th className="py-2.5 px-2 text-[12px] font-extrabold text-slate-800 tracking-wide whitespace-nowrap">{tr('مشاوره', 'Consultation')}</th>
+                  <th className="py-2.5 px-2 text-[12px] font-extrabold text-slate-800 tracking-wide whitespace-nowrap">{tr('ثبت نام', 'Registration')}</th>
                   <th className="py-2.5 px-2 text-[12px] font-extrabold text-slate-800 tracking-wide">
                      <div className="flex flex-col items-center justify-center gap-1.5">
+                        {/* 
                         <button
                            onClick={handleSubmitAll}
                            className="bg-brand-500 hover:bg-brand-600 text-white p-1.5 rounded-lg transition-colors shadow-sm"
@@ -998,6 +1047,8 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                         >
                            <Icons.CheckCheck size={14} />
                         </button>
+                        */}
+                        {tr('عملیات', 'Actions')}
                      </div>
                   </th>
                 </tr>
@@ -1005,7 +1056,7 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
               <tbody className="text-[13px] font-medium text-slate-800 relative">
                 <AnimatePresence>
                 {(() => {
-                  const visibleList = filteredList.filter(c => !hiddenCalls.has(c.id));
+                  const visibleList = displayedList.filter(c => !hiddenCalls.has(c.id));
                   if (visibleList.length === 0 && searchQuery) {
                      return (
                        <motion.tr key="empty-search" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -1048,6 +1099,22 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                     }
 
                     const fuStatus = activeTab === 'followup' ? getFollowUpStatus(c.nextFollowUpAt) : null;
+                    
+                    let rightBorderCls = '';
+                    if (c.advisory === 'حضوری' && c.advisoryDate) {
+                        rightBorderCls = 'border-r-4 border-fuchsia-500';
+                    } else if (activeTab === 'followup') {
+                        rightBorderCls = 'border-r-4 border-orange-500';
+                    } else if (activeTab === 'today') {
+                        if (c.callStatus === 'عدم تمایل' || c.advisory === 'عدم تمایل') {
+                            rightBorderCls = 'border-r-4 border-rose-500';
+                        } else if (c.registered === 'ثبت نام کرد') {
+                            rightBorderCls = 'border-r-4 border-emerald-500';
+                        }
+                    } else if (activeTab === 'queue') {
+                        rightBorderCls = 'border-r-4 border-blue-500';
+                    }
+
                     rows.push(
                     <motion.tr
                     key={c.id}
@@ -1055,35 +1122,18 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.2 }}
-                    className={`relative focus-within:z-50 hover:z-40 border-b border-slate-200 transition-colors duration-300 group ${c.isBlacklisted ? 'bg-rose-50 hover:bg-rose-100/70' : 'bg-white hover:bg-slate-50'} ${fuStatus ? `border-r-4 ${fuStatus.borderCls}` : ''}`}
+                    className={`relative focus-within:z-50 hover:z-40 border-b border-slate-200 transition-colors duration-300 group ${c.isBlacklisted ? 'bg-rose-50 hover:bg-rose-100/70' : 'bg-white hover:bg-slate-50'} ${rightBorderCls}`}
                   >
                     {/* Phone */}
                     <td className="py-3 sm:py-4 px-2 relative whitespace-nowrap">
                        <div className="flex flex-col items-center justify-center w-full px-2">
-                          <div className="flex items-center justify-center relative w-full mx-auto px-4 min-h-[30px]">
-                            {c.isFollowUp && (
-                               <div className="absolute right-1 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-orange-500" title={tr('در حال پیگیری', 'Following up')} />
+                          <div className="flex items-center justify-center relative w-full mx-auto px-4 min-h-[30px] gap-2">
+                            {c.notes && (
+                               <div className="absolute right-0 top-1/2 -translate-y-1/2 text-amber-500" title={tr('دارای یادداشت', 'Has notes')}>
+                                  <Icons.MessageSquareQuote size={14} />
+                               </div>
                             )}
                             <span dir="ltr" className="font-bold text-[19px] tracking-[0.15em] text-slate-800 group-hover:text-cyan-600 transition-colors z-10">{formatPhoneNumber(c.phone)}</span>
-                            {(() => {
-                               if (!c.attempts || c.attempts.length === 0) return null;
-                               const lastAttempt = c.attempts[c.attempts.length - 1];
-                               let timeStr = null;
-                               if (lastAttempt.jalaliDateTime && lastAttempt.jalaliDateTime !== 'Invalid Date' && lastAttempt.jalaliDateTime.includes(':')) {
-                                   timeStr = (lastAttempt.jalaliDateTime || '').split(' ')[1] || lastAttempt.jalaliDateTime;
-                               } else if (lastAttempt.createdAt) {
-                                   const d = new Date(lastAttempt.createdAt);
-                                   if (!isNaN(d.getTime())) {
-                                       timeStr = d.toLocaleTimeString('fa-IR', {hour: '2-digit', minute:'2-digit'});
-                                   }
-                               }
-                               if (!timeStr || timeStr === 'Invalid Date') return null;
-                               return (
-                                  <div className="absolute right-8 top-1/2 -translate-y-1/2 text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-lg border border-slate-200" dir="ltr">
-                                     {timeStr}
-                                  </div>
-                               );
-                            })()}
                           </div>
                           <input
                             type="text"
@@ -1092,11 +1142,42 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                             placeholder={tr('نام شخص...', 'Name...')}
                             className="text-[13px] font-bold text-slate-800 text-center bg-transparent border-b border-slate-200 hover:border-slate-300 focus:border-cyan-600 outline-none w-32 mt-1 transition-colors placeholder:text-slate-400 placeholder:font-medium"
                           />
+                          {(() => {
+                             if (!c.attempts || c.attempts.length === 0) return null;
+                             const lastAttempt = c.attempts[c.attempts.length - 1];
+                             let timeStr = null;
+                             if (lastAttempt.jalaliDateTime && lastAttempt.jalaliDateTime !== 'Invalid Date' && lastAttempt.jalaliDateTime.includes(':')) {
+                                 timeStr = (lastAttempt.jalaliDateTime || '').split(' ')[1] || lastAttempt.jalaliDateTime;
+                             } else if (lastAttempt.createdAt) {
+                                 const d = new Date(lastAttempt.createdAt);
+                                 if (!isNaN(d.getTime())) {
+                                     timeStr = d.toLocaleTimeString('fa-IR', {hour: '2-digit', minute:'2-digit'});
+                                 }
+                             }
+                             if (!timeStr || timeStr === 'Invalid Date') return null;
+                             return (
+                                <div className="mt-1.5 text-[10px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-md border border-slate-200" dir="ltr">
+                                   {timeStr}
+                                </div>
+                             );
+                          })()}
                           {fuStatus && fuStatus.priority !== 'none' && (
                             <div className={`mt-1.5 text-[10px] font-bold px-2 py-0.5 rounded-md border ${fuStatus.bgCls}`}>
                               {fuStatus.label}
                             </div>
                           )}
+                       </div>
+                    </td>
+
+                    {/* Call Status (Call Result) */}
+                    <td className="py-3 sm:py-4 px-2 relative whitespace-nowrap">
+                       <div className="flex flex-col items-center justify-center gap-2">
+                          <TableDropdown
+                            value={c.callStatus || ''}
+                            onChange={(val) => handleStatusChange(c, val)}
+                            options={CALL_STATUSES.map(s => ({ value: s, label: valueLabel(s) }))}
+                            placeholder={tr('نتیجه تماس', 'Result')}
+                          />
                        </div>
                     </td>
 
@@ -1110,29 +1191,17 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                        </div>
                     </td>
 
-                    {/* Registration */}
-                    <td className="py-3 sm:py-4 px-2 relative whitespace-nowrap">
-                       <div className="flex flex-col items-center justify-center gap-2">
-                          <TableDropdown
-                            value={c.registered || ''}
-                            onChange={(val) => handleFieldChange(c, 'registered', val)}
-                            options={REGISTRATION_STATUSES.map(s => ({ value: s, label: valueLabel(s) }))}
-                            placeholder={tr('ثبت نام', 'Registration')}
-                          />
-                       </div>
-                    </td>
-
                     {/* Consultation */}
                     <td className="py-3 sm:py-4 px-2 relative whitespace-nowrap">
                        <div className="flex flex-col items-center justify-center gap-2">
                           <TableDropdown
                             value={c.advisory || ''}
                             onChange={(val) => handleFieldChange(c, 'advisory', val)}
-                            options={['بله', 'خیر'].map(s => ({ value: s, label: valueLabel(s) }))}
+                            options={['حضوری', 'تلفنی', 'عدم تمایل'].map(s => ({ value: s, label: valueLabel(s) }))}
                             placeholder={tr('مشاوره', 'Consultation')}
                           />
-                          {c.advisory === 'بله' && (
-                             <div className="flex flex-col gap-1 w-full max-w-[120px] items-center">
+                          {c.advisory === 'حضوری' && (
+                             <div className="flex flex-col gap-1 w-full max-w-[140px] items-center">
                                 <DatePicker
                                   calendar={persian}
                                   locale={persian_fa}
@@ -1162,14 +1231,14 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                        </div>
                     </td>
 
-                    {/* Call Status (Call Result) */}
+                    {/* Registration */}
                     <td className="py-3 sm:py-4 px-2 relative whitespace-nowrap">
                        <div className="flex flex-col items-center justify-center gap-2">
                           <TableDropdown
-                            value={c.callStatus || ''}
-                            onChange={(val) => handleStatusChange(c, val)}
-                            options={CALL_STATUSES.map(s => ({ value: s, label: valueLabel(s) }))}
-                            placeholder={tr('نتیجه تماس', 'Result')}
+                            value={c.registered || ''}
+                            onChange={(val) => handleFieldChange(c, 'registered', val)}
+                            options={REGISTRATION_STATUSES.map(s => ({ value: s, label: valueLabel(s) }))}
+                            placeholder={tr('ثبت نام', 'Registration')}
                           />
                        </div>
                     </td>
@@ -1188,17 +1257,17 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                                 variant: hasAnyFieldSelected(c) ? 'primary' : 'default',
                                 disabled: !hasAnyFieldSelected(c) || submittingIds.has(c.id)
                               },
-                              {
+                              ...(activeTab === 'followup' ? [{
                                 id: 'log_manual_attempt',
                                 label: tr('ثبت تلاش تماس', 'Log Attempt'),
-                                icon: loggingAttemptIds.has(c.id) ? <Icons.Loader2 size={14} className="animate-spin" /> : <Icons.Activity size={14} />,
+                                icon: loggingAttemptIds.has(c.id) ? <Icons.Loader2 size={14} className="animate-spin" /> : <Icons.Phone size={14} />,
                                 onClick: () => handleLogManualAttempt(c),
-                                variant: 'default',
+                                variant: 'default' as const,
                                 disabled: loggingAttemptIds.has(c.id)
-                              },
+                              }] : []),
                               {
                                 id: 'followup',
-                                label: tr('پیگیری', 'Follow-up'),
+                                label: tr('پیگیری شود', 'Follow-up'),
                                 icon: <Icons.PhoneForwarded size={14} />,
                                 onClick: () => { updateCall({ ...c, isFollowUp: true, workList: 'followup' }); setContactWorkList(c.id, 'followup'); toast.success(tr('به پیگیری‌ها منتقل شد.', 'Moved to Follow-ups.')); },
                                 variant: 'warning',
@@ -1206,7 +1275,7 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                               },
                               {
                                 id: 'notes',
-                                label: tr('یادداشت', 'Notes'),
+                                label: tr('افزودن یادداشت', 'Notes'),
                                 icon: <Icons.MessageSquareQuote size={14} />,
                                 onClick: () => setNotesModalCall(c),
                                 variant: c.notes ? 'warning' : 'default'
@@ -1224,7 +1293,7 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                               }] : []),
                               {
                                 id: 'hard_delete',
-                                label: tr('حذف کامل', 'Hard Delete'),
+                                label: tr('حذف شماره', 'Hard Delete'),
                                 icon: <Icons.Trash2 size={14} />,
                                 onClick: () => {
                                   setConfirmModalConfig({
@@ -1258,7 +1327,7 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
             </table>
 
 
-            {filteredList.length === 0 && (
+            {displayedList.length === 0 && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-slate-500">
                   <div className="w-16 h-16 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center mb-4 shadow-sm">
                     <Filter size={28} className="text-slate-400" />

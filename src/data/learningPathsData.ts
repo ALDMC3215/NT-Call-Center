@@ -1,4 +1,5 @@
-import { Edge, Node } from '@xyflow/react';
+export type Node = { id: string, type?: string, data: any, position?: any };
+export type Edge = { id: string, source: string, target: string, type?: string, animated?: boolean, style?: any };
 
 // Common colors matching the screenshot
 const COLORS = {

@@ -75,15 +75,29 @@ export const TableActionMenu = ({ actions, disabled, attemptCount }: TableAction
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
-  const visibleActions = actions.filter(a => !a.disabled);
-  if (visibleActions.length === 0) return <div className="w-9 h-9" />;
+  const logAttemptAction = actions.find(a => a.id === 'log_manual_attempt');
+  const visibleActions = actions.filter(a => !a.disabled && a.id !== 'log_manual_attempt');
+  if (visibleActions.length === 0 && !logAttemptAction) return <div className="w-9 h-9" />;
 
   return (
     <div ref={wrapperRef} className="inline-flex items-center gap-1.5 text-right">
-      {attemptCount !== undefined && attemptCount > 0 && (
-        <span className="text-[11px] font-medium text-slate-500 bg-slate-100 px-2 h-6 flex items-center justify-center rounded-lg border border-slate-200 whitespace-nowrap">
-          {attemptCount} تلاش
-        </span>
+      {logAttemptAction && (
+        <button
+          disabled={logAttemptAction.disabled}
+          onClick={(e) => {
+            e.stopPropagation();
+            logAttemptAction.onClick();
+          }}
+          className={`relative w-9 h-9 shrink-0 rounded-xl flex items-center justify-center transition-all border bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300 active:scale-95 ${logAttemptAction.disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+          title={logAttemptAction.label}
+        >
+          {logAttemptAction.icon}
+          {attemptCount !== undefined && attemptCount > 0 && (
+             <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border border-white">
+                {attemptCount}
+             </span>
+          )}
+        </button>
       )}
       <button
         disabled={disabled}
@@ -111,8 +125,7 @@ export const TableActionMenu = ({ actions, disabled, attemptCount }: TableAction
           className="min-w-[160px] w-max bg-white border border-slate-200 rounded-xl shadow-xl z-[99999] overflow-hidden py-1"
         >
           <div className="max-h-60 overflow-y-auto custom-select-scroll p-1 flex flex-col gap-0.5">
-            {actions.map(action => {
-              if (action.disabled) return null;
+            {visibleActions.map(action => {
 
               let colorClasses = 'text-slate-700 hover:bg-slate-100 hover:text-slate-900';
               if (action.variant === 'danger') {
