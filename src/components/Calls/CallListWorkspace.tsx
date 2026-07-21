@@ -1293,6 +1293,21 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
                             <Icons.MessageSquareQuote size={15} />
                           </button>
 
+                          {/* Return to Queue Button */}
+                          {(activeTab === 'today' || activeTab === 'followup') && (
+                            <button
+                              onClick={() => {
+                                updateCall({ ...c, workList: 'none', isFollowUp: false });
+                                setContactWorkList(c.id, 'none');
+                                toast.success(tr('به لیست اصلی بازگردانده شد.', 'Returned to main list.'));
+                              }}
+                              title={tr('بازگرداندن به لیست اصلی', 'Return to main list')}
+                              className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center bg-white text-slate-500 border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm hover:shadow-md"
+                            >
+                              <Icons.RotateCcw size={15} />
+                            </button>
+                          )}
+
                           {/* Delete Button */}
                           <button
                             onClick={() => {
