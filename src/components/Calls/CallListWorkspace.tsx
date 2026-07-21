@@ -841,6 +841,18 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
     return list;
   }, [baseFilteredList, statusFilter, activeTab]);
 
+  // Automatically clear status filters if no items have that status anymore
+  useEffect(() => {
+    if (activeTab === 'followup' && statusFilter.length > 0) {
+      const visible = baseFilteredList.filter(c => !hiddenCalls.has(c.id));
+      const availableStatuses = new Set(visible.map(c => c.callStatus || 'نامشخص'));
+      const validFilters = statusFilter.filter(s => availableStatuses.has(s));
+      if (validFilters.length !== statusFilter.length) {
+        setStatusFilter(validFilters);
+      }
+    }
+  }, [baseFilteredList, hiddenCalls, activeTab, statusFilter]);
+
   if (isLoadingCalls && !hasInitialCallsLoaded) {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900" dir={direction}>
