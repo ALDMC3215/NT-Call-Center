@@ -744,15 +744,15 @@ ${skippedPhones.join(', ')}`), { duration: 8000 });
         setContactWorkList(call.id, 'today');
         toast.success(tr('در لیست سیاه و فعالیت ثبت شد.', 'Blacklisted and moved to Activity.'), { duration: 3000 });
       } else if (call.callStatus === 'جواب نداد') {
-        updateCall({ ...call, workList: 'today', isFollowUp: true, followUpAddedAt: nowIso, isBlacklisted: false });
-        setContactWorkList(call.id, 'today');
-        toast.success(tr('در پیگیری‌ها و فعالیت ثبت شد.', 'Moved to Follow-ups and Activity.'));
+        updateCall({ ...call, workList: 'none', isFollowUp: true, followUpAddedAt: nowIso, isBlacklisted: false });
+        setContactWorkList(call.id, 'none');
+        toast.success(tr('در لیست پیگیری ثبت شد.', 'Moved to Follow-ups.'));
       } else if (call.callStatus === 'پاسخ داد') {
         const needsFollowUp = (call.advisory === 'حضوری' || call.advisory === 'تلفنی') || call.registered === 'مردد';
         if (needsFollowUp) {
-           updateCall({ ...call, workList: 'today', isFollowUp: true, followUpAddedAt: nowIso, isBlacklisted: false });
-           setContactWorkList(call.id, 'today');
-           toast.success(tr('نیاز به پیگیری مجدد دارد و در فعالیت ثبت شد.', 'Needs follow-up, moved to Activity.'));
+           updateCall({ ...call, workList: 'none', isFollowUp: true, followUpAddedAt: nowIso, isBlacklisted: false });
+           setContactWorkList(call.id, 'none');
+           toast.success(tr('با موفقیت در لیست پیگیری ثبت شد.', 'Moved to Follow-ups.'));
         } else {
            updateCall({ ...call, workList: 'today', isFollowUp: false, isBlacklisted: false });
            setContactWorkList(call.id, 'today');
