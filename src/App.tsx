@@ -322,7 +322,7 @@ export default function App() {
                     <MessageNotifier />
                     <SessionManager />
                     {/* macOS-style Floating Home Button for internal pages */}
-                    {currentView !== 'home' && !popupView && (
+                    {currentView !== 'home' && currentView !== 'dashboard' && !popupView && (
                       <div className="absolute top-4 left-4 z-50 pointer-events-none">
                         <button 
                           onClick={() => setCurrentView('home')}

@@ -42,8 +42,8 @@ interface AppContextType {
   setCurrentView: (view: ViewType) => void;
   popupView: PopupViewType;
   setPopupView: (view: PopupViewType) => void;
-  activeCallTab: 'cards' | 'queue' | 'today' | 'followup' | 'stats' | 'blacklist' | 'courses' | 'learning_paths' | 'schedule' | 'intro';
-  setActiveCallTab: (tab: 'cards' | 'queue' | 'today' | 'followup' | 'stats' | 'blacklist' | 'courses' | 'learning_paths' | 'schedule' | 'intro') => void;
+  activeCallTab: 'cards' | 'queue' | 'today' | 'followup' | 'call_again' | 'registered' | 'call_stats' | 'stats' | 'blacklist' | 'courses' | 'learning_paths' | 'schedule' | 'intro';
+  setActiveCallTab: (tab: 'cards' | 'queue' | 'today' | 'followup' | 'call_again' | 'registered' | 'call_stats' | 'stats' | 'blacklist' | 'courses' | 'learning_paths' | 'schedule' | 'intro') => void;
   setProfile: (p: Profile) => void;
   logout: () => void;
   addCall: (call: Omit<CallRecord, 'id' | 'createdAt'>) => void;
@@ -59,7 +59,7 @@ interface AppContextType {
   removeFromBlacklist: (phone: string) => void;
   isBlacklisted: (phone: string) => boolean;
   restoreBackup: (p: Profile, importedCalls: CallRecord[], importedBlacklist: BlacklistEntry[]) => void;
-  setContactWorkList: (contactId: string, destination: 'none' | 'today' | 'followup') => Promise<boolean>;
+  setContactWorkList: (contactId: string, destination: 'none' | 'today' | 'followup' | 'call_again' | 'registered') => Promise<boolean>;
   recordAttempt: (id: string, values: Pick<CallRecord, 'fullName' | 'callStatus' | 'advisory' | 'notes' | 'advisoryDate' | 'advisoryTime' | 'interestedCourse' | 'registered' | 'consultationConfirmed'>) => Promise<boolean>;
   enableFluid: boolean;
   setEnableFluid: (val: boolean) => void;
@@ -234,11 +234,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     return 'home';
   });
   const [popupView, setPopupView] = useState<PopupViewType>(null);
-  const [activeCallTab, setActiveCallTab] = useState<'cards' | 'queue' | 'today' | 'followup' | 'stats' | 'blacklist' | 'courses' | 'learning_paths' | 'schedule' | 'intro'>(() => {
+  const [activeCallTab, setActiveCallTab] = useState<'cards' | 'queue' | 'today' | 'followup' | 'call_again' | 'registered' | 'call_stats' | 'stats' | 'blacklist' | 'courses' | 'learning_paths' | 'schedule' | 'intro'>(() => {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       const tab = urlParams.get('tab');
-      if (tab && ['cards', 'queue', 'today', 'followup', 'stats', 'blacklist', 'courses'].includes(tab)) {
+      if (tab && ['cards', 'queue', 'today', 'followup', 'call_again', 'registered', 'call_stats', 'stats', 'blacklist', 'courses'].includes(tab)) {
         return tab as any;
       }
     }
@@ -446,7 +446,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [profile, calls]);
 
-  const setContactWorkList = useCallback(async (contactId: string, destination: 'none' | 'today' | 'followup'): Promise<boolean> => {
+  const setContactWorkList = useCallback(async (contactId: string, destination: 'none' | 'today' | 'followup' | 'call_again' | 'registered'): Promise<boolean> => {
     if (!profile) return false;
     reportMeaningfulActivity(profile.sessionId);
 

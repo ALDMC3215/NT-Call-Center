@@ -1,7 +1,6 @@
 import { COURSE_CATEGORIES } from './data/courses';
 
-export const CALL_STATUSES = ['پاسخ داد', 'عدم تمایل', 'جواب نداد'];
-export const LINK_OPTIONS  = ['ارسال شد', 'ارسال نشد', 'عدم تمایل'];
+export const CALL_STATUSES = ['پاسخ داد', 'پاسخ نداد', 'عدم تمایل', 'علاقه مند', 'مشاوره حضوری'];
 
 // Flatten all course titles into a single array for dropdowns
 export const COURSES = COURSE_CATEGORIES.flatMap(category => 
@@ -9,5 +8,3 @@ export const COURSES = COURSE_CATEGORIES.flatMap(category =>
     sub.courses.map(course => course.title)
   )
 );
-export const ADV_OPTIONS   = ['حضوری', 'تلفنی', 'عدم تمایل'];
-export const REGISTRATION_STATUSES = ['ثبت نام کرد', 'مردد', 'ثبت نام نکرد'] as const;

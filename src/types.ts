@@ -31,7 +31,7 @@ export interface CallRecord {
   phone: string;
   fullName?: string;
   callStatus: string;
-  advisory: string;
+  advisory?: string;
   advisoryDate?: string | null;
   advisoryTime?: string | null;
   interestedCourse?: string | null;
@@ -51,7 +51,7 @@ export interface CallRecord {
   followUpAddedAt?: string | null;
   isBlacklisted?: boolean;
   /** Manual work list properties */
-  workList?: 'none' | 'today';
+  workList?: 'none' | 'today' | 'followup' | 'call_again' | 'registered';
   workListDate?: string | null;
   workListUpdatedAt?: string | null;
 }
