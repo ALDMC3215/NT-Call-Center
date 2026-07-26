@@ -6,7 +6,7 @@ export const exportConsultationsToExcel = async (snapshot: any[], activeCount: n
   wb.creator = 'Novin Tech';
   wb.created = new Date();
 
-  const ws = wb.addWorksheet('مشاوره های کارشناس', {
+  const ws = wb.addWorksheet('تماس‌های کارشناس', {
     views: [{ rightToLeft: true, state: 'frozen', ySplit: 4 }],
     properties: { defaultRowHeight: 25, showGridLines: false },
     pageSetup: { orientation: 'landscape', paperSize: 9, fitToPage: true }
@@ -17,8 +17,8 @@ export const exportConsultationsToExcel = async (snapshot: any[], activeCount: n
     { key: 'phone', width: 20 },
     { key: 'name', width: 30 },
     { key: 'course', width: 30 },
-    { key: 'advisoryDate', width: 20 },
-    { key: 'advisoryTime', width: 20 },
+    { key: 'result', width: 25 },
+    { key: 'note', width: 35 },
   ];
 
   // Row 1: Title
@@ -26,7 +26,7 @@ export const exportConsultationsToExcel = async (snapshot: any[], activeCount: n
   const titleRow = ws.getRow(1);
   titleRow.height = 40;
   const titleCell = ws.getCell('A1');
-  titleCell.value = 'گزارش مشاوره‌های کارشناس نوین تک';
+  titleCell.value = 'گزارش تماس‌های روزانه کارشناس نوین تک';
   titleCell.font = { name: 'Vazirmatn', size: 16, bold: true, color: { argb: 'FFFFFFFF' } };
   titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
   titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF8B5CF6' } }; // Violet
@@ -36,7 +36,7 @@ export const exportConsultationsToExcel = async (snapshot: any[], activeCount: n
   const metaRow = ws.getRow(2);
   metaRow.height = 30;
   const metaCell = ws.getCell('A2');
-  metaCell.value = `تاریخ خروجی: ${nowJalali()}   |   تعداد مشاوره‌ها: ${activeCount}`;
+  metaCell.value = `تاریخ خروجی: ${nowJalali()}   |   تعداد تماس‌ها: ${activeCount}`;
   metaCell.font = { name: 'Vazirmatn', size: 11, bold: true, color: { argb: 'FF4C1D95' } };
   metaCell.alignment = { vertical: 'middle', horizontal: 'center' };
   metaCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEDE9FE' } };
@@ -49,7 +49,7 @@ export const exportConsultationsToExcel = async (snapshot: any[], activeCount: n
   headerRow.height = 35;
   const headers = [
     'ردیف', 'شماره تماس', 'نام شخص', 'دوره مدنظر',
-    'تاریخ مراجعه', 'ساعت مراجعه'
+    'وضعیت تماس', 'یادداشت'
   ];
   headerRow.values = headers;
 
@@ -72,9 +72,9 @@ export const exportConsultationsToExcel = async (snapshot: any[], activeCount: n
       index + 1,
       c.phone ? String(c.phone) : '',
       c.fullName || '',
-      c.interestedCourse || '',
-      c.advisoryDate ? new Date(c.advisoryDate).toLocaleDateString('fa-IR') : '',
-      c.advisoryTime || ''
+      c.course || '',
+      c.callStatus || '',
+      c.notes || ''
     ];
 
     const row = ws.addRow(rowData);
@@ -86,7 +86,7 @@ export const exportConsultationsToExcel = async (snapshot: any[], activeCount: n
         top: { style: 'thin', color: { argb: 'FFE2E8F0' } },
         bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
         left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
-        right: { style: 'thin', color: { argb: 'FFE2E8F0' } }
+        right: { style: 'FFE2E8F0' }
       };
 
       // Striping
@@ -101,7 +101,7 @@ export const exportConsultationsToExcel = async (snapshot: any[], activeCount: n
   const url = window.URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `مشاوره‌های_کارشناس_${nowJalali().replace(/\//g, '-')}.xlsx`;
+  a.download = `تماس‌های_کارشناس_${nowJalali().replace(/\//g, '-')}.xlsx`;
   a.click();
   window.URL.revokeObjectURL(url);
 };

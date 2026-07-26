@@ -236,6 +236,7 @@ export const CallListWorkspace = () => {
   // Batch Selection state
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isDragSelecting, setIsDragSelecting] = useState(false);
+  const [dragStartId, setDragStartId] = useState<string | null>(null);
   const [lastSelectedId, setLastSelectedId] = useState<string | null>(null);
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -348,7 +349,10 @@ export const CallListWorkspace = () => {
 
   // --- Batch Selection Logic ---
   React.useEffect(() => {
-    const handleGlobalMouseUp = () => setIsDragSelecting(false);
+    const handleGlobalMouseUp = () => {
+      setIsDragSelecting(false);
+      setDragStartId(null);
+    };
     window.addEventListener('mouseup', handleGlobalMouseUp);
     return () => window.removeEventListener('mouseup', handleGlobalMouseUp);
   }, []);
@@ -388,8 +392,7 @@ export const CallListWorkspace = () => {
       setLastSelectedId(id);
     } else {
       setIsDragSelecting(true);
-      toggleSelection(id);
-      setLastSelectedId(id);
+      setDragStartId(id);
     }
   };
 
@@ -397,6 +400,10 @@ export const CallListWorkspace = () => {
     if (isDragSelecting) {
       setSelectedIds(prev => {
         const newSet = new Set(prev);
+        if (dragStartId) {
+          newSet.add(dragStartId);
+          setDragStartId(null);
+        }
         newSet.add(id);
         return newSet;
       });
@@ -552,6 +559,7 @@ export const CallListWorkspace = () => {
     CALL_STATUSES.forEach(status => {
        stats[status] = 0;
     });
+    stats['پیگیری'] = 0;
     stats['ثبت نشده'] = 0;
     
     calls.filter(c => !c.isBlacklisted).forEach(c => {
@@ -559,6 +567,9 @@ export const CallListWorkspace = () => {
            stats[c.callStatus]++;
        } else {
            stats['ثبت نشده']++;
+       }
+       if (c.isFollowUp) {
+           stats['پیگیری']++;
        }
     });
     return stats;
@@ -578,7 +589,7 @@ export const CallListWorkspace = () => {
 
     let count = 0;
     calls.forEach(c => {
-       if (c.attempts && c.attempts.some(a => a.createdAt.startsWith(isoDate))) {
+       if (c.callStatus && c.updatedAt?.startsWith(isoDate)) {
            count++;
        }
     });
@@ -617,11 +628,14 @@ export const CallListWorkspace = () => {
             exit={{ opacity: 0, y: 50 }} 
             className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] bg-slate-800 text-white rounded-xl shadow-2xl border border-slate-700 px-4 py-2.5 flex items-center gap-4 flex-nowrap overflow-x-auto hide-scrollbar max-w-[95vw]"
           >
-            <div className="flex items-center gap-2 font-bold text-sm bg-slate-900/50 px-3 py-1.5 rounded-lg border border-slate-700 whitespace-nowrap shrink-0">
-              <span className="text-cyan-400">{selectedIds.size}</span>
-              <span>شماره انتخاب شده</span>
-            </div>
-            
+            <button
+              onClick={() => setSelectedIds(new Set())}
+              className="ml-2 p-1.5 hover:bg-slate-700 rounded-lg transition-colors text-slate-400 hover:text-white shrink-0"
+              title="لغو انتخاب"
+            >
+              <X size={18} />
+            </button>
+
             <div className="w-px h-6 bg-slate-600 shrink-0"></div>
             
             <button
@@ -677,14 +691,12 @@ export const CallListWorkspace = () => {
               <Trash2 size={16} />
               <span>حذف گروهی</span>
             </button>
-            
-            <button
-              onClick={() => setSelectedIds(new Set())}
-              className="ml-2 p-1.5 hover:bg-slate-700 rounded-lg transition-colors text-slate-400 hover:text-white shrink-0"
-              title="لغو انتخاب"
-            >
-              <X size={18} />
-            </button>
+            <div className="w-px h-6 bg-slate-600 shrink-0"></div>
+
+            <div className="flex items-center gap-2 font-bold text-sm bg-slate-900/50 px-3 py-1.5 rounded-lg border border-slate-700 whitespace-nowrap shrink-0">
+              <span className="text-cyan-400">{selectedIds.size}</span>
+              <span>شماره انتخاب شده</span>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

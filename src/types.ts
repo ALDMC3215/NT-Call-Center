@@ -39,6 +39,7 @@ export interface CallRecord {
   consultationConfirmed?: boolean;
   notes: string;
   createdAt: string;
+  updatedAt?: string;
   /** ترتیب ورود شماره از فایل اکسل یا ورود دستی */
   queueOrder?: number;
   /** تاریخچه تغییرناپذیر تمام تماس‌ها و پیگیری‌ها */

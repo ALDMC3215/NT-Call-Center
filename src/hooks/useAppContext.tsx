@@ -165,6 +165,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             consultationConfirmed: c.consultation_confirmed || false,
             notes: c.notes || '',
             createdAt: c.created_at,
+            updatedAt: c.updated_at,
             queueOrder: c.queue_order,
             attempts: contactAttempts,
             nextFollowUpAt: followUpMap[c.id],
@@ -356,12 +357,17 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     if (!profile) return;
     reportMeaningfulActivity(profile.sessionId);
 
-    setCallsState(prev => prev.map(c => c.id === updatedCall.id ? updatedCall : c));
-    updateFollowUpInStorage(profile, updatedCall.id, !!updatedCall.isFollowUp);
+    const callToUpdate = {
+      ...updatedCall,
+      updatedAt: new Date().toISOString()
+    };
+
+    setCallsState(prev => prev.map(c => c.id === callToUpdate.id ? callToUpdate : c));
+    updateFollowUpInStorage(profile, callToUpdate.id, !!callToUpdate.isFollowUp);
 
     try {
       const { error } = await supabase.rpc('update_contact', {
-        p_id: updatedCall.id,
+        p_id: callToUpdate.id,
         p_full_name: updatedCall.fullName || null,
         p_call_status: updatedCall.callStatus || null,
         p_courses: updatedCall.interestedCourse ? [updatedCall.interestedCourse] : null,
