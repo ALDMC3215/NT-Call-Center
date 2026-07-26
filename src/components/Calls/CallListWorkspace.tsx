@@ -529,23 +529,11 @@ export const CallListWorkspace = () => {
       list = list.filter(c => matchesSearch(c, searchQuery));
     }
     return list.sort((a, b) => {
-      const isWorkedA = !!a.callStatus;
-      const isWorkedB = !!b.callStatus;
-      
-      // 1. Unworked numbers at the top
-      if (isWorkedA && !isWorkedB) return 1;
-      if (!isWorkedA && isWorkedB) return -1;
-      
-      // 2. If both are worked, sort by the Date they were worked on (newer dates first)
-      if (isWorkedA && isWorkedB) {
-         const dateA = a.updatedAt ? a.updatedAt.split('T')[0] : '';
-         const dateB = b.updatedAt ? b.updatedAt.split('T')[0] : '';
-         if (dateA !== dateB) {
-            return dateB.localeCompare(dateA);
-         }
-      }
+      // 1. Follow-ups at the top
+      if (a.isFollowUp && !b.isFollowUp) return -1;
+      if (!a.isFollowUp && b.isFollowUp) return 1;
 
-      // 3. Original Excel order (queueOrder ASC, then createdAt ASC)
+      // 2. Original Excel order (queueOrder ASC, then createdAt ASC)
       const qDiff = (a.queueOrder ?? 0) - (b.queueOrder ?? 0);
       if (qDiff !== 0) return qDiff;
       const timeDiff = String(a.createdAt).localeCompare(String(b.createdAt));
