@@ -77,3 +77,14 @@ When I explicitly say a change is final and ready for production:
 5. Wait for my explicit confirmation before commit and push.
 6. Only then commit and push to `origin/main`.
 7. Never force-push.
+
+## Stats & Counters Protection
+
+* The logic for calculating the daily worked counter (`todayCount`) and `historyStats` inside `src/hooks/useCallListStats.ts` is strictly PROTECTED.
+* Under no circumstances should you modify, refactor, or delete the calculation logic or its relation to the UI unless explicitly and repeatedly requested by the user.
+
+
+## Stats & Counters Protection
+
+* The logic for calculating the daily worked counter (`todayCount`) and `historyStats` inside `src/hooks/useCallListStats.ts` is strictly PROTECTED.
+* Under no circumstances should you modify, refactor, or delete the calculation logic or its relation to the UI unless explicitly and repeatedly requested by the user.

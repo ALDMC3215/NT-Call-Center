@@ -27,7 +27,7 @@ export const CallStatsView: React.FC<CallStatsViewProps> = ({ calls }) => {
           
           map[datePart].total += 1;
           
-          if (attempt.callStatus === 'پاسخ داد') {
+          if (['مردد', 'ثبت نام کرد'].includes(attempt.callStatus)) {
             map[datePart].answered += 1;
           } else {
              // Treat all other attempts (جواب نداد, خاموش, مشغول, etc) as unanswered/failed

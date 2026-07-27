@@ -22,6 +22,8 @@ import { exportConsultationsToExcel } from '../../utils/consultationExcel';
 import { CoursesView } from '../Courses/CoursesView';
 import { IntroTextView } from '../Education/IntroTextView';
 import { LearningPathsModal } from '../Shared/LearningPathsModal';
+import { CallListStats } from './CallListStats';
+import { NegotiationView } from '../Education/NegotiationView';
 
 const CourseAutocomplete = ({ value, onChange }: { value: string, onChange: (v: string) => void }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -215,11 +217,13 @@ export const CallListWorkspace = () => {
     updateContactTaskDetails,
     recordCallAttemptWithTask,
     hardDeleteCall,
-    setCurrentView
+    setCurrentView,
+    getMyDailyStats
   } = useAppContext();
   
   const { tr, valueLabel, direction } = useLocale();
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedStatusFilter, setSelectedStatusFilter] = useState<string | null>(null);
   
   const [tasks, setTasks] = useState<ContactTask[]>([]);
   const [actionModalCall, setActionModalCall] = useState<CallRecord | null>(null);
@@ -231,7 +235,7 @@ export const CallListWorkspace = () => {
   const [submittingIds, setSubmittingIds] = useState<Set<string>>(new Set());
 
   // Local state for tabs
-  const [activeTab, setActiveTab] = useState<'list' | 'courses' | 'learning_paths' | 'intro'>('list');
+  const [activeTab, setActiveTab] = useState<'list' | 'courses' | 'learning_paths' | 'intro' | 'negotiation' | 'stats'>('list');
 
   // Batch Selection state
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -528,6 +532,15 @@ export const CallListWorkspace = () => {
     if (searchQuery.trim()) {
       list = list.filter(c => matchesSearch(c, searchQuery));
     }
+    if (selectedStatusFilter) {
+      if (selectedStatusFilter === 'پیگیری') {
+        list = list.filter(c => c.isFollowUp);
+      } else if (selectedStatusFilter === 'ثبت نشده') {
+        list = list.filter(c => !c.callStatus || !CALL_STATUSES.includes(c.callStatus));
+      } else {
+        list = list.filter(c => c.callStatus === selectedStatusFilter);
+      }
+    }
     return list.sort((a, b) => {
       // 1. Follow-ups at the top
       if (a.isFollowUp && !b.isFollowUp) return -1;
@@ -539,7 +552,7 @@ export const CallListWorkspace = () => {
       const timeDiff = String(a.createdAt).localeCompare(String(b.createdAt));
       return timeDiff !== 0 ? timeDiff : String(a.id).localeCompare(String(b.id));
     });
-  }, [calls, searchQuery]);
+  }, [calls, searchQuery, selectedStatusFilter]);
 
   // Status statistics
   const statusStats = useMemo(() => {
@@ -586,8 +599,10 @@ export const CallListWorkspace = () => {
 
   const exportDailyStats = async () => {
     if (displayedList.length === 0) return toast.info(tr('موردی برای خروجی وجود ندارد.', 'No items to export.'));
-    // Map to a simpler structure for excel if needed, or use the utility
-    await exportConsultationsToExcel(displayedList, displayedList.length);
+    const hStats = await getMyDailyStats();
+    const todayStr = require('../../utils/jalali').toJalali();
+    const todayCount = calls.filter(c => c.callStatus && c.updatedAt && require('../../utils/jalali').toJalali(c.updatedAt) === todayStr).length;
+    await require('../../utils/consultationExcel').exportConsultationsToExcel(displayedList, displayedList.length, hStats, todayCount);
     toast.success(tr('فایل اکسل با موفقیت ایجاد شد.', 'Excel created successfully.'));
   };
 
@@ -725,6 +740,20 @@ export const CallListWorkspace = () => {
                    <MessageSquareQuote size={14} />
                    <span>{tr('متن تماس', 'Intro Text')}</span>
                  </button>
+                 <button
+                   onClick={() => setActiveTab('negotiation')}
+                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px] font-bold transition-colors whitespace-nowrap shrink-0 ${activeTab === 'negotiation' ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
+                 >
+                   <Icons.Target size={14} />
+                   <span>{tr('تکنیک‌های مذاکره', 'Negotiation')}</span>
+                 </button>
+                 <button
+                   onClick={() => setActiveTab('stats')}
+                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px] font-bold transition-colors whitespace-nowrap shrink-0 ${activeTab === 'stats' ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
+                 >
+                   <Icons.BarChart3 size={14} />
+                   <span>{tr('آمار', 'Stats')}</span>
+                 </button>
                </div>
 
                {/* Left Side: Search Box & Home */}
@@ -763,35 +792,36 @@ export const CallListWorkspace = () => {
                
                {/* Right Side: Stats Badges */}
                <div className="flex items-center gap-2 shrink-0">
-                 {Object.entries(statusStats).map(([status, count]) => (
-                    <div key={status} className="flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-md bg-white text-slate-600 border border-slate-200 whitespace-nowrap">
-                       <span>{status}:</span>
-                       <span className="text-brand-600">{count}</span>
-                    </div>
-                 ))}
+                 {Object.entries(statusStats).map(([status, count]) => {
+                    const isSelected = selectedStatusFilter === status;
+                    return (
+                      <button
+                        key={status}
+                        onClick={() => setSelectedStatusFilter(isSelected ? null : status)}
+                        className={`flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-md transition-all whitespace-nowrap select-none cursor-pointer border ${
+                          isSelected
+                            ? 'bg-brand-600 text-white border-brand-600 shadow-xs'
+                            : 'bg-white hover:bg-slate-100 text-slate-600 border-slate-200'
+                        }`}
+                        title={isSelected ? tr('حذف فیلتر', 'Clear filter') : tr(`فیلتر براساس ${status}`, `Filter by ${status}`)}
+                      >
+                         <span>{status}:</span>
+                         <span className={isSelected ? 'text-white font-extrabold' : 'text-brand-600'}>{count}</span>
+                      </button>
+                    );
+                 })}
+                 {selectedStatusFilter && (
+                   <button
+                     onClick={() => setSelectedStatusFilter(null)}
+                     className="text-[11px] font-bold px-2 py-1 rounded-md bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 transition-colors whitespace-nowrap cursor-pointer"
+                   >
+                     {tr('نمایش همه', 'Show All')}
+                   </button>
+                 )}
                </div>
                
-               {/* Left Side: Date, Export & Actions */}
+               {/* Left Side: Actions */}
                <div className="flex items-center gap-2 shrink-0">
-                 {/* Date & Calls */}
-                 <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-700 px-2.5 py-1 rounded-md bg-indigo-50 border border-indigo-200 whitespace-nowrap">
-                   <Icons.Calendar size={13} className="text-indigo-500" />
-                   <span>{todayDate}</span>
-                   <span className="mx-1 text-indigo-300">|</span>
-                   <Icons.PhoneCall size={13} className="text-indigo-500" />
-                   <span>{tr('امروز:', 'Today:')} {todayCalls}</span>
-                 </div>
-                 
-                 <div className="w-px h-5 bg-slate-300 mx-1 hidden sm:block"></div>
-                 
-                 {/* Export Stats */}
-                 <button 
-                   onClick={exportDailyStats}
-                   className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-50 transition-colors text-[11px] font-bold whitespace-nowrap shrink-0"
-                 >
-                   <FileText size={13} />
-                   <span>{tr('خروجی', 'Export')}</span>
-                 </button>
 
                  {/* Upload */}
                  <button
@@ -842,8 +872,13 @@ export const CallListWorkspace = () => {
                 <div className="w-full h-full p-4"><IntroTextView embedded={true} /></div>
               ) : activeTab === 'learning_paths' ? (
                 <div className="w-full h-full relative"><LearningPathsModal isOpen={true} onClose={() => {}} embedded={true} /></div>
+              ) : activeTab === 'stats' ? (
+                <div className="w-full h-full relative"><CallListStats calls={displayedList} onExport={exportDailyStats} /></div>
+              ) : activeTab === 'negotiation' ? (
+                <div className="w-full h-full relative"><NegotiationView embedded={true} /></div>
               ) : (
-                <table className="w-full text-center border-collapse table-fixed min-w-[900px]">
+                <div className="p-3 md:p-4">
+                  <table className="w-full text-center border-separate border-spacing-y-2 table-fixed min-w-[900px]">
                   <colgroup>
                     <col className="w-[50px]" /> {/* Checkbox */}
                     <col className="w-[180px]" /> {/* Phone/Name */}
@@ -851,9 +886,9 @@ export const CallListWorkspace = () => {
                     <col className="w-[200px]" /> {/* Interested Course */}
                     <col className="w-[300px]" /> {/* Actions */}
                   </colgroup>
-                  <thead className="sticky top-0 bg-slate-100 border-b-2 border-slate-200 z-20">
-                    <tr>
-                      <th className="py-2 px-2 text-center">
+                  <thead className="sticky top-0 z-20 backdrop-blur-md">
+                    <tr className="[&>th]:bg-slate-100/90 [&>th]:py-2.5 [&>th]:px-2 [&>th]:border-y [&>th]:border-slate-200/80 [&>th:first-child]:rounded-r-xl [&>th:first-child]:border-r [&>th:last-child]:rounded-l-xl [&>th:last-child]:border-l text-[12px] font-extrabold text-slate-800 tracking-wide">
+                      <th className="text-center">
                          <input 
                            type="checkbox" 
                            checked={selectedIds.size > 0 && selectedIds.size === displayedList.length}
@@ -867,17 +902,17 @@ export const CallListWorkspace = () => {
                            className="w-4 h-4 rounded text-brand-600 border-slate-300 focus:ring-brand-500 cursor-pointer"
                          />
                       </th>
-                      <th className="py-2 px-2 text-[12px] font-extrabold text-slate-800 tracking-wide whitespace-nowrap">{tr('شماره تماس و نام', 'Phone & Name')}</th>
-                      <th className="py-2 px-2 text-[12px] font-extrabold text-slate-800 tracking-wide whitespace-nowrap">{tr('نتیجه تماس', 'Call Result')}</th>
-                      <th className="py-2 px-2 text-[12px] font-extrabold text-slate-800 tracking-wide whitespace-nowrap">{tr('دوره مدنظر', 'Course')}</th>
-                      <th className="py-2 px-2 text-[12px] font-extrabold text-slate-800 tracking-wide">{tr('عملیات', 'Actions')}</th>
+                      <th className="whitespace-nowrap">{tr('شماره تماس و نام', 'Phone & Name')}</th>
+                      <th className="whitespace-nowrap">{tr('نتیجه تماس', 'Call Result')}</th>
+                      <th className="whitespace-nowrap">{tr('دوره مدنظر', 'Course')}</th>
+                      <th>{tr('عملیات', 'Actions')}</th>
                     </tr>
                   </thead>
                   <tbody className="text-[13px] font-medium text-slate-800 relative">
                     <AnimatePresence>
                     {displayedList.length === 0 ? (
                       <motion.tr key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                        <td colSpan={4} className="py-24"></td>
+                        <td colSpan={5} className="py-24 text-center"></td>
                       </motion.tr>
                     ) : (
                       displayedList.map((c, index) => (
@@ -889,16 +924,16 @@ export const CallListWorkspace = () => {
                           transition={{ duration: 0.2 }}
                           onMouseDown={(e) => handleRowMouseDown(e, c.id, index)}
                           onMouseEnter={() => handleRowMouseEnter(c.id)}
-                          className={`relative focus-within:z-50 hover:z-40 border-b transition-colors duration-300 group ${
+                          className={`relative focus-within:z-50 hover:z-40 transition-all duration-200 group rounded-xl shadow-2xs hover:shadow-md ${
                             selectedIds.has(c.id)
-                              ? 'bg-indigo-50/70 hover:bg-indigo-100/70 border-indigo-200 shadow-sm'
-                              : c.isFollowUp 
-                                ? 'bg-orange-50/50 hover:bg-orange-100/50 border-orange-200' 
-                                : 'bg-white hover:bg-slate-50 border-slate-200'
+                              ? 'bg-indigo-50/80 hover:bg-indigo-100/90 [&>td]:border-indigo-200'
+                              : c.isFollowUp
+                                ? 'bg-orange-50/70 hover:bg-orange-100/80 [&>td]:border-orange-200'
+                                : 'bg-white hover:bg-slate-50/90 [&>td]:border-slate-200/80'
                           }`}
                         >
                           {/* Selection Checkbox */}
-                          <td className="py-2 px-2 text-center" onClick={(e) => e.stopPropagation()}>
+                          <td className="py-2.5 px-2 text-center rounded-r-xl border-y border-r border-inherit" onClick={(e) => e.stopPropagation()}>
                              <input 
                                type="checkbox"
                                checked={selectedIds.has(c.id)}
@@ -908,7 +943,7 @@ export const CallListWorkspace = () => {
                           </td>
 
                           {/* Phone and Name */}
-                          <td className="py-2 px-2 relative whitespace-nowrap">
+                          <td className="py-2.5 px-2 relative whitespace-nowrap border-y border-inherit">
                              <div className="flex flex-col items-center justify-center w-full px-2">
                                 <span dir="ltr" className="font-bold text-[18px] tracking-[0.1em] text-slate-800">{formatPhoneNumber(c.phone)}</span>
                                 <input
@@ -922,7 +957,7 @@ export const CallListWorkspace = () => {
                           </td>
 
                           {/* Call Status */}
-                          <td className="py-2 px-2 relative whitespace-nowrap">
+                          <td className="py-2.5 px-2 relative whitespace-nowrap border-y border-inherit">
                              <div className="flex items-center justify-center">
                                 <TableDropdown
                                   value={c.callStatus || ''}
@@ -937,7 +972,7 @@ export const CallListWorkspace = () => {
                           </td>
 
                           {/* Course */}
-                          <td className="py-2 px-2 relative whitespace-nowrap overflow-visible">
+                          <td className="py-2.5 px-2 relative whitespace-nowrap overflow-visible border-y border-inherit">
                              <div className="flex items-center justify-center">
                                 <CourseAutocomplete
                                   value={c.interestedCourse || ''}
@@ -947,7 +982,7 @@ export const CallListWorkspace = () => {
                           </td>
 
                            {/* Actions */}
-                          <td className="py-2 px-2 relative">
+                          <td className="py-2.5 px-2 relative border-y border-l border-inherit rounded-l-xl">
                              <div className="flex justify-center items-center gap-2">
                                 {/* Follow-up Button */}
                                 <button
@@ -1007,6 +1042,7 @@ export const CallListWorkspace = () => {
                     </AnimatePresence>
                   </tbody>
                 </table>
+                </div>
               )}
 
               {displayedList.length === 0 && activeTab === 'list' && (

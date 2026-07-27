@@ -3,7 +3,7 @@ import React, { createContext, ReactNode, useContext, useEffect, useMemo, useSta
 export type Language = 'fa' | 'en';
 
 const VALUE_TRANSLATIONS: Record<string, string> = {
-  "پاسخ داد": "Answered",
+  "مردد": "Hesitant",
   "پاسخ نداد": "No answer",
   "در دسترس نیست": "Unavailable",
   "مشغول بود": "Busy",

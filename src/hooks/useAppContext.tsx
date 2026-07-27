@@ -81,6 +81,8 @@ interface AppContextType {
   logManualCallAttempt: (contactId: string, options?: { sourceTaskId?: string | null; manualReason?: string | null }) => Promise<{ attempt: CallAttempt; attemptCount: number; todayAttemptCount: number; lastAttemptAt: string }>;
   isDarkMode: boolean;
   toggleDarkMode: () => void;
+  upsertDailyCallStat: (dateStr: string, count: number) => Promise<void>;
+  getMyDailyStats: () => Promise<Array<{ jalali_date: string; call_count: number }>>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -838,11 +840,33 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
     return data as unknown as ContactTaskSummary;
   }, [profile]);
+
+  const getMyDailyStats = useCallback(async () => {
+    if (!profile) return [];
+    try {
+      const { data, error } = await supabase.rpc('get_my_daily_stats');
+      if (error) throw error;
+      return data || [];
+    } catch (err: any) {
+      console.error('Error fetching daily stats:', err);
+      return [];
+    }
+  }, [profile]);
+
+  const upsertDailyCallStat = useCallback(async (dateStr: string, count: number) => {
+    if (!profile) return;
+    try {
+      await supabase.rpc('upsert_daily_call_stat', { p_jalali_date: dateStr, p_count: count });
+    } catch (err: any) {
+      console.error('Error upserting daily stats:', err);
+    }
+  }, [profile]);
   const contextValue = React.useMemo(() => ({
     profile, calls, isLoadingCalls, callsError, blacklist, currentView, setCurrentView, popupView, setPopupView, activeCallTab, setActiveCallTab, setProfile, logout, addCall, updateCall, deleteCall, hardDeleteCall, clearAllCalls, bulkAddCalls, importData, wipeAllData, importedData, setImportedData, addToBlacklist, removeFromBlacklist, isBlacklisted, restoreBackup, setContactWorkList, recordAttempt, enableFluid, setEnableFluid, accentColor, setAccentColor, layoutMargin, setLayoutMargin, sparkColor, setSparkColor,
     getMyContactTasks, createContactTask, createContactTaskWithDetails, updateContactTaskDetails, rescheduleContactTask, completeContactTask, cancelContactTask, getMyContactTaskSummary, recordCallAttemptWithTask, logManualCallAttempt,
+    getMyDailyStats, upsertDailyCallStat,
     isDarkMode, toggleDarkMode
-  }), [profile, calls, isLoadingCalls, callsError, blacklist, currentView, setCurrentView, popupView, setPopupView, activeCallTab, setActiveCallTab, setProfile, logout, addCall, updateCall, deleteCall, hardDeleteCall, clearAllCalls, bulkAddCalls, importData, wipeAllData, importedData, setImportedData, addToBlacklist, removeFromBlacklist, isBlacklisted, restoreBackup, setContactWorkList, recordAttempt, enableFluid, setEnableFluid, accentColor, setAccentColor, layoutMargin, setLayoutMargin, sparkColor, setSparkColor, getMyContactTasks, createContactTask, createContactTaskWithDetails, updateContactTaskDetails, rescheduleContactTask, completeContactTask, cancelContactTask, getMyContactTaskSummary, recordCallAttemptWithTask, logManualCallAttempt, isDarkMode, toggleDarkMode]);
+  }), [profile, calls, isLoadingCalls, callsError, blacklist, currentView, setCurrentView, popupView, setPopupView, activeCallTab, setActiveCallTab, setProfile, logout, addCall, updateCall, deleteCall, hardDeleteCall, clearAllCalls, bulkAddCalls, importData, wipeAllData, importedData, setImportedData, addToBlacklist, removeFromBlacklist, isBlacklisted, restoreBackup, setContactWorkList, recordAttempt, enableFluid, setEnableFluid, accentColor, setAccentColor, layoutMargin, setLayoutMargin, sparkColor, setSparkColor, getMyContactTasks, createContactTask, createContactTaskWithDetails, updateContactTaskDetails, rescheduleContactTask, completeContactTask, cancelContactTask, getMyContactTaskSummary, recordCallAttemptWithTask, logManualCallAttempt, getMyDailyStats, upsertDailyCallStat, isDarkMode, toggleDarkMode]);
 
   return (
     <AppContext.Provider value={contextValue}>

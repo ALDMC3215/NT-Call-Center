@@ -102,9 +102,17 @@ const techniques = [
   },
 ];
 
-export const NegotiationView = ({ isModal, onClose }: { isModal?: boolean, onClose?: () => void }) => {
+export const NegotiationView = ({ isModal, onClose, embedded }: { isModal?: boolean, onClose?: () => void, embedded?: boolean }) => {
   const [activeId, setActiveId] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
   const { setCurrentView } = useAppContext();
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 400); // 400ms loading effect for smoother flow
+    return () => clearTimeout(timer);
+  }, []);
 
   const scrollToSection = (id: number) => {
     setActiveId(id);
@@ -124,7 +132,7 @@ export const NegotiationView = ({ isModal, onClose }: { isModal?: boolean, onClo
             <Target size={22} strokeWidth={2.5} />
           </div>
           <div>
-            <h1 className="text-lg font-black text-slate-800 leading-tight">
+            <h1 className="text-lg font-extrabold text-slate-800 leading-tight">
               تکنیک‌های حرفه‌ای مذاکره
             </h1>
             <p className="text-sm text-slate-500 font-medium mt-1">
@@ -132,7 +140,7 @@ export const NegotiationView = ({ isModal, onClose }: { isModal?: boolean, onClo
             </p>
           </div>
         </div>
-        {isModal ? (
+        {embedded ? null : isModal ? (
            <button
              onClick={onClose}
              className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-colors shrink-0"
@@ -159,7 +167,7 @@ export const NegotiationView = ({ isModal, onClose }: { isModal?: boolean, onClo
               <div className="w-8 h-8 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center">
                 <Target size={18} strokeWidth={2.5} />
               </div>
-              <h3 className="text-sm font-black text-slate-800 tracking-tight">فهرست تکنیک‌ها</h3>
+              <h3 className="text-sm font-bold text-slate-800 tracking-tight">فهرست تکنیک‌ها</h3>
             </div>
             
             <div className="relative">
@@ -189,10 +197,10 @@ export const NegotiationView = ({ isModal, onClose }: { isModal?: boolean, onClo
                       
                       {/* Title text */}
                       <div className="flex flex-col flex-1 min-w-0 pb-1">
-                        <span className={`text-[10px] font-extrabold mb-1 transition-colors ${isActive ? 'text-brand-600' : 'text-slate-400'}`}>
+                        <span className={`text-[10px] font-bold mb-1 transition-colors ${isActive ? 'text-brand-600' : 'text-slate-400'}`}>
                           تکنیک {tech.id}
                         </span>
-                        <span className={`text-[13px] font-bold transition-colors truncate block w-full ${
+                        <span className={`text-[13px] font-semibold transition-colors truncate block w-full ${
                           isActive ? 'text-slate-900' : 'text-slate-600'
                         }`}>
                           {tech.title}
@@ -226,83 +234,107 @@ export const NegotiationView = ({ isModal, onClose }: { isModal?: boolean, onClo
                }
              }}
         >
-          <div className="max-w-3xl mx-auto space-y-8 pb-32">
+          <div className="max-w-3xl mx-auto space-y-10 pb-32">
             
             {/* Intro Alert */}
-            <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5 sm:p-6 text-blue-800 shadow-sm flex gap-4 items-start">
-              <div className="flex-none p-2 bg-blue-100 text-blue-600 rounded-xl">
+            <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 sm:p-8 text-blue-800 shadow-sm flex gap-5 items-start">
+              <div className="flex-none p-2 bg-blue-100 text-blue-600 rounded-xl mt-1">
                 <Target size={24} />
               </div>
               <div>
-                <h4 className="font-bold text-base mb-2">راهنمای مطالعه</h4>
+                <h4 className="font-semibold text-base mb-2">راهنمای مطالعه</h4>
                 <p className="text-sm font-medium leading-loose opacity-90 text-justify">
                   این بخش برای ارتقای سطح کیفی مکالمات و مهارت‌های فروش شما تدوین شده است. هر یک از این تکنیک‌ها بر اساس رفتار فروشندگان موفق طراحی شده و مستقیماً روی نرخ تبدیل تماس‌های شما تأثیر مثبت می‌گذارد. پیشنهاد می‌کنیم هر روز یک تکنیک را انتخاب کرده و در تماس‌های خود تمرین کنید.
                 </p>
               </div>
             </div>
 
-            {/* Techniques List */}
-            {techniques.map((tech) => {
-              const Icon = tech.icon;
-              return (
-                <motion.div
-                  key={tech.id}
-                  id={`technique-${tech.id}`}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-100px" }}
-                  transition={{ duration: 0.4 }}
-                  className="bg-white rounded-[1.5rem] border border-slate-200 shadow-sm overflow-hidden group hover:shadow-md transition-shadow duration-300"
-                >
-                  <div className="p-6 sm:p-8">
-                    
-                    {/* Header */}
-                    <div className="flex items-start gap-4 mb-6">
-                      <div className="w-12 h-12 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center flex-none border border-brand-100">
-                        <Icon size={24} strokeWidth={2} />
-                      </div>
-                      <div>
-                        <span className="text-xs font-black text-brand-600 bg-brand-50 px-2 py-1 rounded-md mb-2 inline-block">تکنیک شماره {tech.id}</span>
-                        <h2 className="text-lg sm:text-xl font-black text-slate-800 leading-tight">
-                          {tech.title}
-                        </h2>
+            {/* Techniques List / Skeleton Loading */}
+            {isLoading ? (
+              <div className="space-y-10">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="bg-white rounded-[1.5rem] border border-slate-200 shadow-sm overflow-hidden p-8 sm:p-10 animate-pulse">
+                    <div className="flex items-start gap-4 mb-8">
+                      <div className="w-12 h-12 rounded-2xl bg-slate-100 flex-none"></div>
+                      <div className="flex-1 space-y-3 pt-1">
+                        <div className="h-4 bg-slate-100 rounded-md w-24"></div>
+                        <div className="h-6 bg-slate-100 rounded-md w-2/3"></div>
                       </div>
                     </div>
-
-                    {/* Content */}
-                    <p className="text-slate-600 text-[15px] sm:text-base font-medium leading-[2.2] text-justify mb-8">
-                      {tech.content}
-                    </p>
-
-                    {/* Lesson & Golden Point Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-2 h-full bg-slate-400/30"></div>
-                        <h4 className="flex items-center gap-2 font-bold text-slate-700 text-sm mb-3">
-                          <CheckCircle2 size={18} className="text-slate-500" />
-                          درس فروش
-                        </h4>
-                        <p className="text-slate-600 text-sm font-medium leading-loose text-justify">
-                          {tech.lesson}
-                        </p>
-                      </div>
-
-                      <div className="bg-amber-50 border border-amber-200/60 rounded-2xl p-5 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-2 h-full bg-amber-400"></div>
-                        <h4 className="flex items-center gap-2 font-bold text-amber-900 text-sm mb-3">
-                          <Zap size={18} className="text-amber-600 fill-amber-600/20" />
-                          نکته طلایی
-                        </h4>
-                        <p className="text-amber-800 text-sm font-medium leading-loose text-justify">
-                          {tech.goldenPoint}
-                        </p>
-                      </div>
+                    <div className="space-y-3 mb-10">
+                      <div className="h-4 bg-slate-100 rounded-md w-full"></div>
+                      <div className="h-4 bg-slate-100 rounded-md w-full"></div>
+                      <div className="h-4 bg-slate-100 rounded-md w-4/5"></div>
                     </div>
-
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="bg-slate-50 rounded-2xl p-6 h-32"></div>
+                      <div className="bg-slate-50 rounded-2xl p-6 h-32"></div>
+                    </div>
                   </div>
-                </motion.div>
-              );
-            })}
+                ))}
+              </div>
+            ) : (
+              techniques.map((tech) => {
+                const Icon = tech.icon;
+                return (
+                  <motion.div
+                    key={tech.id}
+                    id={`technique-${tech.id}`}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-100px" }}
+                    transition={{ duration: 0.4 }}
+                    className="bg-white rounded-[1.5rem] border border-slate-200 shadow-sm overflow-hidden group hover:shadow-md transition-shadow duration-300"
+                  >
+                    <div className="p-8 sm:p-10">
+                      {/* Header */}
+                      <div className="flex items-start gap-5 mb-8">
+                        <div className="w-14 h-14 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center flex-none border border-brand-100">
+                          <Icon size={26} strokeWidth={1.8} />
+                        </div>
+                        <div>
+                          <span className="text-xs font-bold text-brand-600 bg-brand-50 px-2.5 py-1 rounded-md mb-2 inline-block">تکنیک شماره {tech.id}</span>
+                          <h2 className="text-lg sm:text-xl font-extrabold text-slate-800 leading-tight">
+                            {tech.title}
+                          </h2>
+                        </div>
+                      </div>
+
+                      {/* Content */}
+                      <p className="text-slate-600 text-[15px] sm:text-base font-medium leading-[2.2] text-justify mb-10">
+                        {tech.content}
+                      </p>
+
+                      {/* Lesson & Golden Point Cards */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 relative overflow-hidden">
+                          <div className="absolute top-0 right-0 w-2 h-full bg-slate-400/30"></div>
+                          <h4 className="flex items-center gap-2 font-semibold text-slate-700 text-sm mb-3">
+                            <CheckCircle2 size={18} className="text-slate-500" />
+                            درس فروش
+                          </h4>
+                          <p className="text-slate-600 text-sm font-medium leading-loose text-justify">
+                            {tech.lesson}
+                          </p>
+                        </div>
+
+                        <div className="bg-amber-50 border border-amber-200/60 rounded-2xl p-6 relative overflow-hidden">
+                          <div className="absolute top-0 right-0 w-2 h-full bg-amber-400"></div>
+                          <h4 className="flex items-center gap-2 font-semibold text-amber-900 text-sm mb-3">
+                            <Zap size={18} className="text-amber-600 fill-amber-600/20" />
+                            نکته طلایی
+                          </h4>
+                          <p className="text-amber-800 text-sm font-medium leading-loose text-justify">
+                            {tech.goldenPoint}
+                          </p>
+                        </div>
+                      </div>
+
+                    </div>
+                  </motion.div>
+                );
+              })
+            )}
 
           </div>
         </div>

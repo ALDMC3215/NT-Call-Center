@@ -1,7 +1,7 @@
 import ExcelJS from 'exceljs';
 import { nowJalali } from './jalali';
 
-export const exportConsultationsToExcel = async (snapshot: any[], activeCount: number) => {
+export const exportConsultationsToExcel = async (snapshot: any[], activeCount: number, historyStats?: Array<{jalali_date: string, call_count: number}>, todayCount?: number) => {
   const wb = new ExcelJS.Workbook();
   wb.creator = 'Novin Tech';
   wb.created = new Date();
@@ -86,7 +86,7 @@ export const exportConsultationsToExcel = async (snapshot: any[], activeCount: n
         top: { style: 'thin', color: { argb: 'FFE2E8F0' } },
         bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
         left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
-        right: { style: 'FFE2E8F0' }
+        right: { style: 'thin', color: { argb: 'FFE2E8F0' } }
       };
 
       // Striping
@@ -95,6 +95,71 @@ export const exportConsultationsToExcel = async (snapshot: any[], activeCount: n
       }
     });
   });
+
+  if (historyStats && todayCount !== undefined) {
+    const ws2 = wb.addWorksheet('آمار روزانه', {
+      views: [{ rightToLeft: true }],
+      properties: { defaultRowHeight: 25, showGridLines: false }
+    });
+
+    ws2.columns = [
+      { key: 'date', width: 25 },
+      { key: 'count', width: 25 }
+    ];
+
+    ws2.mergeCells('A1:B1');
+    const tRow = ws2.getRow(1);
+    tRow.height = 35;
+    const tCell = tRow.getCell(1);
+    tCell.value = 'گزارش تماس‌های روزانه';
+    tCell.font = { name: 'Vazirmatn', size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
+    tCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF8B5CF6' } };
+    tCell.alignment = { vertical: 'middle', horizontal: 'center' };
+
+    const todayRow = ws2.getRow(2);
+    todayRow.height = 30;
+    todayRow.getCell(1).value = `کار شده امروز (${nowJalali().split(' ')[0]})`;
+    todayRow.getCell(2).value = todayCount;
+    todayRow.eachCell(c => {
+      c.font = { name: 'Vazirmatn', size: 11, bold: true, color: { argb: 'FF0284C7' } };
+      c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0F2FE' } };
+      c.alignment = { vertical: 'middle', horizontal: 'center' };
+      c.border = {
+        top: { style: 'thin', color: { argb: 'FFBAE6FD' } },
+        bottom: { style: 'thin', color: { argb: 'FFBAE6FD' } },
+        left: { style: 'thin', color: { argb: 'FFBAE6FD' } },
+        right: { style: 'thin', color: { argb: 'FFBAE6FD' } }
+      };
+    });
+
+    ws2.getRow(3).height = 15;
+
+    const hHeaderRow = ws2.getRow(4);
+    hHeaderRow.height = 30;
+    hHeaderRow.values = ['تاریخ', 'تعداد تماس‌های کارشناس'];
+    hHeaderRow.eachCell(c => {
+      c.font = { name: 'Vazirmatn', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+      c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF7C3AED' } };
+      c.alignment = { vertical: 'middle', horizontal: 'center' };
+    });
+
+    [...historyStats].reverse().forEach((s, i) => {
+       const row = ws2.addRow([s.jalali_date, s.call_count]);
+       row.eachCell(c => {
+         c.font = { name: 'Vazirmatn', size: 10, color: { argb: 'FF334155' } };
+         c.alignment = { vertical: 'middle', horizontal: 'center' };
+         c.border = {
+           bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+           top: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+           left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+           right: { style: 'thin', color: { argb: 'FFE2E8F0' } }
+         };
+         if (i % 2 !== 0) {
+           c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } };
+         }
+       });
+    });
+  }
 
   const buf = await wb.xlsx.writeBuffer();
   const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });

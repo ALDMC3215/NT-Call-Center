@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Phone, Link as LinkIcon, BookOpen, Users, CheckCircle2, ChevronRight, UserCircle2 } from 'lucide-react';
 import { useAppContext } from '../../hooks/useAppContext';
 import { useLocale } from '../../hooks/useLocale';
-import { CALL_STATUSES, REGISTRATION_STATUSES } from '../../constants';
+import { CALL_STATUSES } from '../../constants';
 import { CallRecord } from '../../types';
 import { customToast as toast } from '../UI/toast';
 import Select from '../UI/Select';
@@ -46,7 +46,7 @@ export const OrbitalCardView: React.FC<{ calls: CallRecord[] }> = ({ calls }) =>
     );
   }
 
-  const isAnswered = draft.callStatus === 'پاسخ داد';
+  const isAnswered = ['مردد', 'ثبت نام کرد'].includes(draft.callStatus);
 
   const nodes = [
     { id: 'callStatus', label: 'وضعیت تماس', icon: Phone },
@@ -70,7 +70,7 @@ export const OrbitalCardView: React.FC<{ calls: CallRecord[] }> = ({ calls }) =>
   };
 
   const handleStatusChange = (status: string) => {
-    if (status !== 'پاسخ داد') {
+    if (!['مردد', 'ثبت نام کرد'].includes(status)) {
       // Auto-submit and skip to next if not answered
       if (!activeCall) return;
       
