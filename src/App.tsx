@@ -13,7 +13,6 @@ import { isActiveFollowup } from './utils/followups';
 const ProfileView        = React.lazy(() => import('./components/Profile/ProfileView').then(m => ({ default: m.ProfileView })));
 const SettingsView       = React.lazy(() => import('./components/Settings/SettingsView').then(m => ({ default: m.SettingsView })));
 const BlacklistView      = React.lazy(() => import('./components/Blacklist/BlacklistView').then(m => ({ default: m.BlacklistView })));
-const TrashView          = React.lazy(() => import('./components/Settings/TrashView').then(m => ({ default: m.TrashView })));
 const CallListWorkspace  = React.lazy(() => import('./components/Calls/CallListWorkspace').then(m => ({ default: m.CallListWorkspace })));
 const AboutView          = React.lazy(() => import('./components/About/AboutView').then(m => ({ default: m.AboutView })));
 const AuthScreen         = React.lazy(() => import('./components/Auth/AuthScreen').then(m => ({ default: m.AuthScreen })));
@@ -57,43 +56,6 @@ const FollowupReminder = () => {
   return null;
 };
 
-// ---------------------------------------------------------------------------
-// Global Message Notifier — checks for new manager messages everywhere
-// ---------------------------------------------------------------------------
-const MessageNotifier = () => {
-  const { profile } = useAppContext();
-  const seenIds = React.useRef<Set<string>>(new Set());
-  const isFirstLoad = React.useRef(true);
-
-  React.useEffect(() => {
-    if (!profile) return;
-    const fetchNewMessages = async () => {
-      const { data, error } = await supabase.rpc('get_today_followup_messages');
-      if (error || !data) return;
-      
-      const myMessages = data.filter((m: any) => m.recipient_id === profile.id);
-      
-      if (isFirstLoad.current) {
-        myMessages.forEach((m: any) => seenIds.current.add(m.id));
-        isFirstLoad.current = false;
-        return;
-      }
-      
-      myMessages.forEach((m: any) => {
-        if (!seenIds.current.has(m.id)) {
-           toast.info(`پیام جدید از ${m.sender_name || 'مدیر'}:\n${m.body}`, { duration: 4000 });
-           seenIds.current.add(m.id);
-        }
-      });
-    };
-
-    fetchNewMessages();
-    const timer = setInterval(fetchNewMessages, 10000);
-    return () => clearInterval(timer);
-  }, [profile]);
-
-  return null;
-};
 
 // ---------------------------------------------------------------------------
 // Role-mismatch banners — shown inline when a signed-in user hits the wrong panel
@@ -319,7 +281,6 @@ export default function App() {
                 <motion.div key="main-app" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15, ease: 'easeOut' }} className="w-full h-screen overflow-hidden bg-transparent flex relative" dir={direction}>
                   <div className="flex flex-col w-full h-full overflow-hidden z-10">
                     <FollowupReminder />
-                    <MessageNotifier />
                     <SessionManager />
                     {/* macOS-style Floating Home Button for internal pages */}
                     {currentView !== 'home' && currentView !== 'dashboard' && !popupView && (
@@ -345,7 +306,6 @@ export default function App() {
                               {currentView === 'profile'   && <ProfileView />}
                               {currentView === 'settings'  && <SettingsView />}
                               {currentView === 'blacklist' && <BlacklistView />}
-                              {currentView === 'trash'     && <TrashView />}
                               {currentView === 'about'     && <AboutView />}
                               {currentView === 'negotiation' && <NegotiationView />}
                               {currentView === 'schedule'    && <ScheduleView />}

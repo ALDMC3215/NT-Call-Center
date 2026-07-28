@@ -55,14 +55,9 @@ export const ManagerDashboard: React.FC = () => {
   const [sharesError, setSharesError] = useState(false);
   const [viewingShare, setViewingShare] = useState<any>(null);
 
-  // Messaging
-  const [messages, setMessages] = useState<any[]>([]);
-  const [messagesLoading, setMessagesLoading] = useState(false);
   const [activeExperts, setActiveExperts] = useState<{id: string, full_name: string}[]>([]);
-  const [selectedExpertId, setSelectedExpertId] = useState('');
-  const [messageBody, setMessageBody] = useState('');
-  const [isSendingMsg, setIsSendingMsg] = useState(false);
   const [isReviewing, setIsReviewing] = useState(false);
+  const unreadMessages: any[] = [];
 
   // Security
   const [currentPassword, setCurrentPassword] = useState('');
@@ -110,13 +105,6 @@ export const ManagerDashboard: React.FC = () => {
   const loadExperts = useCallback(async () => {
     const { data, error } = await supabase.rpc('get_active_experts');
     if (!error && data) setActiveExperts(data);
-  }, []);
-
-  const loadMessages = useCallback(async () => {
-    setMessagesLoading(true);
-    const { data, error } = await supabase.rpc('get_today_followup_messages');
-    if (!error && data) setMessages(data);
-    setMessagesLoading(false);
   }, []);
 
   const fetchPresence = useCallback(async () => {
@@ -196,8 +184,8 @@ export const ManagerDashboard: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    loadProfiles(); loadShares(); loadExperts(); loadMessages(); fetchPresence();
-  }, [loadProfiles, loadShares, loadExperts, loadMessages, fetchPresence]);
+    loadProfiles(); loadShares(); loadExperts(); fetchPresence();
+  }, [loadProfiles, loadShares, loadExperts, fetchPresence]);
 
   useEffect(() => {
     fetchStats();
@@ -254,7 +242,7 @@ export const ManagerDashboard: React.FC = () => {
   }, [handleBackNavigation]);
 
   const refreshAll = () => {
-    loadProfiles(); loadShares(); loadMessages(); fetchPresence(); fetchStats();
+    loadProfiles(); loadShares(); fetchPresence(); fetchStats();
   };
 
   // ---------------------------------------------------------------------------
@@ -281,7 +269,7 @@ export const ManagerDashboard: React.FC = () => {
     if (error) toast.error('خطا در بررسی لیست.');
     else {
       toast.success('لیست بررسی‌شد.');
-      await loadShares(); await loadMessages();
+      await loadShares();
       setViewingShare((prev: any) => prev?.id === shareId ? { ...prev, reviewed_at: new Date().toISOString() } : prev);
     }
   };
@@ -299,18 +287,7 @@ export const ManagerDashboard: React.FC = () => {
     }
   };
 
-  const handleSendMessage = async () => {
-    if (!selectedExpertId || !messageBody.trim()) return;
-    setIsSendingMsg(true);
-    const { error } = await supabase.rpc('send_followup_message', { p_recipient_id: selectedExpertId, p_body: messageBody.trim() });
-    setIsSendingMsg(false);
-    if (error) toast.error('ارسال انجام نشد.'); else { toast.success('پیام ارسال شد.'); setMessageBody(''); await loadMessages(); }
-  };
 
-  const handleMarkRead = async (msgId: string) => {
-    await supabase.rpc('mark_followup_message_read', { p_message_id: msgId });
-    await loadMessages();
-  };
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -439,7 +416,6 @@ export const ManagerDashboard: React.FC = () => {
   const pendingAgents = profiles.filter(p => p.role === 'agent' && p.account_status === 'pending');
   const activeAgents  = profiles.filter(p => p.role === 'agent' && p.account_status === 'active');
   const managers      = profiles.filter(p => p.role === 'admin'  && p.account_status === 'active');
-  const unreadMessages = messages.filter(m => m.recipient_id === supabaseProfile?.id && !m.read_at);
   const unreviewedShares = receivedShares.filter(s => !s.reviewed_at);
   const onlineCount = presenceList.filter(p => p.status === 'online').length;
 
@@ -623,7 +599,6 @@ export const ManagerDashboard: React.FC = () => {
                   { label: 'کارشناسان فعال', count: activeAgents.length, color: 'emerald', icon: <Users size={16} /> },
                   { label: 'درخواست جدید', count: pendingAgents.length, color: 'amber', icon: <Clock size={16} /> },
                   { label: 'پیگیری دریافتی', count: receivedShares.length, color: 'purple', icon: <Inbox size={16} /> },
-                  { label: 'پیام خوانده‌نشده', count: unreadMessages.length, color: 'rose', icon: <MessageSquare size={16} /> },
                 ].map((s) => (
                   <div key={s.label} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-3.5 flex items-center justify-between transition-colors hover:border-slate-300 dark:hover:border-slate-600">
                     <div className="flex items-center gap-3">
@@ -1056,109 +1031,6 @@ export const ManagerDashboard: React.FC = () => {
                     })}
                   </div>
                 )}
-              </div>
-            </motion.div>
-          )}
-
-          {/* ═════════════════════════════════════════════════════════ */}
-          {/* 6. SUB-VIEW: MESSAGING                                     */}
-          {/* ═════════════════════════════════════════════════════════ */}
-          {activeSubView === 'messages' && (
-            <motion.div
-              key="view-messages"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.15 }}
-              className="flex flex-col gap-6 w-full"
-            >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-400 border border-amber-100 dark:border-amber-900 flex items-center justify-center shrink-0">
-                    <MessageSquare size={24} />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-black text-slate-900 dark:text-white">پیام‌رسانی و دستورات مدیریتی</h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">ارسال پیام مستقیم به کارشناسان و رصد پیام‌های امروز</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[450px]">
-
-                {/* Send Message Panel */}
-                <div className="lg:col-span-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 flex flex-col gap-4">
-                  <h3 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-                    <Send size={16} className="text-indigo-600" /> ارسال پیام جدید
-                  </h3>
-
-                  <div className="flex flex-col gap-3">
-                    <label className="text-xs font-bold text-slate-600 dark:text-slate-400">انتخاب دریافت‌کننده:</label>
-                    <select
-                      className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-bold text-slate-800 dark:text-slate-200 outline-none focus:border-indigo-500"
-                      value={selectedExpertId}
-                      onChange={(e) => setSelectedExpertId(e.target.value)}
-                    >
-                      <option value="">انتخاب کارشناس...</option>
-                      {activeExperts.map(e => <option key={e.id} value={e.id}>{e.full_name}</option>)}
-                    </select>
-
-                    <label className="text-xs font-bold text-slate-600 dark:text-slate-400">متن پیام:</label>
-                    <textarea
-                      className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-medium resize-none outline-none focus:border-indigo-500 h-32"
-                      placeholder="متن پیام را وارد کنید..."
-                      value={messageBody}
-                      onChange={(e) => setMessageBody(e.target.value)}
-                    />
-
-                    <button
-                      onClick={handleSendMessage}
-                      disabled={isSendingMsg || !selectedExpertId || !messageBody.trim()}
-                      className="h-11 w-full bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-300 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-colors border border-indigo-700"
-                    >
-                      {isSendingMsg ? <RefreshCw size={16} className="animate-spin" /> : <Send size={16} />} ارسال پیام
-                    </button>
-                  </div>
-                </div>
-
-                {/* Messages List */}
-                <div className="lg:col-span-7 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 flex flex-col">
-                  <h3 className="text-sm font-extrabold text-slate-900 dark:text-white mb-4">تاریخچه پیام‌های امروز</h3>
-
-                  <div className="flex-1 overflow-y-auto flex flex-col gap-3 pr-1 max-h-[400px]">
-                    {messagesLoading ? (
-                      <div className="py-12 flex justify-center"><RefreshCw size={20} className="animate-spin text-slate-400" /></div>
-                    ) : messages.length === 0 ? (
-                      <p className="text-xs text-slate-400 text-center py-12 font-bold">پیامی ثبت نشده است.</p>
-                    ) : (
-                      messages.map((m) => {
-                        const isMine = m.sender_id === supabaseProfile?.id;
-                        return (
-                          <div key={m.id} className={`p-4 rounded-xl border ${isMine ? 'bg-indigo-50/60 border-indigo-200 dark:bg-indigo-950/40 dark:border-indigo-900 mr-6' : 'bg-slate-50 border-slate-200 dark:bg-slate-900/50 dark:border-slate-700 ml-6'}`}>
-                            <div className="flex justify-between items-center mb-2">
-                              <span className="font-extrabold text-xs text-slate-800 dark:text-slate-200">
-                                {isMine ? `شما (به: ${m.recipient_name || 'کارشناس'})` : m.sender_name}
-                              </span>
-                              <span className="text-[10px] text-slate-400 font-bold" dir="ltr">{formatTime(m.created_at)}</span>
-                            </div>
-                            <p className="text-xs font-medium text-slate-700 dark:text-slate-300 leading-relaxed">{m.body}</p>
-                            {!isMine && !m.read_at && (
-                              <div className="mt-3 flex justify-end">
-                                <button
-                                  onClick={() => handleMarkRead(m.id)}
-                                  className="text-[10px] text-indigo-700 bg-indigo-100 hover:bg-indigo-200 border border-indigo-200 px-2.5 py-1 rounded-md font-bold transition-colors"
-                                >
-                                  علامت به عنوان خوانده‌شده
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })
-                    )}
-                  </div>
-                </div>
-
               </div>
             </motion.div>
           )}

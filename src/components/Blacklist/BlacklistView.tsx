@@ -40,96 +40,113 @@ export const BlacklistView = () => {
   };
 
   return (
-    <div className="w-full h-full overflow-y-auto pt-4 md:pt-6 pb-32 px-4 md:px-8 font-sans text-start hide-scrollbar bg-slate-50" dir={direction}>
+    <div className="w-full h-full overflow-y-auto pt-6 md:pt-10 pb-32 px-4 md:px-8 font-sans text-start hide-scrollbar bg-slate-50 dark:bg-[#0f1419]" dir={direction}>
 
-      <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between rounded-3xl border border-rose-200 bg-white p-6 shadow-sm">
-        <div>
-          <h2 className="text-2xl font-extrabold text-rose-600 mb-2 flex items-center gap-3">
-             <div className="w-12 h-12 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center border border-rose-100 shadow-sm">
-                <ShieldBan strokeWidth={2.5} size={24} />
-             </div>
-             {tr('لیست سیاه', 'Blacklist')}
-          </h2>
-          <p className="text-secondary font-normal mr-13 text-xs">
-             {tr('شماره‌هایی که در این لیست قرار بگیرند، هنگام ورود فایل اکسل جدید به طور خودکار حذف می‌شوند.', 'Numbers in this list are automatically skipped when a new Excel file is imported.')}
-          </p>
-        </div>
-      </div>
-
-      <div className="bg-surface-hover/80 rounded-xl p-4 border border-border mb-3">
-        <h3 className="text-sm font-medium text-muted mb-3 flex items-center gap-2">
-          <UserMinus size={18} />
-          {tr('افزودن شماره جدید به لیست سیاه', 'Add a number to the blacklist')}
-        </h3>
-        <form onSubmit={handleAdd} className="flex gap-2">
-          <div className="flex-1 relative">
-            <input 
-               type="text" 
-               placeholder={tr('شماره تلفن (مثال: 09123456789)...', 'Phone number (e.g. 09123456789)...')}
-               value={newPhone}
-               onChange={(e) => setNewPhone(e.target.value)}
-               className="w-full h-10 bg-surface-hover border border-border rounded-lg px-3 text-left text-sm focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-50 transition-all text-secondary"
-               dir="ltr"
-            />
+      <div className="max-w-6xl mx-auto w-full flex flex-col gap-8">
+        
+        {/* Minimal Header */}
+        <div className="flex flex-col gap-4 max-w-2xl">
+          <div className="w-14 h-14 bg-rose-100/50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 rounded-3xl flex items-center justify-center border border-rose-200/60 dark:border-rose-900/50 shadow-sm">
+            <ShieldBan strokeWidth={2.5} size={28} />
           </div>
-          <button 
-             type="submit"
-             className="h-10 px-5 bg-rose-600/90 hover:bg-rose-700 text-white font-medium rounded-lg flex items-center gap-2 transition-colors"
-          >
-            <Plus size={18} />
-            {tr('افزودن', 'Add')}
-          </button>
-        </form>
-      </div>
-
-      <div className="bg-surface  rounded-xl border border-border overflow-hidden flex flex-col min-h-[360px]">
-        <div className="p-4 border-b border-border bg-surface-hover flex justify-between items-center">
-          <div className="font-medium text-secondary text-sm">
-            {tr('مجموع:', 'Total:')} <span className="text-rose-600 mx-1">{blacklist.length}</span> {tr('شماره', 'numbers')}
-          </div>
-          <div className="relative w-64">
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-secondary" size={16} />
-            <input 
-               type="text"
-               placeholder={tr('جستجو در لیست...', 'Search blacklist...')}
-               value={searchQuery}
-               onChange={e => setSearchQuery(e.target.value)}
-               className="w-full h-9 pl-4 pr-9 bg-surface  border border-border rounded-lg text-sm focus:outline-none focus:border-brand-500"
-               dir="ltr"
-            />
+          <div className="flex flex-col gap-1.5">
+            <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+              {tr('لیست سیاه', 'Blacklist')}
+            </h2>
+            <p className="text-sm font-medium text-slate-500 dark:text-slate-400 leading-relaxed">
+              {tr('شماره‌هایی که در این لیست قرار بگیرند، هنگام ورود فایل اکسل جدید به طور خودکار حذف می‌شوند.', 'Numbers in this list are automatically skipped when a new Excel file is imported.')}
+            </p>
           </div>
         </div>
 
-        <div className="flex-1 p-2">
+        {/* Action Bar (Add & Search) */}
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+          
+          <form onSubmit={handleAdd} className="flex flex-col sm:flex-row gap-3 w-full xl:max-w-lg">
+            <div className="flex-1 relative">
+              <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-slate-400">
+                <UserMinus size={18} />
+              </div>
+              <input 
+                type="text" 
+                placeholder={tr('افزودن شماره تلفن...', 'Add phone number...')}
+                value={newPhone}
+                onChange={(e) => setNewPhone(e.target.value)}
+                className="w-full h-12 bg-white dark:bg-[#1c2530] border border-slate-200 dark:border-[#2b3745] rounded-2xl pr-12 pl-4 text-left text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:border-rose-500 focus:ring-4 focus:ring-rose-50 dark:focus:border-rose-500/50 dark:focus:ring-rose-900/20 transition-all shadow-sm"
+                dir="ltr"
+              />
+            </div>
+            <button 
+              type="submit"
+              className="h-12 px-6 bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 font-extrabold text-sm rounded-2xl flex items-center justify-center gap-2 transition-colors shadow-sm whitespace-nowrap shrink-0"
+            >
+              <Plus size={18} strokeWidth={2.5} />
+              {tr('افزودن', 'Add')}
+            </button>
+          </form>
+
+          <div className="flex flex-col sm:flex-row items-center gap-4 bg-white dark:bg-[#1c2530] p-1.5 pl-4 rounded-2xl border border-slate-200 dark:border-[#2b3745] shadow-sm w-full xl:w-auto">
+            <div className="relative w-full sm:w-72">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+              <input 
+                type="text"
+                placeholder={tr('جستجو در لیست...', 'Search blacklist...')}
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full h-9 pr-10 pl-4 bg-transparent text-sm font-medium text-slate-900 dark:text-white focus:outline-none placeholder:text-slate-400"
+                dir="ltr"
+              />
+            </div>
+            <div className="hidden sm:block w-px h-6 bg-slate-200 dark:bg-[#2b3745]"></div>
+            <div className="flex w-full sm:w-auto items-center justify-between sm:justify-center px-2">
+              <span className="text-[11px] font-extrabold text-slate-500 dark:text-slate-400">
+                {tr('مجموع:', 'Total:')} <span className="text-rose-600 dark:text-rose-400 ml-1 text-sm bg-rose-50 dark:bg-rose-950/40 px-2 py-0.5 rounded-md border border-rose-100 dark:border-rose-900/50">{blacklist.length}</span>
+              </span>
+            </div>
+          </div>
+
+        </div>
+
+        {/* List Content */}
+        <div className="w-full">
           {filteredList.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-secondary my-20">
-               <ShieldBan size={48} strokeWidth={1} className="mb-4 text-secondary" />
-               <p className="font-normal text-sm text-muted">{tr('هیچ شماره‌ای در لیست سیاه یافت نشد.', 'No blacklisted number found.')}</p>
+            <div className="flex flex-col items-center justify-center py-24 text-slate-400 dark:text-[#8e9aaa] bg-white dark:bg-[#1c2530] rounded-3xl border border-slate-200 dark:border-[#2b3745] border-dashed shadow-sm">
+              <ShieldBan size={48} strokeWidth={1.5} className="mb-5 opacity-40 text-slate-300 dark:text-slate-600" />
+              <p className="font-extrabold text-sm">{tr('هیچ شماره‌ای یافت نشد.', 'No blacklisted number found.')}</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 p-2">
-               {filteredList.map(entry => (
-             <div key={entry.phone} className="flex flex-col p-3 bg-surface-hover/80 border border-border rounded-lg hover:border-rose-500/50 hover:bg-rose-900/20 transition-all group gap-2">
-                <div className="flex items-center justify-between">
-                   <span className="font-extrabold text-slate-800 tracking-[0.1em] text-[16px]" dir="ltr">{formatPhoneNumber(entry.phone)}</span>
-                   <button
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {filteredList.map(entry => (
+                <div key={entry.phone} className="flex flex-col p-5 bg-white dark:bg-[#1c2530] border border-slate-200 dark:border-[#2b3745] rounded-[2rem] hover:border-rose-300 dark:hover:border-rose-900/60 hover:shadow-md transition-all group gap-5 relative overflow-hidden">
+                  
+                  <div className="flex items-start justify-between">
+                    <div className="flex flex-col gap-1 z-10">
+                      <span className="font-black text-slate-900 dark:text-white tracking-[0.05em] text-lg" dir="ltr">{formatPhoneNumber(entry.phone)}</span>
+                      <span className="text-[11px] font-bold text-slate-400 dark:text-[#8e9aaa]">{entry.createdAt && new Date(entry.createdAt).toLocaleDateString('fa-IR')}</span>
+                    </div>
+                    
+                    <button
                       onClick={() => setPhoneToDelete(entry.phone)}
-                      className="text-muted hover:text-rose-400 p-1.5 rounded-lg hover:bg-rose-900/40 transition-colors opacity-0 group-hover:opacity-100"
-                   >
-                      <Trash2 size={16} />
-                   </button>
+                      className="w-9 h-9 rounded-[14px] bg-slate-50 dark:bg-[#202b38] text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-slate-200 dark:border-[#344457] hover:border-rose-200 dark:hover:border-rose-900/50 flex items-center justify-center transition-all z-10 sm:opacity-0 sm:group-hover:opacity-100 shadow-sm"
+                    >
+                      <Trash2 size={16} strokeWidth={2} />
+                    </button>
+                  </div>
+                  
+                  <div className="flex items-center z-10">
+                    <span className="text-[11px] font-extrabold px-3 py-1.5 rounded-xl border border-slate-200 dark:border-[#344457] bg-slate-50 dark:bg-[#202b38] text-slate-600 dark:text-[#b7c2cf]">
+                      {entry.reason}
+                    </span>
+                  </div>
+
+                  {/* decorative background element */}
+                  <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-rose-50 dark:bg-rose-950/20 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity z-0 pointer-events-none" />
                 </div>
-                <div className="flex items-center justify-between mt-1">
-                   <span className="text-[10px] font-bold px-2 py-0.5 rounded border border-rose-200 bg-rose-50 text-rose-600">{entry.reason}</span>
-                   <span className="text-[10px] text-slate-400 font-medium">{entry.createdAt && new Date(entry.createdAt).toLocaleDateString('fa-IR')}</span>
-                </div>
-             </div>
-               ))}
+              ))}
             </div>
           )}
         </div>
       </div>
-
       <ConfirmDialog 
          isOpen={!!phoneToDelete}
          title={tr('حذف از لیست سیاه', 'Remove from blacklist')}

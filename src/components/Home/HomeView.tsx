@@ -10,6 +10,57 @@ import { ScheduleView } from '../Education/ScheduleView';
 import { useTheme } from '../../hooks/useTheme';
 import { UserProfileDropdown } from './UserProfileDropdown';
 
+const newsItems = [
+  {
+    id: 1,
+    title: 'انتقال فایل اکسل به پنل کارشناسان',
+    category: 'به‌روزرسانی سیستم',
+    date: 'امروز',
+    image: 'https://images.unsplash.com/photo-1542744094-24638ea0b56c?q=80&w=600&auto=format&fit=crop',
+    description: 'برای دسترسی سریع‌تر و راحت‌تر، دکمه ورود لیست شماره‌ها از طریق فایل اکسل، از بخش تنظیمات به قسمت بالای جدول شماره‌ها در پنل کارشناسان منتقل شده است.',
+    icon: Icons.FileSpreadsheet,
+    color: 'text-blue-500',
+    bg: 'bg-blue-50 dark:bg-blue-500/10',
+    colSpan: 'md:col-span-2'
+  },
+  {
+    id: 4,
+    title: 'شخصی‌سازی و پروفایل یکپارچه',
+    category: 'بهبود رابط کاربری',
+    date: 'امروز',
+    image: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=600&auto=format&fit=crop',
+    description: 'اطلاعات کاربری، مدیریت حساب و تنظیمات پوسته (حالت شب و روز) به صورت یکپارچه در گوشه صفحه اصلی در دسترس قرار گرفته‌اند.',
+    icon: Icons.UserCircle,
+    color: 'text-emerald-500',
+    bg: 'bg-emerald-50 dark:bg-emerald-500/10',
+    colSpan: 'md:col-span-1'
+  },
+  {
+    id: 2,
+    title: 'تب جدید لیست سیاه در پنل',
+    category: 'امکانات جدید',
+    date: 'دیروز',
+    image: 'https://images.unsplash.com/photo-1614064641913-6b71a30f1d5f?q=80&w=600&auto=format&fit=crop',
+    description: 'مدیریت لیست سیاه بسیار ساده‌تر شده است. این بخش به عنوان یک تب مجزا به بالای پنل کارشناسان اضافه شده تا بتوانید سریعاً اقدام کنید.',
+    icon: Icons.ShieldBan,
+    color: 'text-red-500',
+    bg: 'bg-red-50 dark:bg-red-500/10',
+    colSpan: 'md:col-span-1'
+  },
+  {
+    id: 3,
+    title: 'تغییرات گسترده بخش تنظیمات',
+    category: 'اطلاعیه',
+    date: 'دیروز',
+    image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=600&auto=format&fit=crop',
+    description: 'صفحه تنظیمات با هدف سبک‌سازی و تمرکز بیشتر بر روی تنظیمات کاربری بازطراحی شده است. امکانات غیرمرتبط در حال بازتوسعه و انتقال به بخش‌های کاربردی‌تر هستند.',
+    icon: Icons.Settings,
+    color: 'text-slate-500',
+    bg: 'bg-slate-100 dark:bg-slate-500/10',
+    colSpan: 'md:col-span-2'
+  }
+];
+
 export const HomeView = () => {
   const { profile, calls, setCurrentView, setActiveCallTab, setPopupView } = useAppContext();
   const { signOut } = useAuth();
@@ -41,7 +92,7 @@ export const HomeView = () => {
       items: [
         {
           id: 'queue',
-          title: tr('پنل شماره‌گیری', 'Dialing Panel'),
+          title: tr('پنل کارشناسان', 'Dialing Panel'),
           description: tr('ورود به پنل اصلی برای مدیریت تماس‌ها، پیگیری‌ها و دسترسی به ابزارهای کارشناسی', 'Enter main panel for call management, follow-ups, and expert tools'),
           icon: Phone,
           count: counts.queueCount,
@@ -184,6 +235,57 @@ export const HomeView = () => {
             })}
           </div>
         </div>
+
+        {/* News Feed Section */}
+        <div className="w-full mt-12 md:mt-20 pt-12 md:pt-16 border-t border-stone-200/60 dark:border-[#2b3745]/60 flex flex-col items-center">
+           <div className="w-full max-w-[1000px] mx-auto">
+             <div className="flex flex-col mb-8 sm:mb-10 w-full text-right">
+               <h3 className="text-xl sm:text-2xl font-extrabold text-stone-800 dark:text-[#f3f5f7] flex items-center gap-2.5 mb-2">
+                 <Icons.Newspaper size={28} strokeWidth={2.2} className="text-indigo-500" />
+                 {tr('تازه‌های سیستم', 'System Updates & News')}
+               </h3>
+               <p className="text-[13px] font-bold text-stone-500 dark:text-[#8e9aaa] pr-10">
+                 {tr('اطلاعیه‌ها، امکانات جدید و تغییرات اخیر سیستم را از این بخش دنبال کنید.', 'Follow announcements, new features and recent changes of the system from here.')}
+               </p>
+             </div>
+             <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+                {newsItems.map(item => (
+                  <div key={item.id} className={`group bg-white dark:bg-[#1c2530] border border-stone-200 dark:border-[#2b3745] rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 cursor-pointer flex flex-col ${item.colSpan}`}>
+                    {item.image && (
+                      <div className="w-full h-44 md:h-52 overflow-hidden relative bg-stone-100 dark:bg-[#202b38] flex items-center justify-center">
+                        <Icons.ImageOff size={32} strokeWidth={1.5} className="absolute text-stone-300 dark:text-[#35465a]" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent z-10 pointer-events-none"></div>
+                        <img 
+                          src={item.image} 
+                          alt={item.title} 
+                          onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out relative z-0" 
+                        />
+                        <span className="absolute bottom-3 right-4 z-20 text-[11px] font-extrabold bg-white/20 backdrop-blur-md text-white px-3 py-1.5 rounded-xl border border-white/10 shadow-sm pointer-events-none">
+                          {item.category}
+                        </span>
+                      </div>
+                    )}
+                    <div className="p-6 flex flex-col flex-1">
+                      <div className="flex items-center justify-between mb-4">
+                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${item.bg} ${item.color}`}>
+                            <item.icon size={20} strokeWidth={2.2} />
+                         </div>
+                         <span className="text-[12px] font-bold text-stone-400 dark:text-[#8e9aaa] bg-stone-50 dark:bg-[#202b38] px-2.5 py-1 rounded-lg">{item.date}</span>
+                      </div>
+                      <h4 className="text-lg font-extrabold text-stone-800 dark:text-[#f3f5f7] mb-3 leading-snug group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                        {item.title}
+                      </h4>
+                      <p className="text-sm text-stone-500 dark:text-[#b7c2cf] font-medium leading-relaxed">
+                        {item.description}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+             </div>
+           </div>
+        </div>
+
       </div>
 
       {/* Bottom text */}

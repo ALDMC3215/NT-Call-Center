@@ -27,7 +27,7 @@ const reportMeaningfulActivity = (userId: string) => {
   })();
 };
 
-export type ViewType = 'home' | 'dashboard' | 'profile' | 'settings' | 'stats' | 'admin' | 'blacklist' | 'trash' | 'reports' | 'experts' | 'managers' | 'about' | 'negotiation' | 'schedule' | 'courses' | 'intro';
+export type ViewType = 'home' | 'dashboard' | 'profile' | 'settings' | 'stats' | 'admin' | 'blacklist' | 'reports' | 'experts' | 'managers' | 'about' | 'negotiation' | 'schedule' | 'courses' | 'intro';
 export type PopupViewType = 'negotiation' | 'schedule' | 'learning_paths' | 'stats' | 'courses' | 'intro' | null;
 export type LayoutMode = 'default' | 'header-only' | 'cards-only';
 

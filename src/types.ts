@@ -181,5 +181,3 @@ export interface RecordCallAttemptWithTaskResult {
   attempt: CallAttempt;
   task: ContactTask;
 }
-
-export interface TrashEntry extends CallRecord { deletedAt: string; deletedBy: string; }

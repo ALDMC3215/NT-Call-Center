@@ -24,6 +24,7 @@ import { IntroTextView } from '../Education/IntroTextView';
 import { LearningPathsModal } from '../Shared/LearningPathsModal';
 import { CallListStats } from './CallListStats';
 import { NegotiationView } from '../Education/NegotiationView';
+import { BlacklistView } from '../Blacklist/BlacklistView';
 
 const CourseAutocomplete = ({ value, onChange }: { value: string, onChange: (v: string) => void }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -235,7 +236,7 @@ export const CallListWorkspace = () => {
   const [submittingIds, setSubmittingIds] = useState<Set<string>>(new Set());
 
   // Local state for tabs
-  const [activeTab, setActiveTab] = useState<'list' | 'courses' | 'learning_paths' | 'intro' | 'negotiation' | 'stats'>('list');
+  const [activeTab, setActiveTab] = useState<'list' | 'courses' | 'learning_paths' | 'intro' | 'negotiation' | 'stats' | 'blacklist'>('list');
 
   // Batch Selection state
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -754,6 +755,13 @@ export const CallListWorkspace = () => {
                    <Icons.BarChart3 size={14} />
                    <span>{tr('آمار', 'Stats')}</span>
                  </button>
+                 <button
+                   onClick={() => setActiveTab('blacklist')}
+                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px] font-bold transition-colors whitespace-nowrap shrink-0 ${activeTab === 'blacklist' ? 'bg-slate-800 dark:bg-[#f3f5f7] text-white dark:text-[#0f1419] border-slate-800 dark:border-[#f3f5f7]' : 'bg-white dark:bg-transparent text-slate-600 dark:text-[#8e9aaa] border-slate-200 dark:border-[#2b3745] hover:bg-slate-50 dark:hover:bg-[#1c2530]'}`}
+                 >
+                   <Icons.ShieldBan size={14} />
+                   <span>{tr('لیست سیاه', 'Blacklist')}</span>
+                 </button>
                </div>
 
                {/* Left Side: Search Box & Home */}
@@ -876,6 +884,8 @@ export const CallListWorkspace = () => {
                 <div className="w-full h-full relative"><CallListStats calls={displayedList} onExport={exportDailyStats} /></div>
               ) : activeTab === 'negotiation' ? (
                 <div className="w-full h-full relative"><NegotiationView embedded={true} /></div>
+              ) : activeTab === 'blacklist' ? (
+                <div className="w-full h-full relative"><BlacklistView /></div>
               ) : (
                 <div className="p-3 md:p-4">
                   <table className="w-full text-center border-separate border-spacing-y-2 table-fixed min-w-[900px]">

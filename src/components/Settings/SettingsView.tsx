@@ -1,14 +1,11 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Settings, RefreshCw, PhoneOff, Upload, Briefcase, Download, Send, History, X, MessageSquare, Inbox, Lock, Trash2 } from 'lucide-react';
+import { Settings, RefreshCw, PhoneOff, Upload, Briefcase, Download, Send, History, X, MessageSquare, Inbox, Lock, Trash2, Info } from 'lucide-react';
 import { COURSE_CATEGORIES } from '../../data/courses';
 import { fetchCourseDataDynamic } from '../../utils/scraper';
 import { useAppContext } from '../../hooks/useAppContext';
 import { useAuth } from '../../hooks/useAuth';
 import { customToast as toast } from '../UI/toast';
 import { useLocale } from '../../hooks/useLocale';
-import * as xlsx from 'xlsx';
-import { getActiveFollowups, buildFollowUpSnapshot } from '../../utils/followups';
-import { exportFollowupsToExcel } from '../../utils/followupExcel';
 import { supabase } from '../../lib/supabase';
 import { parseContactsFile } from '../../utils/contactFileImport';
 import { motion, AnimatePresence } from 'motion/react';
@@ -20,71 +17,64 @@ export const SettingsView: React.FC = () => {
   const [syncProgress, setSyncProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [activeManagers, setActiveManagers] = useState<{id: string, name: string}[]>([]);
-  const [managerLoadState, setManagerLoadState] = useState<'loading' | 'success' | 'rpc_missing' | 'error'>('loading');
-  const [lastSent, setLastSent] = useState<any>(null);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [managerLoadState, setManagerLoadState] = useState<'idle' | 'loading' | 'success' | 'error' | 'rpc_missing'>('idle');
+  const [activeManagers, setActiveManagers] = useState<any[]>([]);
+  const [selectedManagerId, setSelectedManagerId] = useState<string>('');
   const [isSending, setIsSending] = useState(false);
-  const [selectedManagerId, setSelectedManagerId] = useState('');
+  const [lastSent, setLastSent] = useState<any>(null);
 
-  // Messaging state
-  const [messages, setMessages] = useState<any[]>([]);
-  const [messagesLoading, setMessagesLoading] = useState(false);
-  const [messageBody, setMessageBody] = useState('');
-  const [isSendingMsg, setIsSendingMsg] = useState(false);
-  const [activeMessageManagerId, setActiveMessageManagerId] = useState('');
-  const [isMessagesModalOpen, setIsMessagesModalOpen] = useState(false);
+  const activeCount = calls.filter(c => c.status === 'active' || c.status === 'pending').length;
 
-  const followups = getActiveFollowups(calls);
-  const activeCount = followups.length;
-
-  const fetchManagers = async () => {
+  const fetchManagers = useCallback(async () => {
     setManagerLoadState('loading');
-    const { data, error } = await supabase.rpc('get_active_managers');
+    const { data, error } = await supabase.from('profiles').select('id, name:full_name').eq('role', 'admin');
     if (error) {
-      if (error.code === '42883' || (error.message && error.message.includes('function')) || (error.message && error.message.includes('does not exist'))) {
-         setManagerLoadState('rpc_missing');
-         console.error('get_active_managers RPC missing:', error);
-      } else {
-         setManagerLoadState('error');
-         console.error('Error fetching managers:', error);
-      }
-    } else if (data) {
-      setActiveManagers(data.map((m: any) => ({ id: m.id, name: m.full_name })));
+      setManagerLoadState('error');
+    } else {
+      setActiveManagers(data || []);
       setManagerLoadState('success');
     }
-  };
-
-  const loadMessages = useCallback(async () => {
-    setMessagesLoading(true);
-    const { data, error } = await supabase.rpc('get_today_followup_messages');
-    if (!error && data) setMessages(data);
-    setMessagesLoading(false);
   }, []);
 
   useEffect(() => {
-    if (profile) {
+    if (isShareModalOpen && managerLoadState === 'idle') {
       fetchManagers();
-      fetchLastSent();
-      loadMessages();
     }
-  }, [profile, loadMessages]);
+  }, [isShareModalOpen, managerLoadState, fetchManagers]);
 
-
-
-  const fetchLastSent = () => {
-    if (!profile) return;
-    supabase.from('followup_shares')
-      .select('receiver_manager_id, sent_at, item_count')
-      .eq('sender_expert_id', profile.id)
-      .order('sent_at', { ascending: false })
-      .limit(1)
-      .then(({ data }) => {
-        if (data && data.length > 0) {
-          setLastSent(data[0]);
-        }
-      });
+  const handleSendToManager = async () => {
+    if (!selectedManagerId) return;
+    setIsSending(true);
+    
+    const activeCalls = calls.filter(c => c.status === 'active' || c.status === 'pending');
+    const { error } = await supabase.from('followup_shares').insert({
+        sender_expert_id: profile?.id,
+        receiver_manager_id: selectedManagerId,
+        item_count: activeCalls.length,
+        payload_json: activeCalls
+    });
+    
+    setIsSending(false);
+    if (error) {
+        toast.error(tr('خطا در ارسال پیگیری‌ها', 'Error sending follow-ups'));
+    } else {
+        toast.success(tr('ارسال با موفقیت انجام شد', 'Send successful'));
+        setLastSent({ sent_at: new Date().toISOString(), receiver_manager_id: selectedManagerId, item_count: activeCalls.length });
+        setIsShareModalOpen(false);
+    }
   };
+
+  const handleDownloadExcel = () => {
+    const activeCalls = calls.filter(c => c.status === 'active' || c.status === 'pending');
+    import('../../utils/followupExcel').then(({ exportFollowupsToExcel }) => {
+        exportFollowupsToExcel(activeCalls, activeCount);
+    }).catch(err => {
+        console.error(err);
+        toast.error(tr('خطا در دانلود فایل', 'Error downloading file'));
+    });
+  };
+
 
   const handleSyncData = async () => {
     setIsSyncing(true);
@@ -162,450 +152,37 @@ export const SettingsView: React.FC = () => {
     }
   };
 
-  const handleDownloadExcel = async () => {
-    if (activeCount === 0) return toast.error(tr('پیگیری فعالی برای خروجی وجود ندارد.', 'No active follow-ups to export.'));
-    const snapshot = buildFollowUpSnapshot(calls);
 
-    try {
-      await exportFollowupsToExcel(snapshot, activeCount);
-      toast.success(tr('فایل اکسل پیگیری‌ها با موفقیت دریافت شد.', 'Follow-ups Excel downloaded successfully.'));
-    } catch (err) {
-      console.error(err);
-      toast.error(tr('خطا در ایجاد فایل اکسل.', 'Error creating Excel file.'));
-    }
-  };
 
-  const handleDownloadFollowups = () => {
-    if (activeCount === 0) return toast.error(tr('پیگیری فعالی برای خروجی وجود ندارد.', 'No active follow-ups to export.'));
-    const snapshot = buildFollowUpSnapshot(calls);
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(snapshot, null, 2));
-    const downloadAnchorNode = document.createElement('a');
-    downloadAnchorNode.setAttribute("href", dataStr);
-    downloadAnchorNode.setAttribute("download", `novintech-followups-${new Date().toISOString().split('T')[0]}.json`);
-    document.body.appendChild(downloadAnchorNode);
-    downloadAnchorNode.click();
-    downloadAnchorNode.remove();
-    toast.success(tr('فایل JSON پیگیری‌ها با موفقیت دریافت شد.', 'Follow-ups JSON downloaded successfully.'));
-  };
-
-  const handleSendToManager = async () => {
-    if (!selectedManagerId) return toast.error(tr('لطفا یک مدیر را انتخاب کنید.', 'Please select a manager.'));
-    if (!profile) return;
-    const snapshot = buildFollowUpSnapshot(calls);
-
-    setIsSending(true);
-    const { error } = await supabase.rpc('create_followup_share', {
-      p_receiver_manager_id: selectedManagerId,
-      p_payload_json: snapshot,
-      p_item_count: snapshot.length
-    });
-    setIsSending(false);
-
-    if (error) {
-      toast.error(tr('ارسال با خطا مواجه شد.', 'Sending failed.'));
-    } else {
-      toast.success(tr('لیست پیگیری‌ها با موفقیت به مدیر ارسال شد.', 'Follow-ups successfully sent to manager.'));
-      setIsShareModalOpen(false);
-      fetchLastSent();
-    }
-  };
-
-  const handleMarkRead = async (msgId: string) => {
-    await supabase.rpc('mark_followup_message_read', { p_message_id: msgId });
-    await loadMessages();
-  };
-
-  const openThread = async (managerId: string) => {
-    setActiveMessageManagerId(managerId);
-    setIsMessagesModalOpen(true);
-    const unread = messages.filter(m => m.sender_id === managerId && !m.read_at);
-    for (const msg of unread) {
-      await handleMarkRead(msg.id);
-    }
-  };
-
-  const handleSendMessage = async () => {
-    if (!activeMessageManagerId) return toast.error(tr('ارتباطی انتخاب نشده است.', 'No thread selected.'));
-    if (!messageBody.trim()) return toast.error(tr('متن پیام نمی‌تواند خالی باشد.', 'Message body cannot be empty.'));
-
-    setIsSendingMsg(true);
-    const trimmedMessageBody = messageBody.trim();
-    const { error } = await supabase.rpc('send_followup_message', {
-      p_recipient_id: activeMessageManagerId,
-      p_body: trimmedMessageBody
-    });
-    setIsSendingMsg(false);
-
-    if (error) {
-      console.error(error);
-      toast.error(tr('ارسال پیام انجام نشد. دوباره تلاش کنید.', 'Sending message failed.'));
-    } else {
-      toast.success(tr('پیام با موفقیت ارسال شد.', 'Message sent successfully.'));
-      setMessageBody('');
-      await loadMessages();
-    }
-  };
-
-  useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isMessagesModalOpen) setIsMessagesModalOpen(false);
-    };
-    window.addEventListener('keydown', handleEsc);
-    return () => window.removeEventListener('keydown', handleEsc);
-  }, [isMessagesModalOpen]);
 
   return (
-    <div className="w-full h-full overflow-y-auto hide-scrollbar flex flex-col items-center pt-4 pb-32 bg-slate-50 dark:bg-[#0f1419] px-4 md:px-8" dir={direction}>
+    <div className="w-full h-full overflow-y-auto hide-scrollbar flex flex-col items-center justify-center pt-4 pb-32 bg-slate-50 dark:bg-[#0f1419] px-4 md:px-8" dir={direction}>
       
       {/* Title */}
-      <div className="w-full flex flex-col items-center mb-12 text-center mt-6">
+      <div className="w-full flex flex-col items-center text-center mt-6">
         <div className="w-20 h-20 bg-white dark:bg-[#171e27] rounded-3xl flex items-center justify-center text-slate-800 dark:text-[#f3f5f7] mb-6 shadow-sm border border-slate-200 dark:border-[#2b3745]">
            <Settings size={40} className="text-indigo-600 dark:text-indigo-500" />
         </div>
-        <h1 className="text-4xl font-extrabold text-slate-900 dark:text-[#f3f5f7] mb-3 tracking-tight">{tr('ابزارها و تنظیمات', 'Tools & Settings')}</h1>
-        <p className="text-base text-slate-600 dark:text-[#8e9aaa] max-w-2xl leading-relaxed">{tr('مدیریت داده‌ها، به‌روزرسانی سیستم و تبادل پیگیری‌ها در این بخش انجام می‌شود.', 'Data management, system update and follow-up exchange is done here.')}</p>
+        <h1 className="text-4xl font-extrabold text-slate-900 dark:text-[#f3f5f7] mb-3 tracking-tight">{tr('تنظیمات', 'Settings')}</h1>
       </div>
 
-      <div className="w-full max-w-5xl flex flex-col gap-6">
-
-
-
-        {/* --- ROW 1 --- */}
-        <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-
-          {/* Main quick-actions area */}
-          <div className="lg:col-span-8 flex flex-col gap-4">
-            <h3 className="text-base sm:text-lg font-extrabold text-slate-800 dark:text-[#f3f5f7] flex items-center gap-2">
-              <Briefcase size={20} className="text-indigo-500" />
-              {tr('ابزارهای کاری', 'Working Tools')}
-            </h3>
-
-            <div className="bg-white dark:bg-[#1c2530] p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border border-slate-200 dark:border-[#2b3745] shadow-sm flex flex-col gap-4 hover:shadow-md transition-shadow">
-              <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept=".xlsx, .xls, .csv" className="hidden" />
-              <button onClick={() => fileInputRef.current?.click()} className="flex items-center p-3 bg-brand-50 dark:bg-[#162744] border border-brand-200 dark:border-[#223d6a] text-brand-700 dark:text-[#81a5ff] rounded-md hover:bg-brand-100 dark:hover:bg-[#1c3359] transition-colors w-full gap-3 text-right group">
-                <div className="w-10 h-10 bg-brand-600 text-white rounded-md flex items-center justify-center shrink-0">
-                  <Upload size={18} />
-                </div>
-                <div className="flex flex-col">
-                  <span className="font-bold text-sm">{tr('ورود فایل اکسل', 'Import Excel')}</span>
-                  <span className="text-[11px] text-brand-600 dark:text-[#a0bcff] font-medium mt-0.5">{tr('وارد کردن لیست شماره‌های جدید برای تماس', 'Import new contact numbers list')}</span>
-                </div>
-              </button>
-
-              <div className="flex flex-col gap-3">
-                <button onClick={() => setCurrentView('blacklist')} className="flex items-center p-3 bg-slate-50 dark:bg-[#202b38] border border-slate-200 dark:border-[#344457] text-slate-700 dark:text-[#e8edf3] rounded-md hover:bg-white dark:hover:bg-[#253242] hover:border-slate-300 dark:hover:border-[#46596e] transition-colors gap-3 text-right">
-                  <div className="w-8 h-8 rounded-md bg-slate-200/50 dark:bg-slate-700/50 text-slate-600 dark:text-[#b7c2cf] flex items-center justify-center shrink-0">
-                    <PhoneOff size={16} />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="font-bold text-xs">{tr('لیست سیاه', 'Blacklist')}</span>
-                  </div>
-                </button>
-
-                <button onClick={() => setCurrentView('trash')} className="flex items-center p-3 bg-slate-50 dark:bg-[#202b38] border border-slate-200 dark:border-[#344457] text-slate-700 dark:text-[#e8edf3] rounded-md hover:bg-white dark:hover:bg-[#253242] hover:border-slate-300 dark:hover:border-[#46596e] transition-colors gap-3 text-right">
-                  <div className="w-8 h-8 rounded-md bg-rose-50 dark:bg-[#3d1920] text-rose-500 dark:text-[#ff9aa9] flex items-center justify-center shrink-0">
-                    <Trash2 size={16} />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="font-bold text-xs">{tr('سطل زباله', 'Trash')}</span>
-                  </div>
-                </button>
-              </div>
-
-              <button onClick={() => { if(!isSyncing) handleSyncData(); }} disabled={isSyncing} className="flex items-center p-3 bg-slate-50 dark:bg-[#202b38] border border-slate-200 dark:border-[#344457] text-slate-700 dark:text-[#e8edf3] rounded-md hover:bg-white dark:hover:bg-[#253242] hover:border-teal-300 dark:hover:border-teal-700 transition-colors gap-3 disabled:opacity-70 text-right">
-                <div className="w-8 h-8 rounded-md bg-teal-50 dark:bg-[#163832] text-teal-600 dark:text-[#7ce3ce] flex items-center justify-center shrink-0 border border-teal-100 dark:border-[#26524a]">
-                  <RefreshCw size={16} className={isSyncing ? 'animate-spin' : ''} />
-                </div>
-                <div className="flex flex-col">
-                  <span className="font-bold text-xs">{tr('به‌روزرسانی دوره‌ها', 'Sync Courses')}</span>
-                  <span className="text-[11px] text-slate-500 dark:text-[#8e9aaa] font-medium mt-0.5">
-                    {isSyncing ? `${tr('در حال دریافت...', 'Fetching...')} ${syncProgress}%` : tr('دریافت آخرین قیمت‌های دوره‌ها از وب‌سایت', 'Get latest course prices')}
-                  </span>
-                </div>
-              </button>
+      <div className="w-full max-w-2xl mt-12">
+         <div className="bg-blue-50 dark:bg-[#162744] border border-blue-200 dark:border-[#223d6a] rounded-3xl p-6 md:p-8 flex flex-col items-center text-center gap-4 shadow-sm">
+            <div className="w-14 h-14 bg-blue-100 dark:bg-[#1c3359] text-blue-600 dark:text-[#81a5ff] rounded-2xl flex items-center justify-center mb-2 shadow-inner border border-blue-200/50 dark:border-[#223d6a]/50">
+               <Info size={28} strokeWidth={2.5} />
             </div>
-          </div>
-
-          {/* Follow-up Exchange Area */}
-          <div className="lg:col-span-4 flex flex-col gap-4">
-            <h3 className="text-base sm:text-lg font-extrabold text-slate-800 dark:text-[#f3f5f7] flex items-center gap-2">
-              <Send size={20} className="text-brand-500" />
-              {tr('تبادل پیگیری‌ها', 'Follow-up Exchange')}
-            </h3>
-
-            <div className="bg-white dark:bg-[#1c2530] p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border border-slate-200 dark:border-[#2b3745] shadow-sm flex flex-col gap-4 h-full hover:shadow-md transition-shadow">
-              <button
-                onClick={() => {
-                  if (activeCount > 0) setIsShareModalOpen(true);
-                  else toast.error(tr('شما هیچ پیگیری فعالی ندارید.', 'You have no active follow-ups.'));
-                }}
-                className={`flex items-center p-3 border ${activeCount > 0 ? 'border-brand-200 dark:border-[#223d6a] bg-brand-50/30 dark:bg-[#162744]/30 text-brand-700 dark:text-[#81a5ff] hover:border-brand-300 dark:hover:border-[#2b4c80] hover:bg-brand-50 dark:hover:bg-[#162744]' : 'border-slate-200 dark:border-[#344457] bg-slate-50 dark:bg-[#202b38] text-slate-400 dark:text-[#64748b] cursor-not-allowed opacity-80'} rounded-md transition-colors gap-3 text-right w-full`}
-              >
-                <div className={`w-10 h-10 rounded-md flex items-center justify-center shrink-0 ${activeCount > 0 ? 'bg-brand-100 dark:bg-[#1c3359] text-brand-600 dark:text-[#a0bcff]' : 'bg-slate-100 dark:bg-[#253242] text-slate-400 dark:text-[#64748b]'}`}>
-                  <Send size={18} />
-                </div>
-                <div className="flex flex-col flex-1 min-w-0">
-                  <span className="font-bold text-sm truncate">{tr('ارسال به مدیر', 'Send to Manager')}</span>
-                  <span className="text-[11px] font-medium mt-0.5 opacity-80 line-clamp-1">{tr('اشتراک‌گذاری پیگیری‌های فعال', 'Share active follow-ups')}</span>
-                </div>
-              </button>
-
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={handleDownloadExcel}
-                  className={`flex items-center p-3 bg-slate-50 dark:bg-[#202b38] border ${activeCount > 0 ? 'border-slate-200 dark:border-[#344457] text-slate-700 dark:text-[#e8edf3] hover:border-emerald-300 dark:hover:border-[#2f674b] hover:bg-white dark:hover:bg-[#253242]' : 'border-slate-100 dark:border-[#2b3745] text-slate-400 dark:text-[#64748b] cursor-not-allowed'} rounded-md transition-colors gap-3 text-right`}
-                >
-                  <div className={`w-8 h-8 rounded-md flex items-center justify-center shrink-0 ${activeCount > 0 ? 'bg-emerald-50 dark:bg-[#163326] text-emerald-600 dark:text-[#8de0b5] border border-emerald-100 dark:border-[#2f674b]' : 'bg-slate-100 dark:bg-[#253242] text-slate-400 dark:text-[#64748b]'}`}>
-                    <Download size={16} />
-                  </div>
-                  <div className="flex flex-col flex-1 min-w-0">
-                    <span className="font-bold text-[11px] truncate">{tr('اکسل', 'Excel')}</span>
-                  </div>
-                </button>
-
-                <button
-                  onClick={handleDownloadFollowups}
-                  className={`flex items-center p-3 bg-slate-50 dark:bg-[#202b38] border ${activeCount > 0 ? 'border-slate-200 dark:border-[#344457] text-slate-700 dark:text-[#e8edf3] hover:border-slate-400 dark:hover:border-[#46596e] hover:bg-white dark:hover:bg-[#253242]' : 'border-slate-100 dark:border-[#2b3745] text-slate-400 dark:text-[#64748b] cursor-not-allowed'} rounded-md transition-colors gap-3 text-right`}
-                >
-                  <div className={`w-8 h-8 rounded-md flex items-center justify-center shrink-0 ${activeCount > 0 ? 'bg-slate-200/50 dark:bg-slate-700/50 text-slate-600 dark:text-[#b7c2cf]' : 'bg-slate-100 dark:bg-[#253242] text-slate-400 dark:text-[#64748b]'}`}>
-                    <Download size={16} />
-                  </div>
-                  <div className="flex flex-col flex-1 min-w-0">
-                    <span className="font-bold text-[11px] truncate">{tr('جیسون', 'JSON')}</span>
-                  </div>
-                </button>
-              </div>
-
-              {lastSent && (
-                <div className="flex flex-col mt-auto p-3 bg-slate-50 dark:bg-[#202b38] rounded-md border border-slate-200 dark:border-[#344457]">
-                  <div className="flex items-center justify-between mb-2 pb-2 border-b border-slate-200/70 dark:border-[#344457]/70">
-                    <div className="flex items-center gap-1.5 text-slate-600 dark:text-[#b7c2cf] font-bold text-[12px]">
-                      <History size={14} />
-                      <span>{tr('آخرین ارسال', 'Last Sent')}</span>
-                    </div>
-                    <span className="text-[11px] font-medium text-slate-500 dark:text-[#8e9aaa]" dir="ltr">{new Date(lastSent.sent_at).toLocaleString('fa-IR')}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-[12px] text-slate-600 dark:text-[#b7c2cf] font-medium">
-                     <span>به: {activeManagers.find(m => m.id === lastSent.receiver_manager_id)?.name || 'مدیر'}</span>
-                     <span className="font-bold text-slate-800 dark:text-[#f3f5f7]">{lastSent.item_count} مورد</span>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* --- ROW 2 --- */}
-        <div className="w-full grid grid-cols-1 gap-6 items-start">
-
-          {/* Manager Messages Area */}
-          <div className="flex flex-col gap-4 min-w-0">
-            <h3 className="text-base sm:text-lg font-extrabold text-slate-800 dark:text-[#f3f5f7] flex items-center gap-2">
-              <MessageSquare size={20} className="text-indigo-500" />
-              {tr('پیام‌های مدیر', 'Manager Messages')}
-              {messages.filter(m => m.recipient_id === profile?.id && !m.read_at).length > 0 && (
-                <span className="bg-rose-100 text-rose-700 px-3 py-1 rounded-full text-xs font-bold mr-2">
-                  {messages.filter(m => m.recipient_id === profile?.id && !m.read_at).length} {tr('جدید', 'New')}
-                </span>
-              )}
-            </h3>
-
-            <div className="bg-white dark:bg-[#1c2530] p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border border-slate-200 dark:border-[#2b3745] shadow-sm flex flex-col h-full hover:shadow-md transition-shadow">
-              {messagesLoading ? (
-                <div className="flex justify-center py-6 h-full items-center"><RefreshCw size={20} className="animate-spin text-slate-300" /></div>
-              ) : messages.length === 0 ? (
-                 <div className="flex flex-col items-center justify-center h-full py-8 text-center gap-2">
-                   <Inbox size={24} className="text-slate-300" />
-                   <p className="text-[13px] font-bold text-slate-400">{tr('امروز پیامی ارسال یا دریافت نشده است.', 'No messages today.')}</p>
-                 </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {Array.from(
-                    new Set<string>(
-                      messages
-                        .map((message) =>
-                          message.sender_id === profile?.id
-                            ? message.recipient_id
-                            : message.sender_id,
-                        )
-                        .filter((id): id is string => typeof id === 'string' && id.length > 0),
-                    ),
-                  ).map(managerId => {
-                    const threadMessages = messages.filter(m => m.sender_id === managerId || m.recipient_id === managerId);
-                    const unreadCount = threadMessages.filter(m => m.recipient_id === profile?.id && !m.read_at).length;
-                    const managerName = threadMessages.find(m => m.sender_id === managerId)?.sender_name || threadMessages.find(m => m.recipient_id === managerId)?.recipient_name || 'مدیر';
-                    const lastMessage = threadMessages[threadMessages.length - 1];
-
-                    return (
-                      <button
-                        key={managerId}
-                        onClick={() => openThread(managerId)}
-                        className="flex flex-col gap-2 p-3 rounded-lg border border-slate-200 dark:border-[#344457] bg-slate-50 dark:bg-[#202b38] hover:bg-indigo-50/50 dark:hover:bg-[#2b2b4e] hover:border-indigo-200 dark:hover:border-[#423f8c] transition-all text-right group h-full"
-                      >
-                        <div className="flex justify-between items-center w-full">
-                          <span className="font-extrabold text-[13px] text-slate-800 dark:text-[#f3f5f7] truncate">{managerName}</span>
-                          {unreadCount > 0 && <span className="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0">{unreadCount} جدید</span>}
-                        </div>
-                        <div className="text-[11px] font-medium text-slate-500 dark:text-[#8e9aaa] line-clamp-2 leading-relaxed">
-                          {lastMessage.message_type === 'share_review' ? 'بررسی لیست پیگیری' : lastMessage.body}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
+            <h3 className="text-2xl font-black text-blue-900 dark:text-[#a0bcff] mb-1">اطلاعیه به‌روزرسانی سیستم</h3>
+            <p className="text-[15px] font-bold text-blue-700/80 dark:text-[#81a5ff]/80 leading-relaxed max-w-lg">
+               کارشناس گرامی، در نسخه جدید، گزینه‌های این بخش برای دسترسی سریع‌تر به پنل کارشناسان منتقل شده‌اند:
+            </p>
+            <ul className="text-[14px] font-extrabold text-blue-900 dark:text-[#e8edf3] flex flex-col gap-4 mt-6 text-right w-full bg-white/60 dark:bg-[#0f1419]/40 p-6 rounded-2xl border border-blue-100/50 dark:border-[#223d6a]/30">
+               <li className="flex items-center gap-3"><div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]"></div> <span><b>ورود فایل اکسل:</b> به بالای جدول لیست شماره‌ها منتقل شد.</span></li>
+               <li className="flex items-center gap-3"><div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]"></div> <span><b>لیست سیاه:</b> به تب‌های بالای پنل کارشناسان اضافه شد.</span></li>
+               <li className="flex items-center gap-3"><div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]"></div> <span><b>ارسال به مدیر و خروجی اکسل:</b> در آپدیت‌های بعدی جایگزین خواهند شد.</span></li>
+               <li className="flex items-center gap-3"><div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]"></div> <span><b>به‌روزرسانی دوره‌ها:</b> موقتاً از دسترس خارج شده است.</span></li>
+            </ul>
+         </div>
       </div>
-
-      <AnimatePresence>
-        {isShareModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" dir={direction}>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsShareModalOpen(false)} className="absolute inset-0 bg-slate-900/40 dark:bg-slate-900/70 backdrop-blur-sm" />
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-white dark:bg-[#1c2530] rounded-3xl w-full max-w-md relative z-10 overflow-hidden shadow-2xl border border-slate-200 dark:border-[#2b3745]">
-              <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-[#344457] bg-slate-50 dark:bg-[#202b38]">
-                 <div className="flex items-center gap-3">
-                   <div className="w-10 h-10 rounded-xl bg-brand-100 dark:bg-[#162744] text-brand-600 dark:text-[#81a5ff] flex items-center justify-center"><Send size={20} /></div>
-                   <span className="font-extrabold text-slate-900 dark:text-[#f3f5f7] text-lg">{tr('ارسال پیگیری‌ها به مدیر', 'Send follow-ups to manager')}</span>
-                 </div>
-                 <button onClick={() => setIsShareModalOpen(false)} className="text-slate-400 dark:text-[#8e9aaa] hover:text-slate-700 dark:hover:text-[#f3f5f7] bg-white dark:bg-[#1c2530] rounded-full p-2 border border-slate-200 dark:border-[#344457] transition-colors"><X size={18} /></button>
-              </div>
-              <div className="p-6 flex flex-col gap-6">
-                 <div className="bg-brand-50 dark:bg-[#162744] border border-brand-100 dark:border-[#223d6a] rounded-2xl p-5 flex flex-col items-center justify-center text-center gap-1">
-                   <span className="text-4xl font-black text-brand-600 dark:text-[#a0bcff]">{activeCount}</span>
-                   <span className="text-[13px] font-bold text-brand-700 dark:text-[#81a5ff] mt-1">{tr('مورد جهت ارسال آماده است', 'items ready to send')}</span>
-                 </div>
-
-                 <div className="flex flex-col gap-3">
-                    <label className="text-[14px] font-extrabold text-slate-800 dark:text-[#f3f5f7]">{tr('انتخاب مدیر', 'Select Manager')}</label>
-
-                    {managerLoadState === 'rpc_missing' ? (
-                      <div className="p-4 bg-amber-50 text-amber-700 border border-amber-200 rounded-2xl text-[13px] font-bold leading-relaxed text-center">
-                        سامانه تبادل پیگیریها هنوز روی سرور راهاندازی نشده است.
-                      </div>
-                    ) : managerLoadState === 'error' ? (
-                      <div className="p-4 bg-red-50 text-red-600 border border-red-200 rounded-2xl text-[13px] font-bold flex flex-col items-center justify-center gap-3 text-center">
-                        <span>خطا در دریافت لیست مدیران</span>
-                        <button onClick={fetchManagers} className="bg-red-100 px-4 py-2 rounded-xl hover:bg-red-200 transition-colors">تلاش مجدد</button>
-                      </div>
-                    ) : managerLoadState === 'loading' ? (
-                      <div className="p-4 bg-slate-50 dark:bg-[#202b38] text-slate-500 dark:text-[#8e9aaa] border border-slate-200 dark:border-[#344457] rounded-2xl text-[13px] font-bold flex items-center justify-center gap-2">
-                        <RefreshCw size={16} className="animate-spin" />
-                        در حال دریافت لیست مدیران...
-                      </div>
-                    ) : (
-                      <div className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-1 hide-scrollbar">
-                        {activeManagers.length === 0 ? (
-                           <div className="text-center text-[13px] font-bold text-slate-500 dark:text-[#8e9aaa] p-4 border border-dashed border-slate-200 dark:border-[#344457] rounded-2xl">
-                             مدیر فعالی یافت نشد.
-                           </div>
-                        ) : (
-                          activeManagers.map(m => (
-                            <button
-                              key={m.id}
-                              onClick={() => setSelectedManagerId(m.id)}
-                              className={`flex items-center justify-between p-4 rounded-2xl border ${selectedManagerId === m.id ? 'border-brand-500 dark:border-brand-400 bg-brand-50 dark:bg-[#162744] shadow-sm' : 'border-slate-200 dark:border-[#344457] bg-white dark:bg-[#1c2530] hover:border-slate-300 dark:hover:border-[#46596e]'} transition-all text-right w-full`}
-                            >
-                              <span className={`font-extrabold text-[14px] ${selectedManagerId === m.id ? 'text-brand-700 dark:text-[#81a5ff]' : 'text-slate-700 dark:text-[#e8edf3]'}`}>{m.name}</span>
-                              <span className="text-[11px] font-extrabold px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-[#163326] text-emerald-700 dark:text-[#8de0b5] border border-emerald-200 dark:border-[#2f674b]">فعال</span>
-                            </button>
-                          ))
-                        )}
-                      </div>
-                    )}
-                 </div>
-
-                 <button
-                   onClick={handleSendToManager}
-                   disabled={isSending || !selectedManagerId || managerLoadState !== 'success'}
-                   className="w-full h-14 bg-brand-600 hover:bg-brand-500 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white rounded-2xl font-black text-[15px] transition-all flex items-center justify-center gap-2 mt-2 shadow-lg shadow-brand-500/25 disabled:shadow-none"
-                 >
-                   {isSending ? (
-                     <RefreshCw size={20} className="animate-spin" />
-                   ) : (
-                     <>
-                       <Send size={20} />
-                       <span>{tr('تایید و ارسال سریع', 'Confirm & Quick Send')}</span>
-                     </>
-                   )}
-                 </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {isMessagesModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" dir={direction}>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsMessagesModalOpen(false)} className="absolute inset-0 bg-slate-900/40 dark:bg-slate-900/70 backdrop-blur-sm" />
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-white dark:bg-[#1c2530] rounded-3xl w-full max-w-2xl relative z-10 overflow-hidden shadow-2xl border border-slate-200 dark:border-[#2b3745] flex flex-col max-h-[85vh]">
-              <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-[#344457] bg-slate-50 dark:bg-[#202b38] shrink-0">
-                 <div className="flex items-center gap-3">
-                   <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-[#1e1b4b] text-indigo-600 dark:text-[#a5b4fc] flex items-center justify-center"><MessageSquare size={20} /></div>
-                   <span className="font-extrabold text-slate-900 dark:text-[#f3f5f7] text-lg">
-                     {messages.find(m => m.sender_id === activeMessageManagerId)?.sender_name || messages.find(m => m.recipient_id === activeMessageManagerId)?.recipient_name || 'مدیر'}
-                   </span>
-                 </div>
-                 <button onClick={() => setIsMessagesModalOpen(false)} className="text-slate-400 dark:text-[#8e9aaa] hover:text-slate-700 dark:hover:text-[#f3f5f7] bg-white dark:bg-[#1c2530] rounded-full p-2 border border-slate-200 dark:border-[#344457] transition-colors"><X size={18} /></button>
-              </div>
-              <div className="p-6 flex-1 overflow-y-auto flex flex-col gap-3 bg-slate-50/50 dark:bg-[#0f1419]/50 hide-scrollbar">
-                {messages.filter(m => m.sender_id === activeMessageManagerId || m.recipient_id === activeMessageManagerId).map(m => {
-                  const isMine = m.sender_id === profile?.id;
-
-                  if (m.message_type === 'share_review') {
-                    const jalaliSentAt = m.related_share_sent_at ? new Date(m.related_share_sent_at).toLocaleString('fa-IR') : '—';
-                    const jalaliReviewedAt = new Date(m.created_at).toLocaleString('fa-IR');
-                    return (
-                      <div key={m.id} className={`p-4 rounded-2xl border ${isMine ? 'bg-indigo-50/50 dark:bg-[#1e1b4b]/50 border-indigo-100 dark:border-[#312e81] mr-8' : 'bg-white dark:bg-[#1c2530] border-slate-200 dark:border-[#344457] ml-8'}`}>
-                        <div className="flex flex-col gap-2">
-                          <h4 className="font-extrabold text-sm text-brand-900 dark:text-[#e2e8f0]">لیست پیگیری بررسی شد</h4>
-                          <p className="text-sm font-medium text-brand-800 dark:text-[#cbd5e1]">مدیر {m.sender_name} فهرست پیگیری ارسالی شما را بررسی کرد.</p>
-                          <div className="flex flex-wrap gap-2 mt-2">
-                            <span className="text-[11px] font-bold bg-white dark:bg-[#1c2530] text-slate-600 dark:text-[#b7c2cf] px-2 py-1 rounded-md border border-slate-200 dark:border-[#344457]">تعداد پیگیری‌ها: {m.related_share_item_count} مورد</span>
-                            <span className="text-[11px] font-bold bg-white dark:bg-[#1c2530] text-slate-600 dark:text-[#b7c2cf] px-2 py-1 rounded-md border border-slate-200 dark:border-[#344457]">زمان ارسال لیست: {jalaliSentAt}</span>
-                            <span className="text-[11px] font-bold bg-white dark:bg-[#1c2530] text-slate-600 dark:text-[#b7c2cf] px-2 py-1 rounded-md border border-slate-200 dark:border-[#344457]">زمان بررسی: {jalaliReviewedAt}</span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  }
-
-                  return (
-                    <div key={m.id} className={`p-4 rounded-2xl border ${isMine ? 'bg-indigo-50/50 dark:bg-[#1e1b4b]/50 border-indigo-100 dark:border-[#312e81] mr-8' : 'bg-white dark:bg-[#1c2530] border-slate-200 dark:border-[#344457] ml-8'}`}>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-extrabold text-xs text-slate-700 dark:text-[#f3f5f7]">{isMine ? tr('شما', 'You') : m.sender_name}</span>
-                        <span className="text-[10px] text-slate-400 dark:text-[#8e9aaa] font-bold" dir="ltr">{new Date(m.created_at).toLocaleTimeString('fa-IR', {hour: '2-digit', minute:'2-digit'})}</span>
-                      </div>
-                      <p className="text-sm font-medium text-slate-800 dark:text-[#e2e8f0] whitespace-pre-wrap leading-relaxed">{m.body}</p>
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="p-4 border-t border-slate-100 dark:border-[#344457] bg-white dark:bg-[#1c2530] shrink-0 flex flex-col gap-3">
-                <textarea
-                  className="w-full p-3 rounded-xl border border-slate-200 dark:border-[#344457] bg-slate-50 dark:bg-[#202b38] text-sm font-medium text-slate-700 dark:text-[#f3f5f7] focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all min-h-[80px] resize-y"
-                  placeholder={tr('پاسخ خود را بنویسید...', 'Type your reply...')}
-                  value={messageBody}
-                  onChange={(e) => setMessageBody(e.target.value)}
-                />
-                <div className="flex justify-end">
-                  <button
-                    onClick={handleSendMessage}
-                    disabled={isSendingMsg || !messageBody.trim()}
-                    className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-300 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all shadow-sm disabled:shadow-none"
-                  >
-                    {isSendingMsg ? <RefreshCw size={16} className="animate-spin" /> : <Send size={16} />}
-                    {tr('ارسال پاسخ', 'Send Reply')}
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };
