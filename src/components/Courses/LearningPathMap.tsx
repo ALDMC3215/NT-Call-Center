@@ -27,7 +27,7 @@ export const LearningPathMap = () => {
       <li key={treeNode.node.id}>
         <div className="flex justify-center z-10 relative">
           <div 
-            className="px-5 py-2.5 rounded-lg text-[13px] md:text-[14px] text-slate-700 bg-white border border-slate-300 whitespace-nowrap shadow-sm hover:border-slate-400 transition-colors"
+            className="px-5 py-2.5 rounded-lg text-[13px] md:text-[14px] text-slate-700 dark:text-[#f3f5f7] bg-white dark:bg-[#1c2530] border border-slate-300 dark:border-[#344457] whitespace-nowrap shadow-sm hover:border-slate-400 dark:hover:border-[#46596e] transition-colors"
             dir="rtl" // Ensure text inside cards is RTL
           >
             {treeNode.node.data.label}
@@ -98,7 +98,7 @@ export const LearningPathMap = () => {
   return (
     <div 
       ref={scrollRef}
-      className="w-full h-full overflow-auto bg-slate-50 cursor-grab active:cursor-grabbing p-8 md:p-16 select-none" 
+      className="w-full h-full overflow-auto bg-slate-50 dark:bg-[#0f1419] cursor-grab active:cursor-grabbing p-8 md:p-16 select-none" 
       dir="ltr" // LTR is crucial for the CSS tree lines to render correctly
     >
       <style dangerouslySetInnerHTML={{__html: `

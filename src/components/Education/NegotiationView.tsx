@@ -123,19 +123,19 @@ export const NegotiationView = ({ isModal, onClose, embedded }: { isModal?: bool
   };
 
   return (
-    <div className="w-full h-full bg-[#F8FAFC] flex flex-col" dir="rtl">
+    <div className="w-full h-full bg-[#F8FAFC] dark:bg-[#0f1419] flex flex-col" dir="rtl">
       
       {/* Header */}
-      <div className="flex-none bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-20 shadow-sm">
+      <div className="flex-none bg-white dark:bg-[#171e27] border-b border-slate-200 dark:border-[#2b3745] px-6 py-4 flex items-center justify-between sticky top-0 z-20 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
             <Target size={22} strokeWidth={2.5} />
           </div>
           <div>
-            <h1 className="text-lg font-extrabold text-slate-800 leading-tight">
+            <h1 className="text-lg font-extrabold text-slate-800 dark:text-[#f3f5f7] leading-tight">
               تکنیک‌های حرفه‌ای مذاکره
             </h1>
-            <p className="text-sm text-slate-500 font-medium mt-1">
+            <p className="text-sm text-slate-500 dark:text-[#8e9aaa] font-medium mt-1">
               مجموعه‌ای از برترین تکنیک‌های فروش برای استفاده کارشناسان
             </p>
           </div>
@@ -143,7 +143,7 @@ export const NegotiationView = ({ isModal, onClose, embedded }: { isModal?: bool
         {embedded ? null : isModal ? (
            <button
              onClick={onClose}
-             className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-colors shrink-0"
+             className="w-8 h-8 rounded-full bg-slate-100 dark:bg-[#202b38] flex items-center justify-center text-slate-500 dark:text-[#8e9aaa] hover:bg-slate-200 dark:hover:bg-[#2c3b4d] hover:text-slate-900 dark:hover:text-[#f3f5f7] transition-colors shrink-0"
              title="بستن"
            >
              <X size={18} strokeWidth={2.5} />
@@ -151,7 +151,7 @@ export const NegotiationView = ({ isModal, onClose, embedded }: { isModal?: bool
         ) : (
            <button
              onClick={() => setCurrentView('home')}
-             className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-lg transition-colors shrink-0"
+             className="px-4 py-2 bg-slate-100 dark:bg-[#202b38] hover:bg-slate-200 dark:hover:bg-[#2c3b4d] text-slate-700 dark:text-[#e8edf3] text-sm font-bold rounded-lg transition-colors shrink-0"
            >
              بازگشت
            </button>
@@ -161,18 +161,18 @@ export const NegotiationView = ({ isModal, onClose, embedded }: { isModal?: bool
       <div className="flex-1 overflow-hidden flex flex-col lg:flex-row max-w-7xl mx-auto w-full">
         
         {/* Sidebar Index (Desktop) */}
-        <div className="hidden lg:flex w-[340px] flex-col bg-white h-full overflow-y-auto hide-scrollbar shrink-0 border-l border-slate-200">
+        <div className="hidden lg:flex w-[340px] flex-col bg-white dark:bg-[#171e27] h-full overflow-y-auto hide-scrollbar shrink-0 border-l border-slate-200 dark:border-[#2b3745]">
           <div className="p-8">
             <div className="flex items-center gap-3 mb-8">
-              <div className="w-8 h-8 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-brand-50 dark:bg-[#162744] text-brand-600 dark:text-[#81a5ff] flex items-center justify-center">
                 <Target size={18} strokeWidth={2.5} />
               </div>
-              <h3 className="text-sm font-bold text-slate-800 tracking-tight">فهرست تکنیک‌ها</h3>
+              <h3 className="text-sm font-bold text-slate-800 dark:text-[#f3f5f7] tracking-tight">فهرست تکنیک‌ها</h3>
             </div>
             
             <div className="relative">
               {/* Vertical timeline line */}
-              <div className="absolute right-[21px] top-6 bottom-6 w-0.5 bg-slate-100 rounded-full z-0"></div>
+              <div className="absolute right-[21px] top-6 bottom-6 w-0.5 bg-slate-100 dark:bg-[#344457] rounded-full z-0"></div>
               
               <div className="space-y-4 relative z-10">
                 {techniques.map((tech) => {
@@ -190,18 +190,18 @@ export const NegotiationView = ({ isModal, onClose, embedded }: { isModal?: bool
                       <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-none transition-all duration-300 ${
                         isActive 
                           ? 'bg-brand-600 text-white shadow-md shadow-brand-500/25 scale-110' 
-                          : 'bg-white text-slate-400 border border-slate-200 group-hover:border-slate-300 group-hover:text-slate-600 group-hover:scale-105'
+                          : 'bg-white dark:bg-[#1c2530] text-slate-400 dark:text-[#8e9aaa] border border-slate-200 dark:border-[#344457] group-hover:border-slate-300 dark:group-hover:border-[#46596e] group-hover:text-slate-600 dark:group-hover:text-[#b7c2cf] group-hover:scale-105'
                       }`}>
                         <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
                       </div>
                       
                       {/* Title text */}
                       <div className="flex flex-col flex-1 min-w-0 pb-1">
-                        <span className={`text-[10px] font-bold mb-1 transition-colors ${isActive ? 'text-brand-600' : 'text-slate-400'}`}>
+                        <span className={`text-[10px] font-bold mb-1 transition-colors ${isActive ? 'text-brand-600 dark:text-[#81a5ff]' : 'text-slate-400 dark:text-[#8e9aaa]'}`}>
                           تکنیک {tech.id}
                         </span>
                         <span className={`text-[13px] font-semibold transition-colors truncate block w-full ${
-                          isActive ? 'text-slate-900' : 'text-slate-600'
+                          isActive ? 'text-slate-900 dark:text-[#f3f5f7]' : 'text-slate-600 dark:text-[#b7c2cf]'
                         }`}>
                           {tech.title}
                         </span>
@@ -215,7 +215,7 @@ export const NegotiationView = ({ isModal, onClose, embedded }: { isModal?: bool
         </div>
 
         {/* Main Content Area */}
-        <div className="flex-1 overflow-y-auto hide-scrollbar bg-[#F8FAFC] p-4 sm:p-6 lg:p-10 relative scroll-smooth"
+        <div className="flex-1 overflow-y-auto hide-scrollbar bg-[#F8FAFC] dark:bg-[#0f1419] p-4 sm:p-6 lg:p-10 relative scroll-smooth"
              onScroll={(e) => {
                // Simple scroll spy logic
                const container = e.currentTarget;
@@ -237,8 +237,8 @@ export const NegotiationView = ({ isModal, onClose, embedded }: { isModal?: bool
           <div className="max-w-3xl mx-auto space-y-10 pb-32">
             
             {/* Intro Alert */}
-            <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 sm:p-8 text-blue-800 shadow-sm flex gap-5 items-start">
-              <div className="flex-none p-2 bg-blue-100 text-blue-600 rounded-xl mt-1">
+            <div className="bg-blue-50 dark:bg-[#1c2a38] border border-blue-100 dark:border-[#2b3a4a] rounded-2xl p-6 sm:p-8 text-blue-800 dark:text-[#93c5fd] shadow-sm flex gap-5 items-start">
+              <div className="flex-none p-2 bg-blue-100 dark:bg-[#2b3a4a] text-blue-600 dark:text-[#60a5fa] rounded-xl mt-1">
                 <Target size={24} />
               </div>
               <div>
@@ -253,22 +253,22 @@ export const NegotiationView = ({ isModal, onClose, embedded }: { isModal?: bool
             {isLoading ? (
               <div className="space-y-10">
                 {[1, 2, 3].map(i => (
-                  <div key={i} className="bg-white rounded-[1.5rem] border border-slate-200 shadow-sm overflow-hidden p-8 sm:p-10 animate-pulse">
+                  <div key={i} className="bg-white dark:bg-[#1c2530] rounded-[1.5rem] border border-slate-200 dark:border-[#2b3745] shadow-sm overflow-hidden p-8 sm:p-10 animate-pulse">
                     <div className="flex items-start gap-4 mb-8">
-                      <div className="w-12 h-12 rounded-2xl bg-slate-100 flex-none"></div>
+                      <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-[#344457] flex-none"></div>
                       <div className="flex-1 space-y-3 pt-1">
-                        <div className="h-4 bg-slate-100 rounded-md w-24"></div>
-                        <div className="h-6 bg-slate-100 rounded-md w-2/3"></div>
+                        <div className="h-4 bg-slate-100 dark:bg-[#344457] rounded-md w-24"></div>
+                        <div className="h-6 bg-slate-100 dark:bg-[#344457] rounded-md w-2/3"></div>
                       </div>
                     </div>
                     <div className="space-y-3 mb-10">
-                      <div className="h-4 bg-slate-100 rounded-md w-full"></div>
-                      <div className="h-4 bg-slate-100 rounded-md w-full"></div>
-                      <div className="h-4 bg-slate-100 rounded-md w-4/5"></div>
+                      <div className="h-4 bg-slate-100 dark:bg-[#344457] rounded-md w-full"></div>
+                      <div className="h-4 bg-slate-100 dark:bg-[#344457] rounded-md w-full"></div>
+                      <div className="h-4 bg-slate-100 dark:bg-[#344457] rounded-md w-4/5"></div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="bg-slate-50 rounded-2xl p-6 h-32"></div>
-                      <div className="bg-slate-50 rounded-2xl p-6 h-32"></div>
+                      <div className="bg-slate-50 dark:bg-[#0f1419] rounded-2xl p-6 h-32"></div>
+                      <div className="bg-slate-50 dark:bg-[#0f1419] rounded-2xl p-6 h-32"></div>
                     </div>
                   </div>
                 ))}
@@ -284,47 +284,47 @@ export const NegotiationView = ({ isModal, onClose, embedded }: { isModal?: bool
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, margin: "-100px" }}
                     transition={{ duration: 0.4 }}
-                    className="bg-white rounded-[1.5rem] border border-slate-200 shadow-sm overflow-hidden group hover:shadow-md transition-shadow duration-300"
+                    className="bg-white dark:bg-[#1c2530] rounded-[1.5rem] border border-slate-200 dark:border-[#2b3745] shadow-sm overflow-hidden group hover:shadow-md transition-shadow duration-300"
                   >
                     <div className="p-8 sm:p-10">
                       {/* Header */}
                       <div className="flex items-start gap-5 mb-8">
-                        <div className="w-14 h-14 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center flex-none border border-brand-100">
+                        <div className="w-14 h-14 rounded-2xl bg-brand-50 dark:bg-[#162744] text-brand-600 dark:text-[#81a5ff] flex items-center justify-center flex-none border border-brand-100 dark:border-[#223d6a]">
                           <Icon size={26} strokeWidth={1.8} />
                         </div>
                         <div>
-                          <span className="text-xs font-bold text-brand-600 bg-brand-50 px-2.5 py-1 rounded-md mb-2 inline-block">تکنیک شماره {tech.id}</span>
-                          <h2 className="text-lg sm:text-xl font-extrabold text-slate-800 leading-tight">
+                          <span className="text-xs font-bold text-brand-600 dark:text-[#81a5ff] bg-brand-50 dark:bg-[#162744] px-2.5 py-1 rounded-md mb-2 inline-block">تکنیک شماره {tech.id}</span>
+                          <h2 className="text-lg sm:text-xl font-extrabold text-slate-800 dark:text-[#f3f5f7] leading-tight">
                             {tech.title}
                           </h2>
                         </div>
                       </div>
 
                       {/* Content */}
-                      <p className="text-slate-600 text-[15px] sm:text-base font-medium leading-[2.2] text-justify mb-10">
+                      <p className="text-slate-600 dark:text-[#e2e8f0] text-[15px] sm:text-base font-medium leading-[2.2] text-justify mb-10">
                         {tech.content}
                       </p>
 
                       {/* Lesson & Golden Point Cards */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 relative overflow-hidden">
-                          <div className="absolute top-0 right-0 w-2 h-full bg-slate-400/30"></div>
-                          <h4 className="flex items-center gap-2 font-semibold text-slate-700 text-sm mb-3">
-                            <CheckCircle2 size={18} className="text-slate-500" />
+                        <div className="bg-slate-50 dark:bg-[#202b38] border border-slate-200 dark:border-[#344457] rounded-2xl p-6 relative overflow-hidden">
+                          <div className="absolute top-0 right-0 w-2 h-full bg-slate-400/30 dark:bg-slate-500/30"></div>
+                          <h4 className="flex items-center gap-2 font-semibold text-slate-700 dark:text-[#f3f5f7] text-sm mb-3">
+                            <CheckCircle2 size={18} className="text-slate-500 dark:text-[#8e9aaa]" />
                             درس فروش
                           </h4>
-                          <p className="text-slate-600 text-sm font-medium leading-loose text-justify">
+                          <p className="text-slate-600 dark:text-[#b7c2cf] text-sm font-medium leading-loose text-justify">
                             {tech.lesson}
                           </p>
                         </div>
 
-                        <div className="bg-amber-50 border border-amber-200/60 rounded-2xl p-6 relative overflow-hidden">
-                          <div className="absolute top-0 right-0 w-2 h-full bg-amber-400"></div>
-                          <h4 className="flex items-center gap-2 font-semibold text-amber-900 text-sm mb-3">
-                            <Zap size={18} className="text-amber-600 fill-amber-600/20" />
+                        <div className="bg-amber-50 dark:bg-[#452003] border border-amber-200/60 dark:border-[#78350f] rounded-2xl p-6 relative overflow-hidden">
+                          <div className="absolute top-0 right-0 w-2 h-full bg-amber-400 dark:bg-[#b45309]"></div>
+                          <h4 className="flex items-center gap-2 font-semibold text-amber-900 dark:text-[#fcd34d] text-sm mb-3">
+                            <Zap size={18} className="text-amber-600 dark:text-[#fcd34d] fill-amber-600/20 dark:fill-amber-400/20" />
                             نکته طلایی
                           </h4>
-                          <p className="text-amber-800 text-sm font-medium leading-loose text-justify">
+                          <p className="text-amber-800 dark:text-[#fde68a] text-sm font-medium leading-loose text-justify">
                             {tech.goldenPoint}
                           </p>
                         </div>

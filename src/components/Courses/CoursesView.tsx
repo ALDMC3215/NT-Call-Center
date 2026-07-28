@@ -226,19 +226,19 @@ export const CoursesView = ({ externalSearchQuery = '', isModal, onClose, embedd
   const categoryColors = ['#aadb9f', '#88c4a5', '#7089a9'];
 
   return (
-    <div className={`w-full h-full flex flex-col ${isModal ? 'bg-slate-50' : 'bg-transparent'} relative z-10`} dir={direction}>
+    <div className={`w-full h-full flex flex-col ${isModal ? 'bg-slate-50 dark:bg-[#0f1419]' : 'bg-transparent'} relative z-10`} dir={direction}>
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 md:p-6 lg:p-8 bg-white border-b border-slate-200 shrink-0 relative z-20 shadow-sm">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 md:p-6 lg:p-8 bg-white dark:bg-[#171e27] border-b border-slate-200 dark:border-[#2b3745] shrink-0 relative z-20 shadow-sm">
         <div className="flex flex-col gap-1 order-1 md:order-none">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center text-brand-600 shadow-sm border border-brand-100">
+            <div className="w-10 h-10 rounded-xl bg-brand-50 dark:bg-[#162744] flex items-center justify-center text-brand-600 dark:text-[#81a5ff] shadow-sm border border-brand-100 dark:border-[#223d6a]">
               <Icons.BookOpen size={20} strokeWidth={2.5} />
             </div>
-            <h1 className="text-xl md:text-2xl font-extrabold text-slate-800 tracking-tight">
+            <h1 className="text-xl md:text-2xl font-extrabold text-slate-800 dark:text-[#f3f5f7] tracking-tight">
               {tr('دوره‌های آموزشی', 'Courses Prices')}
             </h1>
           </div>
-          <p className="text-sm font-medium text-slate-500 mr-14">
+          <p className="text-sm font-medium text-slate-500 dark:text-[#8e9aaa] mr-14">
             {tr('مشاهده لیست و قیمت به‌روز دوره‌های آموزشی', 'View updated list and prices of courses')}
           </p>
         </div>
@@ -250,7 +250,7 @@ export const CoursesView = ({ externalSearchQuery = '', isModal, onClose, embedd
                 placeholder={tr('جستجوی دوره، دسته‌بندی یا سکشن...', 'Search course, category or section...')}
                 value={internalSearchQuery}
                 onChange={(e) => setInternalSearchQuery(e.target.value)}
-                className="w-full h-10 bg-slate-50 border border-slate-200 rounded-xl pr-10 pl-10 text-[13px] font-medium text-slate-900 placeholder:text-slate-500 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/10 transition-all shadow-sm"
+                className="w-full h-10 bg-slate-50 dark:bg-[#18222d] border border-slate-200 dark:border-[#344457] rounded-xl pr-10 pl-10 text-[13px] font-medium text-slate-900 dark:text-[#f3f5f7] placeholder:text-slate-500 dark:placeholder:text-[#7f8da0] outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/10 transition-all shadow-sm"
               />
             )}
             {(!externalSearchQuery) && (
@@ -272,7 +272,7 @@ export const CoursesView = ({ externalSearchQuery = '', isModal, onClose, embedd
             {isModal ? (
                <button
                  onClick={onClose}
-                 className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-colors"
+                 className="w-8 h-8 rounded-full bg-slate-100 dark:bg-[#202b38] flex items-center justify-center text-slate-500 dark:text-[#8e9aaa] hover:bg-slate-200 dark:hover:bg-[#2c3b4d] hover:text-slate-900 dark:hover:text-[#f3f5f7] transition-colors"
                  title="بستن"
                >
                  <Icons.X size={18} strokeWidth={2.5} />
@@ -280,7 +280,7 @@ export const CoursesView = ({ externalSearchQuery = '', isModal, onClose, embedd
             ) : (
                <button
                  onClick={() => setCurrentView('home')}
-                 className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-lg transition-colors"
+                 className="px-4 py-2 bg-slate-100 dark:bg-[#202b38] hover:bg-slate-200 dark:hover:bg-[#2c3b4d] text-slate-700 dark:text-[#e8edf3] text-sm font-bold rounded-lg transition-colors"
                >
                  بازگشت
                </button>
@@ -314,7 +314,7 @@ export const CoursesView = ({ externalSearchQuery = '', isModal, onClose, embedd
                   <button 
                     onClick={handleUpdateAllCourses}
                     disabled={isUpdating}
-                    className="flex items-center gap-2 px-4 py-2 bg-brand-500/10 text-brand-500 hover:bg-brand-500/20 hover:text-brand-600 rounded-xl font-medium text-[12px] transition-colors border border-brand-500/20 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto justify-center"
+                    className="flex items-center gap-2 px-4 py-2 bg-brand-500/10 dark:bg-brand-500/20 text-brand-500 dark:text-[#81a5ff] hover:bg-brand-500/20 dark:hover:bg-brand-500/30 hover:text-brand-600 dark:hover:text-[#a0bcff] rounded-xl font-medium text-[12px] transition-colors border border-brand-500/20 dark:border-brand-500/30 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto justify-center"
                   >
                     <Icons.RefreshCw size={16} className={isUpdating ? "animate-spin" : ""} />
                     <span>{isUpdating ? tr('در حال بروزرسانی...', 'Updating...') : tr('بروزرسانی اطلاعات دوره‌ها', 'Update Course Data')}</span>
@@ -328,45 +328,45 @@ export const CoursesView = ({ externalSearchQuery = '', isModal, onClose, embedd
                       <div 
                         key={idx} 
                         onClick={() => setSelectedCourse(course)}
-                        className="flex flex-col h-full p-4 bg-white border border-slate-200 rounded-2xl relative overflow-hidden group hover:border-brand-500/30 hover:shadow-md transition-all duration-300 min-h-[72px] cursor-pointer"
+                        className="flex flex-col h-full p-4 bg-white dark:bg-[#1c2530] border border-slate-200 dark:border-[#2b3745] rounded-2xl relative overflow-hidden group hover:border-brand-500/30 dark:hover:border-brand-500/40 hover:shadow-md transition-all duration-300 min-h-[72px] cursor-pointer"
                       >
                         {/* Left ticket notched decor */}
-                        <div className="absolute top-[36px] -translate-y-1/2 -left-2.5 w-5 h-5 rounded-full bg-[#f8fafc] border-r border-slate-200 z-20"></div>
+                        <div className="absolute top-[36px] -translate-y-1/2 -left-2.5 w-5 h-5 rounded-full bg-[#f8fafc] dark:bg-[#0f1419] border-r border-slate-200 dark:border-[#2b3745] z-20"></div>
                         {/* Right ticket notched decor */}
-                        <div className="absolute top-[36px] -translate-y-1/2 -right-2.5 w-5 h-5 rounded-full bg-[#f8fafc] border-l border-slate-200 z-20"></div>
+                        <div className="absolute top-[36px] -translate-y-1/2 -right-2.5 w-5 h-5 rounded-full bg-[#f8fafc] dark:bg-[#0f1419] border-l border-slate-200 dark:border-[#2b3745] z-20"></div>
 
                         <div className="flex items-center justify-between w-full relative z-10">
                           <div className="flex flex-col gap-1 pr-3 pl-3 flex-1 min-w-0">
-                            <h4 className="text-[13px] font-extrabold text-slate-800 transition-colors truncate tracking-tight" title={course.title}>
+                            <h4 className="text-[13px] font-extrabold text-slate-800 dark:text-[#f3f5f7] transition-colors truncate tracking-tight" title={course.title}>
                               {course.title}
                             </h4>
-                            <span className="text-[10px] font-medium text-slate-400 truncate">
+                            <span className="text-[10px] font-medium text-slate-400 dark:text-[#8e9aaa] truncate">
                               {course.subcategoryTitle}
                             </span>
                           </div>
 
-                          <div className="flex flex-col items-end shrink-0 pl-3 pr-3 border-r border-dashed border-slate-200">
+                          <div className="flex flex-col items-end shrink-0 pl-3 pr-3 border-r border-dashed border-slate-200 dark:border-[#344457]">
                             {course.originalPrice && course.originalPrice !== course.price && (
-                              <span className="text-[10px] font-medium text-slate-400 line-through tracking-tight">{course.originalPrice}</span>
+                              <span className="text-[10px] font-medium text-slate-400 dark:text-[#8e9aaa] line-through tracking-tight">{course.originalPrice}</span>
                             )}
-                            <span className="text-[13px] font-extrabold text-brand-600 tracking-tight">{course.price || tr('نامشخص', 'Unknown')}</span>
+                            <span className="text-[13px] font-extrabold text-brand-600 dark:text-[#81a5ff] tracking-tight">{course.price || tr('نامشخص', 'Unknown')}</span>
                           </div>
                         </div>
 
                         {/* Schedules / Active Sections */}
                         {course.schedules && course.schedules.length > 0 && (
-                          <div className="w-full mt-auto pt-3 border-t border-dashed border-slate-200 flex flex-col gap-1.5 relative z-10">
+                          <div className="w-full mt-auto pt-3 border-t border-dashed border-slate-200 dark:border-[#344457] flex flex-col gap-1.5 relative z-10">
                              {course.schedules.map((sched: string, sIdx: number) => {
                                 const badges = parseSchedule(sched);
                                 return (
                                   <div key={sIdx} className="flex flex-wrap items-center gap-1.5">
                                     {badges.map((b, i) => (
                                       <span key={i} className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
-                                        b.type === 'day' ? 'bg-indigo-50 text-indigo-600' :
-                                        b.type === 'time' ? 'bg-emerald-50 text-emerald-600' :
-                                        b.type === 'group_label' ? 'bg-orange-50 text-orange-600' :
-                                        b.type === 'branch' ? 'bg-rose-50 text-rose-600' :
-                                        'bg-slate-50 text-slate-600'
+                                        b.type === 'day' ? 'bg-indigo-50 dark:bg-[#1e1b4b] text-indigo-600 dark:text-[#a5b4fc]' :
+                                        b.type === 'time' ? 'bg-emerald-50 dark:bg-[#064e3b] text-emerald-600 dark:text-[#6ee7b7]' :
+                                        b.type === 'group_label' ? 'bg-orange-50 dark:bg-[#451a03] text-orange-600 dark:text-[#fdba74]' :
+                                        b.type === 'branch' ? 'bg-rose-50 dark:bg-[#4c0519] text-rose-600 dark:text-[#fda4af]' :
+                                        'bg-slate-50 dark:bg-[#202b38] text-slate-600 dark:text-[#b7c2cf]'
                                       }`}>
                                         {b.value}
                                       </span>

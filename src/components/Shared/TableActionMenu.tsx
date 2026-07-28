@@ -88,7 +88,7 @@ export const TableActionMenu = ({ actions, disabled, attemptCount }: TableAction
             e.stopPropagation();
             logAttemptAction.onClick();
           }}
-          className={`relative w-9 h-9 shrink-0 rounded-xl flex items-center justify-center transition-all border bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300 active:scale-95 ${logAttemptAction.disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className={`relative w-9 h-9 shrink-0 rounded-xl flex items-center justify-center transition-all border bg-emerald-50 dark:bg-[#163326] text-emerald-600 dark:text-[#8de0b5] border-emerald-200 dark:border-[#2f674b] hover:bg-emerald-100 dark:hover:bg-[#1e4a36] hover:border-emerald-300 dark:hover:border-[#387a58] active:scale-95 ${logAttemptAction.disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
           title={logAttemptAction.label}
         >
           {logAttemptAction.icon}
@@ -106,7 +106,7 @@ export const TableActionMenu = ({ actions, disabled, attemptCount }: TableAction
           setIsOpen(!isOpen);
         }}
         className={`w-9 h-9 shrink-0 rounded-xl flex items-center justify-center transition-all border ${
-          isOpen ? 'bg-slate-200 text-slate-900 border-slate-300' : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200 hover:text-slate-900 hover:border-slate-300'
+          isOpen ? 'bg-slate-200 dark:bg-[#243140] text-slate-900 dark:text-white border-slate-300 dark:border-[#46596e]' : 'bg-slate-100 dark:bg-[#18222d] text-slate-700 dark:text-[#e8edf3] border-slate-200 dark:border-[#344457] hover:bg-slate-200 dark:hover:bg-[#243140] hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-[#46596e]'
         } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
         title="عملیات بیشتر"
       >
@@ -122,18 +122,18 @@ export const TableActionMenu = ({ actions, disabled, attemptCount }: TableAction
             bottom: coords.direction === 'up' ? window.innerHeight - coords.top : 'auto',
             left: coords.left,
           }}
-          className="min-w-[160px] w-max bg-white border border-slate-200 rounded-xl shadow-xl z-[99999] overflow-hidden py-1"
+          className="min-w-[160px] w-max bg-white dark:bg-[#202b38] border border-slate-200 dark:border-[#35465a] rounded-xl shadow-xl z-[99999] overflow-hidden py-1"
         >
           <div className="max-h-60 overflow-y-auto custom-select-scroll p-1 flex flex-col gap-0.5">
             {visibleActions.map(action => {
 
-              let colorClasses = 'text-slate-700 hover:bg-slate-100 hover:text-slate-900';
+              let colorClasses = 'text-slate-700 dark:text-[#e8edf3] hover:bg-slate-100 dark:hover:bg-[#2b3949] hover:text-slate-900 dark:hover:text-white';
               if (action.variant === 'danger') {
-                colorClasses = 'text-rose-600 hover:bg-rose-50 hover:text-rose-700 font-bold';
+                colorClasses = 'text-rose-600 dark:text-[#ff9aa9] hover:bg-rose-50 dark:hover:bg-[#3a1d25] hover:text-rose-700 dark:hover:text-[#ffb3be] font-bold';
               } else if (action.variant === 'primary') {
-                colorClasses = 'text-brand-600 hover:bg-brand-50 hover:text-brand-700 font-bold';
+                colorClasses = 'text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-900/30 hover:text-brand-700 dark:hover:text-brand-300 font-bold';
               } else if (action.variant === 'warning') {
-                colorClasses = 'text-amber-600 hover:bg-amber-50 hover:text-amber-700 font-bold';
+                colorClasses = 'text-amber-600 dark:text-[#ffc477] hover:bg-amber-50 dark:hover:bg-[#3b2917] hover:text-amber-700 dark:hover:text-[#ffd699] font-bold';
               }
 
               return (

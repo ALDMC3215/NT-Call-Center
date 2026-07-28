@@ -290,9 +290,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/python/",
             "schedules": [
-              "پایتون ۲۸ پنجشنبه ۹ تا ۱۲ شعبه ۲",
-              "پایتون ۲۷ شنبه ۱۶ تا ۲۰ شعبه ۱",
-              "پایتون ۲۶ دوشنبه ۱۶ تا ۲۰ شعبه ۱"
+              "پایتون ۲۸ پنجشنبه ۹ تا ۱۲ شعبه ۲"
             ],
             "metadata": [
               "نوع دوره: حضوری",
@@ -522,7 +520,8 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/chatgpt/",
             "schedules": [
-              "ابزار هوش مصنوعی گروه ۱۵ سه‌شنبه ۱۸ تا ۲۱ شعبه ۲"
+              "ابزار هوش مصنوعی چهارشنبه ۱۵ تا ۱۸",
+              "ابزار هوش مصنوعی شنبه ۱۵ تا ۱۸"
             ],
             "metadata": [
               "نوع دوره: حضوری",
@@ -786,7 +785,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
             "iconName": "Monitor",
             "url": "https://itech-co.ir/product/ui-ux/",
             "schedules": [
-              "UI/UX گروه ۷ یکشنبه ۱۵ تا ۱۸ شعبه ۲"
+              "UI/UX سه‌شنبه ۱۵ تا ۱۸"
             ],
             "metadata": [
               "نوع دوره: حضوری",

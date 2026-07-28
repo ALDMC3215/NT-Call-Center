@@ -182,16 +182,28 @@
   }
 
   .dark {
-    --color-bg-base: #0f172a; /* slate-900 */
-    --color-surface: #1e293b; /* slate-800 */
-    --color-surface-hover: #334155; /* slate-700 */
-    --color-border: #334155; /* slate-700 */
-    --color-border-muted: #1e293b; /* slate-800 */
-    --color-border-strong: #475569; /* slate-600 */
+    --color-bg-base: #0f1419;
+    --color-surface: #171e27;
+    --color-surface-hover: #222c38;
+    --color-surface-secondary: #1c2530;
+    --color-surface-elevated: #222c38;
+    --color-border: #2b3745;
+    --color-border-muted: #1c2530;
+    --color-border-strong: #3a4757;
 
-    --color-text-primary: #f8fafc; /* slate-50 */
-    --color-text-secondary: #cbd5e1; /* slate-300 */
-    --color-text-muted: #94a3b8; /* slate-400 */
+    --color-text-primary: #f3f5f7;
+    --color-text-secondary: #c0c8d2;
+    --color-text-muted: #8e9aaa;
+
+    --color-success: #59d98e;
+    --color-success-soft: rgba(89, 217, 142, 0.15);
+    --color-danger: #f08080;
+    --color-danger-soft: rgba(240, 128, 128, 0.15);
+    --color-warning: #f6c999;
+    --color-warning-soft: rgba(246, 201, 153, 0.15);
+    --color-neutral: #8e9aaa;
+
+    color-scheme: dark;
   }
 
   /* Shadow override intentionally kept minimal — gradient override removed
@@ -295,9 +307,18 @@
   background: #8b5cf6;
 }
 
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+}
+
 ::selection {
   color: #ffffff;
   background: #0284c7; /* Sky-600 — neutral brand blue, no green artefact */
+}
+
+.dark ::selection {
+  color: #ffffff;
+  background: #4f7cac;
 }
 
 .hide-scrollbar::-webkit-scrollbar {

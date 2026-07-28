@@ -66,13 +66,13 @@ const CourseAutocomplete = ({ value, onChange }: { value: string, onChange: (v: 
         }}
         onFocus={() => setIsOpen(true)}
         placeholder="دوره مدنظر..."
-        className="text-[13px] font-bold text-slate-800 text-center bg-slate-100 border border-slate-200 hover:border-slate-300 focus:border-cyan-600 outline-none w-full px-2 py-2 rounded-lg transition-colors placeholder:text-slate-500 placeholder:font-medium"
+        className="text-[13px] font-bold text-slate-800 dark:text-[#e8edf3] text-center bg-slate-100 dark:bg-[#18222d] border border-slate-200 dark:border-[#344457] hover:border-slate-300 dark:hover:border-[#46596e] focus:border-cyan-600 outline-none w-full px-2 py-2 rounded-lg transition-colors placeholder:text-slate-500 dark:placeholder:text-[#7f8da0] placeholder:font-medium"
       />
       <AnimatePresence>
       {isOpen && localVal && filtered.length > 0 && (
-        <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 5 }} className="absolute z-[100] top-full mt-1 w-[240px] left-1/2 -translate-x-1/2 bg-white border border-slate-200 rounded-xl  max-h-[250px] overflow-y-auto custom-scrollbar flex flex-col p-1 text-right">
+        <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 5 }} className="absolute z-[100] top-full mt-1 w-[240px] left-1/2 -translate-x-1/2 bg-white dark:bg-[#202b38] border border-slate-200 dark:border-[#35465a] rounded-xl max-h-[250px] overflow-y-auto custom-scrollbar flex flex-col p-1 text-right">
           {filtered.map(o => (
-             <button key={o} onClick={() => { setLocalVal(o); onChange(o); setIsOpen(false); }} className="px-3 py-2 text-[12px] font-medium text-slate-700 hover:bg-brand-50 hover:text-brand-700 text-right rounded-lg w-full transition-colors truncate">
+             <button key={o} onClick={() => { setLocalVal(o); onChange(o); setIsOpen(false); }} className="px-3 py-2 text-[12px] font-medium text-slate-700 dark:text-[#e8edf3] hover:bg-brand-50 dark:hover:bg-[#2b3949] hover:text-brand-700 dark:hover:text-brand-400 text-right rounded-lg w-full transition-colors truncate">
                {o}
              </button>
           ))}
@@ -97,16 +97,16 @@ const NotesModal = ({ call, isOpen, onClose, onSave }: { call: CallRecord | null
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-slate-50/60" onClick={onClose} />
+      <div className="absolute inset-0 bg-slate-50/60 dark:bg-slate-900/80" onClick={onClose} />
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="bg-white border border-slate-200 rounded-xl w-full max-w-md relative z-10 overflow-hidden"
+        className="bg-white dark:bg-[#171e27] border border-slate-200 dark:border-[#35465a] rounded-xl w-full max-w-md relative z-10 overflow-hidden"
       >
-        <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50 rounded-t-2xl">
-          <span className="font-medium text-slate-900 text-sm">{tr('یادداشت', 'Notes')} — <span dir="ltr">{formatPhoneNumber(call?.phone || '')}</span></span>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-900 transition-colors p-1 rounded-lg hover:bg-slate-200">
+        <div className="p-4 border-b border-slate-100 dark:border-[#2b3745] flex items-center justify-between bg-slate-50 dark:bg-[#1c2530] rounded-t-2xl">
+          <span className="font-medium text-slate-900 dark:text-[#f3f5f7] text-sm">{tr('یادداشت', 'Notes')} — <span dir="ltr">{formatPhoneNumber(call?.phone || '')}</span></span>
+          <button onClick={onClose} className="text-slate-400 dark:text-[#66717f] hover:text-slate-900 dark:hover:text-[#f3f5f7] transition-colors p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-[#2b3745]">
             <X size={18} />
           </button>
         </div>
@@ -116,14 +116,14 @@ const NotesModal = ({ call, isOpen, onClose, onSave }: { call: CallRecord | null
             onChange={e => setNotes(e.target.value)}
             placeholder={tr('یادداشت خود را بنویسید...', 'Write your notes here...')}
             rows={6}
-            className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm text-slate-900 placeholder-slate-400 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 resize-none transition-all"
+            className="w-full bg-white dark:bg-[#18222d] border border-slate-200 dark:border-[#344457] rounded-xl p-3 text-sm text-slate-900 dark:text-[#e8edf3] placeholder-slate-400 dark:placeholder-[#7f8da0] outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 resize-none transition-all"
             dir="rtl"
             autoFocus
           />
           <div className="flex gap-2 justify-end">
             <button
               onClick={onClose}
-              className="h-10 px-5 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 transition-all"
+              className="h-10 px-5 rounded-xl text-sm font-medium text-slate-500 dark:text-[#b7c2cf] hover:text-slate-900 dark:hover:text-[#e8edf3] hover:bg-slate-50 dark:hover:bg-[#243140] border border-slate-200 dark:border-[#334355] transition-all"
             >
               {tr('لغو', 'Cancel')}
             </button>
@@ -608,14 +608,14 @@ export const CallListWorkspace = () => {
 
   if (isLoadingCalls && !hasInitialCallsLoaded) {
     return (
-      <div className="w-full h-full flex items-center justify-center bg-slate-50 dark:bg-slate-900" dir={direction}>
+      <div className="w-full h-full flex items-center justify-center bg-slate-50 dark:bg-[#0f1419]" dir={direction}>
         <div className="text-slate-500 font-medium">{tr('در حال بارگذاری اطلاعات...', 'Loading...')}</div>
       </div>
     );
   }
 
   return (
-    <div className={`w-full h-full flex flex-col hide-scrollbar relative bg-white dark:bg-slate-900 ${isDragSelecting ? 'select-none' : ''}`} dir={direction}>
+    <div className={`w-full h-full flex flex-col hide-scrollbar relative bg-white dark:bg-[#0f1419] ${isDragSelecting ? 'select-none' : ''}`} dir={direction}>
       {callsError && hasInitialCallsLoaded && (
         <div className="w-full max-w-3xl mx-auto mt-4 bg-rose-50 text-rose-600 px-4 py-2 rounded-xl text-[13.5px] font-medium text-center border border-rose-200  animate-pulse">
           {callsError}
@@ -706,50 +706,50 @@ export const CallListWorkspace = () => {
 
       <div className="flex-1 w-full min-h-0 flex items-stretch" >
         <div className="flex-1 flex flex-col overflow-hidden relative">
-          <div className="relative h-full bg-white flex flex-col overflow-hidden ">
+          <div className="relative h-full bg-white dark:bg-[#0f1419] flex flex-col overflow-hidden ">
           
             {/* Navigation & Search (Row 1) */}
-            <div className="flex flex-nowrap overflow-x-auto hide-scrollbar items-center justify-between gap-3 p-2.5 bg-white border-b border-slate-200 shrink-0">
+            <div className="flex flex-nowrap overflow-x-auto hide-scrollbar items-center justify-between gap-3 p-2.5 bg-white dark:bg-[#171e27] border-b border-slate-200 dark:border-[#2b3745] shrink-0">
                {/* Right Side: Navigation Tabs */}
                <div className="flex items-center gap-1.5 shrink-0">
                  <button
                    onClick={() => setActiveTab('list')}
-                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px] font-bold transition-colors whitespace-nowrap shrink-0 ${activeTab === 'list' ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
+                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px] font-bold transition-colors whitespace-nowrap shrink-0 ${activeTab === 'list' ? 'bg-slate-800 dark:bg-[#f3f5f7] text-white dark:text-[#0f1419] border-slate-800 dark:border-[#f3f5f7]' : 'bg-white dark:bg-transparent text-slate-600 dark:text-[#8e9aaa] border-slate-200 dark:border-[#2b3745] hover:bg-slate-50 dark:hover:bg-[#1c2530]'}`}
                  >
                    <Icons.List size={14} />
                    <span>{tr('لیست شماره‌ها', 'Call List')}</span>
                  </button>
                  <button
                    onClick={() => setActiveTab('courses')}
-                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px] font-bold transition-colors whitespace-nowrap shrink-0 ${activeTab === 'courses' ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
+                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px] font-bold transition-colors whitespace-nowrap shrink-0 ${activeTab === 'courses' ? 'bg-slate-800 dark:bg-[#f3f5f7] text-white dark:text-[#0f1419] border-slate-800 dark:border-[#f3f5f7]' : 'bg-white dark:bg-transparent text-slate-600 dark:text-[#8e9aaa] border-slate-200 dark:border-[#2b3745] hover:bg-slate-50 dark:hover:bg-[#1c2530]'}`}
                  >
                    <BookOpen size={14} />
                    <span>{tr('قیمت دوره‌ها', 'Courses')}</span>
                  </button>
                  <button
                    onClick={() => setActiveTab('learning_paths')}
-                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px] font-bold transition-colors whitespace-nowrap shrink-0 ${activeTab === 'learning_paths' ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
+                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px] font-bold transition-colors whitespace-nowrap shrink-0 ${activeTab === 'learning_paths' ? 'bg-slate-800 dark:bg-[#f3f5f7] text-white dark:text-[#0f1419] border-slate-800 dark:border-[#f3f5f7]' : 'bg-white dark:bg-transparent text-slate-600 dark:text-[#8e9aaa] border-slate-200 dark:border-[#2b3745] hover:bg-slate-50 dark:hover:bg-[#1c2530]'}`}
                  >
                    <Route size={14} />
                    <span>{tr('مسیرهای یادگیری', 'Learning Paths')}</span>
                  </button>
                  <button
                    onClick={() => setActiveTab('intro')}
-                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px] font-bold transition-colors whitespace-nowrap shrink-0 ${activeTab === 'intro' ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
+                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px] font-bold transition-colors whitespace-nowrap shrink-0 ${activeTab === 'intro' ? 'bg-slate-800 dark:bg-[#f3f5f7] text-white dark:text-[#0f1419] border-slate-800 dark:border-[#f3f5f7]' : 'bg-white dark:bg-transparent text-slate-600 dark:text-[#8e9aaa] border-slate-200 dark:border-[#2b3745] hover:bg-slate-50 dark:hover:bg-[#1c2530]'}`}
                  >
                    <MessageSquareQuote size={14} />
                    <span>{tr('متن تماس', 'Intro Text')}</span>
                  </button>
                  <button
                    onClick={() => setActiveTab('negotiation')}
-                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px] font-bold transition-colors whitespace-nowrap shrink-0 ${activeTab === 'negotiation' ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
+                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px] font-bold transition-colors whitespace-nowrap shrink-0 ${activeTab === 'negotiation' ? 'bg-slate-800 dark:bg-[#f3f5f7] text-white dark:text-[#0f1419] border-slate-800 dark:border-[#f3f5f7]' : 'bg-white dark:bg-transparent text-slate-600 dark:text-[#8e9aaa] border-slate-200 dark:border-[#2b3745] hover:bg-slate-50 dark:hover:bg-[#1c2530]'}`}
                  >
                    <Icons.Target size={14} />
                    <span>{tr('تکنیک‌های مذاکره', 'Negotiation')}</span>
                  </button>
                  <button
                    onClick={() => setActiveTab('stats')}
-                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px] font-bold transition-colors whitespace-nowrap shrink-0 ${activeTab === 'stats' ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
+                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px] font-bold transition-colors whitespace-nowrap shrink-0 ${activeTab === 'stats' ? 'bg-slate-800 dark:bg-[#f3f5f7] text-white dark:text-[#0f1419] border-slate-800 dark:border-[#f3f5f7]' : 'bg-white dark:bg-transparent text-slate-600 dark:text-[#8e9aaa] border-slate-200 dark:border-[#2b3745] hover:bg-slate-50 dark:hover:bg-[#1c2530]'}`}
                  >
                    <Icons.BarChart3 size={14} />
                    <span>{tr('آمار', 'Stats')}</span>
@@ -767,7 +767,7 @@ export const CallListWorkspace = () => {
                      value={searchQuery}
                      onChange={e => setSearchQuery(e.target.value)}
                      placeholder={tr('جستجو...', 'Search...')}
-                     className="w-full bg-slate-50 border border-slate-200 rounded-lg py-1.5 pr-8 pl-3 text-[12px] font-bold text-slate-800 placeholder-slate-400 focus:outline-none focus:border-cyan-500 focus:bg-white transition-colors"
+                     className="w-full bg-slate-50 dark:bg-[#1c2530] border border-slate-200 dark:border-[#2b3745] rounded-lg py-1.5 pr-8 pl-3 text-[12px] font-bold text-slate-800 dark:text-[#f3f5f7] placeholder-slate-400 dark:placeholder-[#66717f] focus:outline-none focus:border-cyan-500 focus:bg-white dark:focus:bg-[#222c38] transition-colors"
                    />
                    {searchQuery && (
                      <button onClick={() => setSearchQuery('')} className="absolute inset-y-0 left-0 pl-2.5 flex items-center text-slate-400 hover:text-slate-600">
@@ -778,17 +778,17 @@ export const CallListWorkspace = () => {
                  
                  <button
                    onClick={() => setCurrentView('home')}
-                   className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 transition-colors whitespace-nowrap shrink-0"
+                   className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-[#1b2531] border border-slate-200 dark:border-[#334355] hover:bg-slate-50 dark:hover:bg-[#243140] transition-colors whitespace-nowrap shrink-0"
                    title={tr('بازگشت به خانه', 'Return to Home')}
                  >
-                   <Home size={14} className="text-slate-600" />
-                   <span className="text-[12px] font-bold text-slate-700">{tr('بازگشت', 'Back')}</span>
+                   <Home size={14} className="text-slate-600 dark:text-[#b7c2cf]" />
+                   <span className="text-[12px] font-bold text-slate-700 dark:text-[#e8edf3]">{tr('بازگشت', 'Back')}</span>
                  </button>
                </div>
             </div>
 
             {/* Actions & Stats (Row 2) */}
-            <div className="flex flex-nowrap overflow-x-auto hide-scrollbar items-center justify-between gap-3 p-2.5 bg-slate-50 border-b border-slate-200 shrink-0">
+            <div className="flex flex-nowrap overflow-x-auto hide-scrollbar items-center justify-between gap-3 p-2.5 bg-slate-50 dark:bg-[#171e27] border-b border-slate-200 dark:border-[#2b3745] shrink-0">
                
                {/* Right Side: Stats Badges */}
                <div className="flex items-center gap-2 shrink-0">
@@ -801,12 +801,12 @@ export const CallListWorkspace = () => {
                         className={`flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-md transition-all whitespace-nowrap select-none cursor-pointer border ${
                           isSelected
                             ? 'bg-brand-600 text-white border-brand-600 shadow-xs'
-                            : 'bg-white hover:bg-slate-100 text-slate-600 border-slate-200'
+                            : 'bg-white dark:bg-[#202b38] hover:bg-slate-100 dark:hover:bg-[#243140] text-slate-600 dark:text-[#b7c2cf] border-slate-200 dark:border-[#35465a]'
                         }`}
                         title={isSelected ? tr('حذف فیلتر', 'Clear filter') : tr(`فیلتر براساس ${status}`, `Filter by ${status}`)}
                       >
                          <span>{status}:</span>
-                         <span className={isSelected ? 'text-white font-extrabold' : 'text-brand-600'}>{count}</span>
+                         <span className={isSelected ? 'text-white font-extrabold' : 'text-brand-600 dark:text-brand-400'}>{count}</span>
                       </button>
                     );
                  })}
@@ -826,7 +826,7 @@ export const CallListWorkspace = () => {
                  {/* Upload */}
                  <button
                    onClick={() => fileInputRef.current?.click()}
-                   className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-white border border-slate-200 hover:bg-slate-100 transition-colors text-[11px] font-bold text-slate-700 whitespace-nowrap shrink-0"
+                   className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-white dark:bg-[#1b2531] border border-slate-200 dark:border-[#334355] hover:bg-slate-100 dark:hover:bg-[#243140] transition-colors text-[11px] font-bold text-slate-700 dark:text-[#e8edf3] whitespace-nowrap shrink-0"
                  >
                    <Icons.Upload size={13} />
                    <span>{tr('اکسل', 'Excel')}</span>
@@ -836,7 +836,7 @@ export const CallListWorkspace = () => {
                  {/* Add Manual */}
                  <button
                    onClick={() => setIsManualAddOpen(true)}
-                   className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 transition-colors text-[11px] font-bold text-emerald-700 whitespace-nowrap shrink-0"
+                   className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-emerald-50 dark:bg-[#163326] border border-emerald-200 dark:border-[#2f674b] hover:bg-emerald-100 dark:hover:bg-[#1e4a36] transition-colors text-[11px] font-bold text-emerald-700 dark:text-[#8de0b5] whitespace-nowrap shrink-0"
                  >
                    <Plus size={13} strokeWidth={2.5} /> 
                    <span>{tr('افزودن', 'Add')}</span>
@@ -855,7 +855,7 @@ export const CallListWorkspace = () => {
                        }
                      });
                    }}
-                   className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-rose-50 border border-rose-200 hover:bg-rose-100 transition-colors text-[11px] font-bold text-rose-700 whitespace-nowrap shrink-0"
+                   className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-rose-50 dark:bg-[#3a1d25] border border-rose-200 dark:border-[#71303e] hover:bg-rose-100 dark:hover:bg-[#48222c] transition-colors text-[11px] font-bold text-rose-700 dark:text-[#ff9aa9] whitespace-nowrap shrink-0"
                  >
                    <Trash2 size={13} /> 
                    <span>{tr('حذف', 'Delete')}</span>
@@ -887,7 +887,7 @@ export const CallListWorkspace = () => {
                     <col className="w-[300px]" /> {/* Actions */}
                   </colgroup>
                   <thead className="sticky top-0 z-20 backdrop-blur-md">
-                    <tr className="[&>th]:bg-slate-100/90 [&>th]:py-2.5 [&>th]:px-2 [&>th]:border-y [&>th]:border-slate-200/80 [&>th:first-child]:rounded-r-xl [&>th:first-child]:border-r [&>th:last-child]:rounded-l-xl [&>th:last-child]:border-l text-[12px] font-extrabold text-slate-800 tracking-wide">
+                    <tr className="[&>th]:bg-slate-100/90 dark:[&>th]:bg-[#1c2530] [&>th]:py-2.5 [&>th]:px-2 [&>th]:border-y [&>th]:border-slate-200/80 dark:[&>th]:border-[#2b3745] [&>th:first-child]:rounded-r-xl [&>th:first-child]:border-r [&>th:last-child]:rounded-l-xl [&>th:last-child]:border-l text-[12px] font-extrabold text-slate-800 dark:text-[#c0c8d2] tracking-wide">
                       <th className="text-center">
                          <input 
                            type="checkbox" 
@@ -899,7 +899,7 @@ export const CallListWorkspace = () => {
                                setSelectedIds(new Set());
                              }
                            }}
-                           className="w-4 h-4 rounded text-brand-600 border-slate-300 focus:ring-brand-500 cursor-pointer"
+                           className="w-4 h-4 rounded text-brand-600 border-slate-300 dark:border-[#344457] dark:bg-[#18222d] focus:ring-brand-500 cursor-pointer"
                          />
                       </th>
                       <th className="whitespace-nowrap">{tr('شماره تماس و نام', 'Phone & Name')}</th>
@@ -908,7 +908,7 @@ export const CallListWorkspace = () => {
                       <th>{tr('عملیات', 'Actions')}</th>
                     </tr>
                   </thead>
-                  <tbody className="text-[13px] font-medium text-slate-800 relative">
+                  <tbody className="text-[13px] font-medium text-slate-800 dark:text-[#c0c8d2] relative">
                     <AnimatePresence>
                     {displayedList.length === 0 ? (
                       <motion.tr key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -926,12 +926,12 @@ export const CallListWorkspace = () => {
                           onMouseEnter={() => handleRowMouseEnter(c.id)}
                           className={`relative focus-within:z-50 hover:z-40 transition-all duration-200 group rounded-xl shadow-2xs hover:shadow-md ${
                             selectedIds.has(c.id)
-                              ? 'bg-indigo-50/80 hover:bg-indigo-100/90 [&>td]:border-indigo-200'
+                              ? 'bg-indigo-50/80 dark:bg-indigo-500/10 hover:bg-indigo-100/90 dark:hover:bg-indigo-500/15 [&>td]:border-indigo-200 dark:[&>td]:border-indigo-500/30'
                               : c.isFollowUp
-                                ? 'bg-orange-50/70 hover:bg-orange-100/80 [&>td]:border-orange-200'
+                                ? 'bg-orange-50/70 dark:bg-orange-500/10 hover:bg-orange-100/80 dark:hover:bg-orange-500/15 [&>td]:border-orange-200 dark:[&>td]:border-orange-500/30'
                                 : c.callStatus && CALL_STATUSES.includes(c.callStatus)
-                                  ? 'bg-blue-50/70 hover:bg-blue-100/80 [&>td]:border-blue-300'
-                                  : 'bg-white hover:bg-slate-50/90 [&>td]:border-slate-200/80'
+                                  ? 'bg-blue-50/70 dark:bg-blue-500/10 hover:bg-blue-100/80 dark:hover:bg-blue-500/15 [&>td]:border-blue-300 dark:[&>td]:border-blue-500/30'
+                                  : 'bg-white dark:bg-[#171e27] hover:bg-slate-50/90 dark:hover:bg-[#1c2530] [&>td]:border-slate-200/80 dark:[&>td]:border-[#2b3745]'
                           }`}
                         >
                           {/* Selection Checkbox */}
@@ -940,20 +940,20 @@ export const CallListWorkspace = () => {
                                type="checkbox"
                                checked={selectedIds.has(c.id)}
                                onChange={() => toggleSelection(c.id)}
-                               className="w-4 h-4 rounded text-brand-600 border-slate-300 focus:ring-brand-500 cursor-pointer"
+                               className="w-4 h-4 rounded text-brand-600 border-slate-300 dark:border-[#344457] dark:bg-[#18222d] focus:ring-brand-500 cursor-pointer"
                              />
                           </td>
 
                           {/* Phone and Name */}
                           <td className="py-2.5 px-2 relative whitespace-nowrap border-y border-inherit">
                              <div className="flex flex-col items-center justify-center w-full px-2">
-                                <span dir="ltr" className="font-bold text-[18px] tracking-[0.1em] text-slate-800">{formatPhoneNumber(c.phone)}</span>
+                                <span dir="ltr" className="font-bold text-[18px] tracking-[0.1em] text-slate-800 dark:text-[#f3f5f7]">{formatPhoneNumber(c.phone)}</span>
                                 <input
                                   type="text"
                                   value={c.fullName || ''}
                                   onChange={e => handleFieldChange(c, 'fullName', e.target.value)}
                                   placeholder={tr('نام شخص...', 'Name...')}
-                                  className="text-[13px] font-bold text-slate-800 text-center bg-transparent border-b border-slate-200 hover:border-slate-300 focus:border-cyan-600 outline-none w-40 mt-1 transition-colors placeholder:text-slate-400"
+                                  className="text-[13px] font-bold text-slate-800 dark:text-[#c0c8d2] text-center bg-transparent border-b border-slate-200 dark:border-[#2b3745] hover:border-slate-300 focus:border-cyan-600 outline-none w-40 mt-1 transition-colors placeholder:text-slate-400 dark:placeholder:text-[#66717f]"
                                 />
                              </div>
                           </td>
@@ -993,7 +993,7 @@ export const CallListWorkspace = () => {
                                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all text-[12px] font-bold border ${
                                     c.isFollowUp 
                                       ? 'bg-orange-500 text-white border-orange-600 hover:bg-orange-600' 
-                                      : 'bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100'
+                                      : 'bg-orange-50 dark:bg-[#3b2917] text-orange-600 dark:text-[#ffc477] border-orange-200 dark:border-[#76522a] hover:bg-orange-100 dark:hover:bg-[#48341f]'
                                   }`}
                                 >
                                   <CalendarClock size={16} />
@@ -1006,8 +1006,8 @@ export const CallListWorkspace = () => {
                                   title={tr('افزودن یادداشت', 'Notes')}
                                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all  border text-[12px] font-bold
                                     ${c.notes 
-                                      ? 'bg-amber-50 text-amber-600 border-amber-200' 
-                                      : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}
+                                      ? 'bg-amber-50 dark:bg-[#3b2917] text-amber-600 dark:text-[#ffc477] border-amber-200 dark:border-[#76522a]' 
+                                      : 'bg-white dark:bg-[#1b2531] text-slate-500 dark:text-[#e8edf3] border-slate-200 dark:border-[#334355] hover:bg-slate-50 dark:hover:bg-[#243140]'}`}
                                 >
                                   <MessageSquareQuote size={16} />
                                   <span>{tr('یادداشت', 'Notes')}</span>
@@ -1031,7 +1031,7 @@ export const CallListWorkspace = () => {
                                     });
                                   }}
                                   title={tr('حذف شماره', 'Delete')}
-                                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100 transition-all  text-[12px] font-bold"
+                                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-50 dark:bg-[#3a1d25] text-rose-600 dark:text-[#ff9aa9] border border-rose-200 dark:border-[#71303e] hover:bg-rose-100 dark:hover:bg-[#48222c] transition-all text-[12px] font-bold"
                                 >
                                   <Trash2 size={16} />
                                   <span>{tr('حذف', 'Delete')}</span>

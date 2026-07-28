@@ -101,13 +101,13 @@ const MessageNotifier = () => {
 const AdminTriedAgentPanel = () => {
   const { signOut, setLoginMode } = useAuth();
   return (
-    <div className="flex w-full min-h-[100vh] items-center justify-center bg-slate-50" dir="rtl">
-      <div className="bg-white rounded-lg border border-indigo-200 p-6 shadow-sm max-w-md text-center">
+    <div className="flex w-full min-h-[100vh] items-center justify-center bg-slate-50 dark:bg-[#0f1419]" dir="rtl">
+      <div className="bg-white dark:bg-[#171e27] rounded-lg border border-indigo-200 dark:border-[#2b3745] p-6 shadow-sm max-w-md text-center">
         <div className="w-12 h-12 rounded-md bg-indigo-50 border border-indigo-200 flex items-center justify-center mx-auto mb-4">
           <Shield size={24} className="text-indigo-600" />
         </div>
-        <h2 className="text-lg font-bold text-slate-900 mb-2">حساب شما مدیر است</h2>
-        <p className="text-sm text-slate-600 font-medium leading-relaxed mb-6">
+        <h2 className="text-lg font-bold text-slate-900 dark:text-[#f3f5f7] mb-2">حساب شما مدیر است</h2>
+        <p className="text-sm text-slate-600 dark:text-[#c0c8d2] font-medium leading-relaxed mb-6">
           شما با یک حساب مدیریت وارد شده‌اید. لطفاً از پنل مدیریت استفاده کنید.
         </p>
         <button onClick={e => { e.preventDefault(); setLoginMode('manager'); }}
@@ -124,13 +124,13 @@ const AdminTriedAgentPanel = () => {
 const AgentTriedManagerPanel = () => {
   const { signOut, setLoginMode } = useAuth();
   return (
-    <div className="flex w-full min-h-[100vh] items-center justify-center bg-slate-50" dir="rtl">
-      <div className="bg-white rounded-lg border border-red-200 p-6 shadow-sm max-w-md text-center">
+    <div className="flex w-full min-h-[100vh] items-center justify-center bg-slate-50 dark:bg-[#0f1419]" dir="rtl">
+      <div className="bg-white dark:bg-[#171e27] rounded-lg border border-red-200 dark:border-[#2b3745] p-6 shadow-sm max-w-md text-center">
         <div className="w-12 h-12 rounded-md bg-red-50 border border-red-200 flex items-center justify-center mx-auto mb-4">
           <UserCheck size={24} className="text-red-500" />
         </div>
-        <h2 className="text-lg font-bold text-slate-900 mb-2">این حساب مدیر نیست</h2>
-        <p className="text-sm text-slate-600 font-medium leading-relaxed mb-6">
+        <h2 className="text-lg font-bold text-slate-900 dark:text-[#f3f5f7] mb-2">این حساب مدیر نیست</h2>
+        <p className="text-sm text-slate-600 dark:text-[#c0c8d2] font-medium leading-relaxed mb-6">
           حساب شما از نوع کارشناس است و به پنل مدیریت دسترسی ندارد.<br />
           اگر فکر می‌کنید این اشتباه است، با مدیر سیستم تماس بگیرید.
         </p>
@@ -268,7 +268,7 @@ export default function App() {
       <ToastProvider />
 
       <ClickSpark sparkColor={sparkColor} sparkSize={8} sparkRadius={25} sparkCount={6} duration={500}>
-        <div className="selection:bg-brand-200 relative w-full h-screen font-sans antialiased text-primary bg-slate-50 dark:bg-slate-900 flex flex-col overflow-hidden">
+        <div className="selection:bg-brand-200 relative w-full h-screen font-sans antialiased text-primary bg-slate-50 dark:bg-[#0f1419] flex flex-col overflow-hidden">
           <div className="relative z-10 w-full h-full flex flex-col">
             <AnimatePresence mode="wait">
 
@@ -309,7 +309,7 @@ export default function App() {
 
               {/* 6. Active admin, manager panel ─────────────────────── */}
               {authStatus === 'active_admin' && !adminTriedAgent && (
-                <motion.div key="manager-panel" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15, ease: 'easeOut' }} className="w-full h-screen overflow-hidden bg-slate-50 dark:bg-slate-900 flex flex-col" dir={direction}>
+                <motion.div key="manager-panel" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15, ease: 'easeOut' }} className="w-full h-screen overflow-hidden bg-slate-50 dark:bg-[#0f1419] flex flex-col" dir={direction}>
                   <React.Suspense fallback={<LoadingSpinner />}><ManagerDashboard /></React.Suspense>
                 </motion.div>
               )}
@@ -326,7 +326,7 @@ export default function App() {
                       <div className="absolute top-4 left-4 z-50 pointer-events-none">
                         <button 
                           onClick={() => setCurrentView('home')}
-                          className="pointer-events-auto flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 hover:text-brand-600 hover:bg-slate-50 transition-colors"
+                          className="pointer-events-auto flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-[#171e27] border border-slate-200 dark:border-[#2b3745] text-slate-700 dark:text-[#c0c8d2] hover:text-brand-600 hover:bg-slate-50 dark:hover:bg-[#1c2530] transition-colors"
                           title="بازگشت به مرکز فرماندهی (Esc / Alt + ⬅)"
                         >
                           <Home size={18} />

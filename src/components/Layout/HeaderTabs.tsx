@@ -236,8 +236,8 @@ export const HeaderTabs = () => {
         whileTap={{ scale: 0.95 }}
         className={`relative flex h-10 items-center justify-center gap-2 rounded-xl px-4 transition-colors duration-300 ease-out outline-none z-10 border-2 ${
           isActive 
-            ? 'text-[#4e6077] border-[#4e6077] bg-[#fffcfb]' 
-            : 'text-[#7089a9] border-transparent hover:border-[#aadb9f] bg-transparent'
+            ? 'text-[#4e6077] dark:text-[#f3f5f7] border-[#4e6077] dark:border-[#46596e] bg-[#fffcfb] dark:bg-[#202b38]' 
+            : 'text-[#7089a9] dark:text-[#b7c2cf] border-transparent hover:border-[#aadb9f] dark:hover:border-[#387a58] bg-transparent'
         }`}
       >
         <span className={`hidden whitespace-nowrap pt-0.5 text-[13px] tracking-wide md:inline ${isActive ? 'font-extrabold' : 'font-medium'}`}>{isFa ? tab.label : ({ home: 'Home', dashboard: 'Calls', today: 'Today', blacklist: 'Blacklist', stats: 'Statistics', admin: 'Admin' }[tab.id] || tab.label)}</span>

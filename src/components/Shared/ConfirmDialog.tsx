@@ -47,7 +47,7 @@ export const ConfirmDialog = ({ isOpen, title, message, confirmText = 'بله، 
           >
             {!isFa && confirmText === 'بله، تایید' ? 'Confirm' : confirmText}
           </AlertDialogAction>
-          <AlertDialogCancel onClick={onCancel} className="mt-0 font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 border-slate-200">
+          <AlertDialogCancel onClick={onCancel} className="mt-0 font-bold text-slate-600 dark:text-[#b7c2cf] hover:text-slate-900 dark:hover:text-[#e8edf3] hover:bg-slate-100 dark:hover:bg-[#243140] border-slate-200 dark:border-[#334355]">
             {tr('لغو', 'Cancel')}
           </AlertDialogCancel>
         </div>
