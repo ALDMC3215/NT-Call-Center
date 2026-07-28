@@ -315,7 +315,7 @@ export const AuthScreen: React.FC = () => {
     <div
       className="relative flex w-full min-h-screen text-stone-900 overflow-x-hidden"
       dir={direction}
-      style={{ backgroundColor: '#EFEDFA' }}
+      style={{ backgroundColor: '#EFEDFA', colorScheme: 'light' }}
     >
 
       {/* Minimal Animated Background */}

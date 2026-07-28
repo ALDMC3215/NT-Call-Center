@@ -59,6 +59,8 @@ interface AuthContextType {
   updateUserByAdmin: (targetId: string, newFullName: string, newRole: string) => Promise<string | null>;
   /** Permanently delete a user from the auth system — calls the secure Supabase RPC */
   deleteUserByAdmin: (targetId: string) => Promise<string | null>;
+  /** Update current user's profile info — uploads avatar if provided and calls RPC */
+  updateOwnProfile: (name: string, shift: string, branch: string, avatarFile?: File) => Promise<string | null>;
 }
 
 // ---------------------------------------------------------------------------
@@ -74,10 +76,11 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const buildLocalProfile = (sp: SupabaseProfile) => ({
   name: sp.full_name,
   date: new Date().toLocaleDateString('fa-IR'),
-  shift: 'Morning' as const,
-  branch: 'پردیس' as const,
+  shift: sp.shift || 'Morning',
+  branch: sp.branch || 'پردیس',
   sessionId: sp.id,
   role: sp.role === 'admin' ? ('admin' as const) : ('expert' as const),
+  avatar_url: sp.avatar_url || null,
 });
 
 // ---------------------------------------------------------------------------
@@ -300,6 +303,52 @@ export const AuthProvider = ({
     return null;
   }, []);
 
+  const updateOwnProfile = useCallback(async (name: string, shift: string, branch: string, avatarFile?: File): Promise<string | null> => {
+    try {
+      if (!supabaseUser) return 'شما وارد سیستم نشده‌اید.';
+      
+      let newAvatarUrl: string | undefined = undefined;
+
+      if (avatarFile) {
+        if (avatarFile.size > 1024 * 1024) return 'حجم تصویر نباید بیشتر از ۱ مگابایت باشد.';
+        const fileExt = avatarFile.name.split('.').pop();
+        const fileName = `${supabaseUser.id}-${Date.now()}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, avatarFile);
+        if (uploadError) return `خطا در آپلود تصویر: ${uploadError.message}`;
+
+        const { data: publicUrlData } = supabase.storage.from('avatars').getPublicUrl(filePath);
+        newAvatarUrl = publicUrlData.publicUrl;
+      }
+
+      const { error: updateError } = await supabase.rpc('update_own_profile_data', {
+        p_name: name,
+        p_shift: shift,
+        p_branch: branch,
+        p_avatar_url: newAvatarUrl || null
+      });
+
+      if (updateError) return `خطا در به‌روزرسانی پروفایل: ${updateError.message}`;
+
+      // Refresh the local user profile
+      const { data: profileData, error: fetchError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', supabaseUser.id)
+        .single();
+        
+      if (!fetchError && profileData) {
+        setSupabaseProfile(profileData);
+        onAuthenticated(buildLocalProfile(profileData));
+      }
+
+      return null;
+    } catch (err: any) {
+      return `خطای غیرمنتظره: ${err.message}`;
+    }
+  }, [supabaseUser, onAuthenticated]);
+
   const value: AuthContextType = {
     authStatus,
     loginMode,
@@ -313,6 +362,7 @@ export const AuthProvider = ({
     disableAgent,
     updateUserByAdmin,
     deleteUserByAdmin,
+    updateOwnProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

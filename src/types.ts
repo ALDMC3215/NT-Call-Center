@@ -11,6 +11,9 @@ export interface SupabaseProfile {
   approved_at: string | null;
   created_at: string;
   updated_at: string;
+  avatar_url?: string | null;
+  shift?: string;
+  branch?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -21,9 +24,10 @@ export interface Profile {
   name: string;
   date: string;
   shift: string;
-  branch: 'پردیس' | 'زرگری' | 'Admin';
+  branch: 'پردیس' | 'زرگری' | 'Admin' | string;
   sessionId: string;
   role?: 'expert' | 'admin';
+  avatar_url?: string | null;
 }
 
 export interface CallRecord {

@@ -8,6 +8,7 @@ import { ConfirmDialog } from '../Shared/ConfirmDialog';
 import { useAuth } from '../../hooks/useAuth';
 import { ScheduleView } from '../Education/ScheduleView';
 import { useTheme } from '../../hooks/useTheme';
+import { UserProfileDropdown } from './UserProfileDropdown';
 
 export const HomeView = () => {
   const { profile, calls, setCurrentView, setActiveCallTab, setPopupView } = useAppContext();
@@ -55,17 +56,6 @@ export const HomeView = () => {
       title: tr('تنظیمات کاربری', 'User Settings'),
       items: [
         {
-          id: 'profile',
-          title: tr('پروفایل من', 'My Profile'),
-          description: tr('مشاهده و ویرایش اطلاعات حساب کاربری', 'View and edit account information'),
-          icon: User,
-          count: null,
-          onClick: () => { setCurrentView('profile'); },
-          iconColor: 'text-fuchsia-600',
-          iconBg: 'bg-fuchsia-500/10',
-          gradient: 'from-fuchsia-400 to-pink-500'
-        },
-        {
           id: 'settings',
           title: tr('تنظیمات', 'Settings'),
           description: tr('تنظیمات شخصی‌سازی و ورود اطلاعات سیستم', 'Personalization and system configuration settings'),
@@ -108,9 +98,10 @@ export const HomeView = () => {
       {/* Flat Background */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 bg-[#FAFAFA] dark:bg-[#0f1419]"></div>
 
-      {/* Theme Toggle (Right side) */}
-      <div className="absolute top-6 right-6 sm:top-8 sm:right-8 z-50">
-        <div className="flex items-center bg-white dark:bg-[#1c2530] border border-stone-200 dark:border-[#2b3745] rounded-2xl p-1 gap-0.5" role="radiogroup" aria-label={tr('حالت نمایش', 'Display Mode')}>
+      {/* Theme Toggle & User Dropdown (Right side) */}
+      <div className="absolute top-6 right-6 sm:top-8 sm:right-8 z-50 flex items-center gap-3">
+        <UserProfileDropdown />
+        <div className="flex items-center gap-1 p-1 bg-white dark:bg-[#1c2530] border border-stone-200 dark:border-[#2b3745] rounded-2xl shadow-sm" role="radiogroup" aria-label={tr('انتخاب تم', 'Theme Selection')}>
           <button
             onClick={() => setTheme('light')}
             role="radio"
