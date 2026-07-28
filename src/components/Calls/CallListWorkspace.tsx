@@ -600,9 +600,9 @@ export const CallListWorkspace = () => {
   const exportDailyStats = async () => {
     if (displayedList.length === 0) return toast.info(tr('موردی برای خروجی وجود ندارد.', 'No items to export.'));
     const hStats = await getMyDailyStats();
-    const todayStr = require('../../utils/jalali').toJalali();
-    const todayCount = calls.filter(c => c.callStatus && c.updatedAt && require('../../utils/jalali').toJalali(c.updatedAt) === todayStr).length;
-    await require('../../utils/consultationExcel').exportConsultationsToExcel(displayedList, displayedList.length, hStats, todayCount);
+    const todayStr = toJalali();
+    const todayWorkedCount = calls.filter(c => c.callStatus && c.updatedAt && toJalali(c.updatedAt) === todayStr).length;
+    await exportConsultationsToExcel(displayedList, displayedList.length, hStats, todayWorkedCount);
     toast.success(tr('فایل اکسل با موفقیت ایجاد شد.', 'Excel created successfully.'));
   };
 
@@ -929,7 +929,9 @@ export const CallListWorkspace = () => {
                               ? 'bg-indigo-50/80 hover:bg-indigo-100/90 [&>td]:border-indigo-200'
                               : c.isFollowUp
                                 ? 'bg-orange-50/70 hover:bg-orange-100/80 [&>td]:border-orange-200'
-                                : 'bg-white hover:bg-slate-50/90 [&>td]:border-slate-200/80'
+                                : c.callStatus && CALL_STATUSES.includes(c.callStatus)
+                                  ? 'bg-blue-50/70 hover:bg-blue-100/80 [&>td]:border-blue-300'
+                                  : 'bg-white hover:bg-slate-50/90 [&>td]:border-slate-200/80'
                           }`}
                         >
                           {/* Selection Checkbox */}
