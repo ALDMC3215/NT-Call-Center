@@ -12,26 +12,35 @@ import { UserProfileDropdown } from './UserProfileDropdown';
 
 const newsItems = [
   {
+    id: 5,
+    title: 'تحول در مدیریت تماس‌ها؛ کارها خیلی ساده‌تر شده!',
+    category: 'راهنمای سیستم',
+    date: 'ویژه',
+    description: 'روند کار روی شماره‌ها خیلی راحت‌تر شده! دیگه لازم نیست بین لیست‌های مختلف جابجا بشید؛ الان همه شماره‌ها توی یه جدول جمع شدن. هر شماره فقط یه "وضعیت" اصلی داره و بقیه کارها (مثل پیگیری، لیست سیاه، یادداشت یا حذف) رو می‌تونید با دکمه‌های کوچیک جلوی هر ردیف انجام بدید. تازه یه قابلیت خیلی خفن (انتخاب گروهی) هم اضافه شده که باهاش می‌تونید همزمان روی چندتا شماره تغییرات بدید تا سرعت کارتون حسابی بره بالا.',
+    icon: Icons.Workflow,
+    color: 'text-indigo-600 dark:text-indigo-400',
+    bg: 'bg-indigo-50 dark:bg-indigo-500/10',
+    colSpan: 'md:col-span-3'
+  },
+  {
     id: 1,
     title: 'انتقال فایل اکسل به پنل کارشناسان',
     category: 'به‌روزرسانی سیستم',
     date: 'امروز',
-    image: 'https://images.unsplash.com/photo-1542744094-24638ea0b56c?q=80&w=600&auto=format&fit=crop',
-    description: 'برای دسترسی سریع‌تر و راحت‌تر، دکمه ورود لیست شماره‌ها از طریق فایل اکسل، از بخش تنظیمات به قسمت بالای جدول شماره‌ها در پنل کارشناسان منتقل شده است.',
+    description: 'برای اینکه کارتون راحت‌تر بشه، دکمه آپلود فایل اکسل رو از تو بخش تنظیمات برداشتیم و آوردیمش دقیقا بالای همون جدولی که تو پنل کارشناسان باهاش کار می‌کنید تا همیشه دم دستتون باشه.',
     icon: Icons.FileSpreadsheet,
-    color: 'text-blue-500',
+    color: 'text-blue-600 dark:text-blue-400',
     bg: 'bg-blue-50 dark:bg-blue-500/10',
     colSpan: 'md:col-span-2'
   },
   {
     id: 4,
-    title: 'شخصی‌سازی و پروفایل یکپارچه',
+    title: 'پروفایل کاربری تو مشت شماست!',
     category: 'بهبود رابط کاربری',
     date: 'امروز',
-    image: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=600&auto=format&fit=crop',
-    description: 'اطلاعات کاربری، مدیریت حساب و تنظیمات پوسته (حالت شب و روز) به صورت یکپارچه در گوشه صفحه اصلی در دسترس قرار گرفته‌اند.',
+    description: 'تنظیمات پروفایل و دکمه تغییر تم (حالت تاریک و روشن) همگی با هم رفتن گوشه بالای صفحه اصلی. حالا خیلی راحت‌تر و سریع‌تر می‌تونید اکانتتون رو مدیریت کنید یا ظاهر پنل رو به سلیقه خودتون تغییر بدید.',
     icon: Icons.UserCircle,
-    color: 'text-emerald-500',
+    color: 'text-emerald-600 dark:text-emerald-400',
     bg: 'bg-emerald-50 dark:bg-emerald-500/10',
     colSpan: 'md:col-span-1'
   },
@@ -40,22 +49,20 @@ const newsItems = [
     title: 'تب جدید لیست سیاه در پنل',
     category: 'امکانات جدید',
     date: 'دیروز',
-    image: 'https://images.unsplash.com/photo-1614064641913-6b71a30f1d5f?q=80&w=600&auto=format&fit=crop',
-    description: 'مدیریت لیست سیاه بسیار ساده‌تر شده است. این بخش به عنوان یک تب مجزا به بالای پنل کارشناسان اضافه شده تا بتوانید سریعاً اقدام کنید.',
+    description: 'مدیریت شماره‌های مسدود شده الان خیلی ساده‌تر شده. به جای اینکه برید تو تنظیمات بگردید، این بخش الان شده یه تب جداگانه بالای همون پنل کارشناسان تا بتونید خیلی سریع شماره‌های بلک لیست رو مدیریت کنید.',
     icon: Icons.ShieldBan,
-    color: 'text-red-500',
+    color: 'text-red-600 dark:text-red-400',
     bg: 'bg-red-50 dark:bg-red-500/10',
     colSpan: 'md:col-span-1'
   },
   {
     id: 3,
-    title: 'تغییرات گسترده بخش تنظیمات',
+    title: 'خلوت‌سازی و تغییرات بخش تنظیمات',
     category: 'اطلاعیه',
     date: 'دیروز',
-    image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=600&auto=format&fit=crop',
-    description: 'صفحه تنظیمات با هدف سبک‌سازی و تمرکز بیشتر بر روی تنظیمات کاربری بازطراحی شده است. امکانات غیرمرتبط در حال بازتوسعه و انتقال به بخش‌های کاربردی‌تر هستند.',
+    description: 'صفحه تنظیمات رو کلا خلوت کردیم تا دیگه گیج‌کننده نباشه. الان این صفحه بیشتر مخصوص تنظیمات حساب کاربری شماست. بقیه امکانات اضافی دارن جابجا میشن و میرن همون‌جایی که دقیقا بهشون نیاز دارید.',
     icon: Icons.Settings,
-    color: 'text-slate-500',
+    color: 'text-slate-600 dark:text-slate-400',
     bg: 'bg-slate-100 dark:bg-slate-500/10',
     colSpan: 'md:col-span-2'
   }
@@ -248,35 +255,27 @@ export const HomeView = () => {
                  {tr('اطلاعیه‌ها، امکانات جدید و تغییرات اخیر سیستم را از این بخش دنبال کنید.', 'Follow announcements, new features and recent changes of the system from here.')}
                </p>
              </div>
-             <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+             <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
                 {newsItems.map(item => (
-                  <div key={item.id} className={`group bg-white dark:bg-[#1c2530] border border-stone-200 dark:border-[#2b3745] rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 cursor-pointer flex flex-col ${item.colSpan}`}>
-                    {item.image && (
-                      <div className="w-full h-44 md:h-52 overflow-hidden relative bg-stone-100 dark:bg-[#202b38] flex items-center justify-center">
-                        <Icons.ImageOff size={32} strokeWidth={1.5} className="absolute text-stone-300 dark:text-[#35465a]" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent z-10 pointer-events-none"></div>
-                        <img 
-                          src={item.image} 
-                          alt={item.title} 
-                          onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out relative z-0" 
-                        />
-                        <span className="absolute bottom-3 right-4 z-20 text-[11px] font-extrabold bg-white/20 backdrop-blur-md text-white px-3 py-1.5 rounded-xl border border-white/10 shadow-sm pointer-events-none">
-                          {item.category}
-                        </span>
-                      </div>
-                    )}
-                    <div className="p-6 flex flex-col flex-1">
-                      <div className="flex items-center justify-between mb-4">
-                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${item.bg} ${item.color}`}>
-                            <item.icon size={20} strokeWidth={2.2} />
+                  <div key={item.id} className={`group bg-white dark:bg-[#1c2530] border border-stone-200 dark:border-[#2b3745] rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 cursor-pointer flex flex-col ${item.colSpan}`}>
+                    <div className="p-6 md:p-7 flex flex-col flex-1">
+                      <div className="flex items-center justify-between mb-5">
+                         <div className="flex items-center gap-3.5">
+                           <div className={`w-12 h-12 rounded-[14px] flex items-center justify-center ${item.bg} ${item.color}`}>
+                              <item.icon size={24} strokeWidth={2} />
+                           </div>
+                           <span className={`text-[12px] font-extrabold px-3 py-1.5 rounded-lg ${item.bg} ${item.color}`}>
+                             {item.category}
+                           </span>
                          </div>
-                         <span className="text-[12px] font-bold text-stone-400 dark:text-[#8e9aaa] bg-stone-50 dark:bg-[#202b38] px-2.5 py-1 rounded-lg">{item.date}</span>
+                         <span className="text-[12px] font-bold text-stone-400 dark:text-[#8e9aaa] bg-stone-50 dark:bg-[#202b38] px-3 py-1.5 rounded-lg border border-stone-100 dark:border-[#2b3745]">
+                           {item.date}
+                         </span>
                       </div>
-                      <h4 className="text-lg font-extrabold text-stone-800 dark:text-[#f3f5f7] mb-3 leading-snug group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                      <h4 className="text-[18px] md:text-[20px] font-extrabold text-stone-800 dark:text-[#f3f5f7] mb-3 leading-snug group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                         {item.title}
                       </h4>
-                      <p className="text-sm text-stone-500 dark:text-[#b7c2cf] font-medium leading-relaxed">
+                      <p className="text-[14px] md:text-[15px] text-stone-500 dark:text-[#b7c2cf] font-medium leading-relaxed">
                         {item.description}
                       </p>
                     </div>

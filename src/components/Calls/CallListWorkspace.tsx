@@ -219,7 +219,8 @@ export const CallListWorkspace = () => {
     recordCallAttemptWithTask,
     hardDeleteCall,
     setCurrentView,
-    getMyDailyStats
+    getMyDailyStats,
+    addToBlacklist
   } = useAppContext();
   
   const { tr, valueLabel, direction } = useLocale();
@@ -1023,6 +1024,25 @@ export const CallListWorkspace = () => {
                                   <span>{tr('یادداشت', 'Notes')}</span>
                                 </button>
 
+                                {/* Add to Blacklist Button */}
+                                <button
+                                  onClick={() => {
+                                    setConfirmModalConfig({
+                                      isOpen: true,
+                                      title: tr('انتقال به لیست سیاه', 'Move to Blacklist'),
+                                      message: tr('آیا مطمئن هستید که می‌خواهید این شماره را به لیست سیاه منتقل کنید؟', 'Are you sure you want to move this number to blacklist?'),
+                                      onConfirm: () => {
+                                        addToBlacklist(c.phone);
+                                        toast.success(tr('شماره به لیست سیاه منتقل شد.', 'Number moved to blacklist.'));
+                                      }
+                                    });
+                                  }}
+                                  title={tr('انتقال به لیست سیاه', 'Move to Blacklist')}
+                                  className="flex items-center justify-center w-[34px] h-[34px] rounded-lg bg-stone-50 dark:bg-[#202b38] text-stone-500 dark:text-[#8e9aaa] border border-stone-200 dark:border-[#35465a] hover:bg-stone-100 dark:hover:bg-[#253242] hover:text-stone-800 dark:hover:text-[#c0c8d2] transition-all"
+                                >
+                                  <Icons.ShieldBan size={16} />
+                                </button>
+
                                 {/* Delete Button */}
                                 <button
                                   onClick={() => {
@@ -1041,10 +1061,9 @@ export const CallListWorkspace = () => {
                                     });
                                   }}
                                   title={tr('حذف شماره', 'Delete')}
-                                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-50 dark:bg-[#3a1d25] text-rose-600 dark:text-[#ff9aa9] border border-rose-200 dark:border-[#71303e] hover:bg-rose-100 dark:hover:bg-[#48222c] transition-all text-[12px] font-bold"
+                                  className="flex items-center justify-center w-[34px] h-[34px] rounded-lg bg-rose-50 dark:bg-[#3a1d25] text-rose-600 dark:text-[#ff9aa9] border border-rose-200 dark:border-[#71303e] hover:bg-rose-100 dark:hover:bg-[#48222c] transition-all"
                                 >
                                   <Trash2 size={16} />
-                                  <span>{tr('حذف', 'Delete')}</span>
                                 </button>
                              </div>
                           </td>
