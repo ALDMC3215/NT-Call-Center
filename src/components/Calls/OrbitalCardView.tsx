@@ -91,15 +91,25 @@ export const OrbitalCardView: React.FC<{ calls: CallRecord[] }> = ({ calls }) =>
   const submit = () => {
     if (!activeCall) return;
     
-    recordAttempt(activeCall.id, {
-      fullName: draft.fullName,
-      callStatus: draft.callStatus || '',
-      advisory: draft.advisory || '',
-      notes: activeCall.notes || ''
-    });
+    const executeSubmit = () => {
+      recordAttempt(activeCall.id, {
+        fullName: draft.fullName,
+        callStatus: draft.callStatus || '',
+        advisory: draft.advisory || '',
+        notes: activeCall.notes || ''
+      });
 
-    toast.success(tr('تماس با موفقیت ثبت شد!', 'Call recorded successfully!'));
-    setCurrentIndex(prev => prev + 1);
+      toast.success(tr('تماس با موفقیت ثبت شد!', 'Call recorded successfully!'));
+      setCurrentIndex(prev => prev + 1);
+    };
+
+    if (draft.callStatus === 'ثبت نام کرد') {
+      if (window.confirm(tr('آیا مطمئن هستید که این فرد ثبت‌نام کرده است؟', 'Are you sure this person has registered?'))) {
+        executeSubmit();
+      }
+    } else {
+      executeSubmit();
+    }
   };
 
   // Generate cards for the stack (up to 4 visible)

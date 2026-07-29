@@ -8,7 +8,7 @@ import {
 } from '../types';
 import { storage } from '../utils/storage';
 import { v4 as uuidv4 } from 'uuid';
-import { jalaliDateTimeToIso, nowJalali } from '../utils/jalali';
+import { jalaliDateTimeToIso, nowJalali, toJalali } from '../utils/jalali';
 import { supabase } from '../lib/supabase';
 
 let lastActivityTime = 0;
@@ -481,6 +481,16 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     if (!profile) return false;
     reportMeaningfulActivity(profile.sessionId);
     const s = values.callStatus;
+
+    const oldCall = calls.find(c => c.id === id);
+    if (oldCall && !oldCall.callStatus && values.callStatus) {
+      const todayStr = toJalali();
+      const key = `novintech_daily_worked_${profile.sessionId}_${todayStr}`;
+      const saved = localStorage.getItem(key);
+      const current = saved ? parseInt(saved, 10) : 0;
+      localStorage.setItem(key, (current + 1).toString());
+      window.dispatchEvent(new Event('daily_worked_updated'));
+    }
 
     let needsFollowUp = false;
 

@@ -7,7 +7,7 @@ import { CallResultActionModal } from './CallResultActionModal';
 import { ContactTaskEditorModal } from './ContactTaskEditorModal';
 import { CALL_STATUSES } from '../../constants';
 import * as Icons from 'lucide-react';
-import { Search, X, Plus, Trash2, Filter, Home, BookOpen, Route, MessageSquareQuote, FileText, CalendarClock } from 'lucide-react';
+import { Search, X, Plus, Trash2, Filter, Home, BookOpen, Route, MessageSquareQuote, FileText, CalendarClock, ShieldBan } from 'lucide-react';
 import { customToast as toast } from '../UI/toast';
 import * as xlsx from 'xlsx';
 import { motion, AnimatePresence } from 'motion/react';
@@ -25,6 +25,7 @@ import { LearningPathsModal } from '../Shared/LearningPathsModal';
 import { CallListStats } from './CallListStats';
 import { NegotiationView } from '../Education/NegotiationView';
 import { BlacklistView } from '../Blacklist/BlacklistView';
+import { ScheduleGridView } from '../Education/ScheduleGridView';
 
 const CourseAutocomplete = ({ value, onChange }: { value: string, onChange: (v: string) => void }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -237,7 +238,7 @@ export const CallListWorkspace = () => {
   const [submittingIds, setSubmittingIds] = useState<Set<string>>(new Set());
 
   // Local state for tabs
-  const [activeTab, setActiveTab] = useState<'list' | 'courses' | 'learning_paths' | 'intro' | 'negotiation' | 'stats' | 'blacklist'>('list');
+  const [activeTab, setActiveTab] = useState<'list' | 'courses' | 'learning_paths' | 'intro' | 'negotiation' | 'stats' | 'blacklist' | 'schedule'>('list');
 
   // Batch Selection state
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -350,7 +351,19 @@ export const CallListWorkspace = () => {
   };
 
   const handleStatusChange = (call: CallRecord, newStatus: string) => {
-    updateCall({ ...call, callStatus: newStatus });
+    if (newStatus === 'ثبت نام کرد') {
+      setConfirmModalConfig({
+        isOpen: true,
+        title: tr('تایید ثبت‌نام', 'Confirm Registration'),
+        message: tr('آیا مطمئن هستید که این فرد ثبت نام کرده است؟', 'Are you sure this person has registered?'),
+        onConfirm: () => {
+          updateCall({ ...call, callStatus: newStatus });
+          toast.success(tr('وضعیت اعمال شد.', 'Status applied.'));
+        }
+      });
+    } else {
+      updateCall({ ...call, callStatus: newStatus });
+    }
   };
 
   // --- Batch Selection Logic ---
@@ -548,11 +561,16 @@ export const CallListWorkspace = () => {
       if (a.isFollowUp && !b.isFollowUp) return -1;
       if (!a.isFollowUp && b.isFollowUp) return 1;
 
-      // 2. Original Excel order (queueOrder ASC, then createdAt ASC)
+      // 2. UpdatedAt / CreatedAt descending
+      const aTime = a.updatedAt || a.createdAt;
+      const bTime = b.updatedAt || b.createdAt;
+      const timeDiff = String(bTime).localeCompare(String(aTime));
+      if (timeDiff !== 0) return timeDiff;
+
+      // 3. Original Excel order (queueOrder ASC)
       const qDiff = (a.queueOrder ?? 0) - (b.queueOrder ?? 0);
       if (qDiff !== 0) return qDiff;
-      const timeDiff = String(a.createdAt).localeCompare(String(b.createdAt));
-      return timeDiff !== 0 ? timeDiff : String(a.id).localeCompare(String(b.id));
+      return String(a.id).localeCompare(String(b.id));
     });
   }, [calls, searchQuery, selectedStatusFilter]);
 
@@ -729,6 +747,13 @@ export const CallListWorkspace = () => {
                    <span>{tr('دوره‌ها', 'Courses')}</span>
                  </button>
                  <button
+                   onClick={() => setActiveTab('schedule')}
+                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px] font-bold transition-colors whitespace-nowrap shrink-0 ${activeTab === 'schedule' ? 'bg-slate-800 dark:bg-[#f3f5f7] text-white dark:text-[#0f1419] border-slate-800 dark:border-[#f3f5f7]' : 'bg-white dark:bg-transparent text-slate-600 dark:text-[#8e9aaa] border-slate-200 dark:border-[#2b3745] hover:bg-slate-50 dark:hover:bg-[#1c2530]'}`}
+                 >
+                   <Icons.CalendarDays size={14} />
+                   <span>{tr('برنامه کلاس‌ها', 'Schedule')}</span>
+                 </button>
+                 <button
                    onClick={() => setActiveTab('learning_paths')}
                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px] font-bold transition-colors whitespace-nowrap shrink-0 ${activeTab === 'learning_paths' ? 'bg-slate-800 dark:bg-[#f3f5f7] text-white dark:text-[#0f1419] border-slate-800 dark:border-[#f3f5f7]' : 'bg-white dark:bg-transparent text-slate-600 dark:text-[#8e9aaa] border-slate-200 dark:border-[#2b3745] hover:bg-slate-50 dark:hover:bg-[#1c2530]'}`}
                  >
@@ -850,6 +875,26 @@ export const CallListWorkspace = () => {
                    <Plus size={13} strokeWidth={2.5} /> 
                    <span>{tr('افزودن', 'Add')}</span>
                  </button>
+
+                 {/* Move Not Interested to Blacklist */}
+                 <button
+                   onClick={() => {
+                     setConfirmModalConfig({
+                       isOpen: true,
+                       title: tr('انتقال به لیست سیاه', 'Move to Blacklist'),
+                       message: tr('آیا مطمئن هستید که می‌خواهید تمام شماره‌های با وضعیت "عدم تمایل" را به لیست سیاه منتقل کنید؟', 'Are you sure you want to move all "Not Interested" numbers to blacklist?'),
+                       onConfirm: () => {
+                         const toBlacklist = calls.filter(c => c.callStatus === 'عدم تمایل' && !c.isBlacklisted);
+                         toBlacklist.forEach(c => addToBlacklist(c.phone, 'عدم تمایل'));
+                         toast.success(tr(`${toBlacklist.length} شماره به لیست سیاه منتقل شد.`, `${toBlacklist.length} numbers moved to blacklist.`));
+                       }
+                     });
+                   }}
+                   className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-slate-100 dark:bg-[#202b38] border border-slate-200 dark:border-[#344457] hover:bg-slate-200 dark:hover:bg-[#2c3b4d] transition-colors text-[11px] font-bold text-slate-700 dark:text-[#b7c2cf] whitespace-nowrap shrink-0"
+                 >
+                   <ShieldBan size={13} /> 
+                   <span>{tr('انتقال عدم تمایل', 'Move Not Interested')}</span>
+                 </button>
                  
                  {/* Delete All */}
                  <button
@@ -877,6 +922,8 @@ export const CallListWorkspace = () => {
               
               {activeTab === 'courses' ? (
                 <div className="w-full h-full p-4"><CoursesView embedded={true} /></div>
+              ) : activeTab === 'schedule' ? (
+                <div className="w-full h-full relative"><ScheduleGridView embedded={true} /></div>
               ) : activeTab === 'intro' ? (
                 <div className="w-full h-full p-4"><IntroTextView embedded={true} /></div>
               ) : activeTab === 'learning_paths' ? (
@@ -1065,6 +1112,13 @@ export const CallListWorkspace = () => {
                                 >
                                   <Trash2 size={16} />
                                 </button>
+                                
+                                {/* Time Display */}
+                                {c.updatedAt && c.callStatus && (
+                                  <div className="flex flex-col items-center justify-center min-w-[40px] text-[11px] font-bold text-slate-400 dark:text-[#66717f] mr-1" title="زمان ثبت نتیجه">
+                                    {new Date(c.updatedAt).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })}
+                                  </div>
+                                )}
                              </div>
                           </td>
                         </motion.tr>

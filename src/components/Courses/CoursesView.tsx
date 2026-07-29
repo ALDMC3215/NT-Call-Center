@@ -353,29 +353,7 @@ export const CoursesView = ({ externalSearchQuery = '', isModal, onClose, embedd
                           </div>
                         </div>
 
-                        {/* Schedules / Active Sections */}
-                        {course.schedules && course.schedules.length > 0 && (
-                          <div className="w-full mt-auto pt-3 border-t border-dashed border-slate-200 dark:border-[#344457] flex flex-col gap-1.5 relative z-10">
-                             {course.schedules.map((sched: string, sIdx: number) => {
-                                const badges = parseSchedule(sched);
-                                return (
-                                  <div key={sIdx} className="flex flex-wrap items-center gap-1.5">
-                                    {badges.map((b, i) => (
-                                      <span key={i} className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
-                                        b.type === 'day' ? 'bg-indigo-50 dark:bg-[#1e1b4b] text-indigo-600 dark:text-[#a5b4fc]' :
-                                        b.type === 'time' ? 'bg-emerald-50 dark:bg-[#064e3b] text-emerald-600 dark:text-[#6ee7b7]' :
-                                        b.type === 'group_label' ? 'bg-orange-50 dark:bg-[#451a03] text-orange-600 dark:text-[#fdba74]' :
-                                        b.type === 'branch' ? 'bg-rose-50 dark:bg-[#4c0519] text-rose-600 dark:text-[#fda4af]' :
-                                        'bg-slate-50 dark:bg-[#202b38] text-slate-600 dark:text-[#b7c2cf]'
-                                      }`}>
-                                        {b.value}
-                                      </span>
-                                    ))}
-                                  </div>
-                                )
-                             })}
-                          </div>
-                        )}
+
                       </div>
                     );
                   })}

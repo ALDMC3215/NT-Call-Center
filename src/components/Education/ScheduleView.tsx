@@ -4,9 +4,9 @@ import { useLocale } from '../../hooks/useLocale';
 import { CalendarDays, Info, BookOpen, Clock, MapPin, User, CheckCircle2, CircleDashed, X, Search } from 'lucide-react';
 import { useAppContext } from '../../hooks/useAppContext';
 
-type CourseStatus = 'closed' | 'open';
+export type CourseStatus = 'closed' | 'open';
 
-interface FlatCourse {
+export interface FlatCourse {
   name: string;
   teacher?: string;
   status: CourseStatus;
@@ -16,7 +16,7 @@ interface FlatCourse {
   branch: string;
 }
 
-const COURSES_DATA: FlatCourse[] = [
+export const COURSES_DATA: FlatCourse[] = [
   // شعبه ۲ - شنبه
   { name: 'PHP 4', teacher: 'کیمیا', status: 'closed', time: '۹ تا ۱۲', day: 'شنبه', branch: 'شعبه ۲', note: '۱۰ تا ۱۳' },
   { name: 'UI/UX خصوصی', teacher: 'فرقانی', status: 'closed', time: '۹ تا ۱۲', day: 'شنبه', branch: 'شعبه ۲', note: '۹:۳۰ تا ۱۱:۳۰' },
