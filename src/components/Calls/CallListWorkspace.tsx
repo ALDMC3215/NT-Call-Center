@@ -246,6 +246,17 @@ export const CallListWorkspace = () => {
   const [dragStartId, setDragStartId] = useState<string | null>(null);
   const [lastSelectedId, setLastSelectedId] = useState<string | null>(null);
 
+  // Section Toggle state
+  const [expandedSections, setExpandedSections] = useState({
+    followUp: true,
+    worked: true,
+    raw: true
+  });
+
+  const toggleSection = (section: keyof typeof expandedSections) => {
+    setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
+
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const loadTasks = React.useCallback(async () => {
@@ -586,7 +597,12 @@ export const CallListWorkspace = () => {
         return String(a.id).localeCompare(String(b.id));
       }
 
-      // 3. Raw numbers (no callStatus, not follow-up) sort by Phone Number (ascending)
+      // 3. Raw numbers (no callStatus, not follow-up) sort by Date (createdAt descending), then by phone
+      const aRawTime = a.createdAt || '';
+      const bRawTime = b.createdAt || '';
+      const rawTimeDiff = String(bRawTime).localeCompare(String(aRawTime));
+      if (rawTimeDiff !== 0) return rawTimeDiff;
+
       const phoneDiff = String(a.phone || '').localeCompare(String(b.phone || ''));
       if (phoneDiff !== 0) return phoneDiff;
 
@@ -648,6 +664,12 @@ export const CallListWorkspace = () => {
     await exportConsultationsToExcel(displayedList, displayedList.length, hStats, todayWorkedCount);
     toast.success(tr('فایل اکسل با موفقیت ایجاد شد.', 'Excel created successfully.'));
   };
+
+  const rowGroups = [
+    { key: 'followUp', title: tr('پیگیری‌ها', 'Follow-ups'), items: displayedList.filter(c => c.isFollowUp), badgeColor: 'bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400' },
+    { key: 'worked', title: tr('کارشده‌ها', 'Worked'), items: displayedList.filter(c => !c.isFollowUp && !!c.callStatus), badgeColor: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400' },
+    { key: 'raw', title: tr('خام (کارنشده)', 'Raw'), items: displayedList.filter(c => !c.isFollowUp && !c.callStatus), badgeColor: 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300' }
+  ];
 
   if (isLoadingCalls && !hasInitialCallsLoaded) {
     return (
@@ -879,23 +901,6 @@ export const CallListWorkspace = () => {
 
                {/* Left Side: Actions */}
                <div className="flex items-center gap-2 shrink-0">
-                 {/* Scroll Past Follow-ups */}
-                 {displayedList.some(c => c.isFollowUp) && displayedList.some(c => !c.isFollowUp) && (
-                   <button
-                     onClick={() => {
-                       const firstIndex = displayedList.findIndex(c => !c.isFollowUp);
-                       if (firstIndex !== -1) {
-                         document.getElementById(`call-row-${firstIndex}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                       }
-                     }}
-                     className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-indigo-50 dark:bg-[#1a233a] border border-indigo-200 dark:border-[#2e3c5a] hover:bg-indigo-100 dark:hover:bg-[#25324d] transition-colors text-[11px] font-bold text-indigo-700 dark:text-[#a5b4fc] whitespace-nowrap shrink-0"
-                     title={tr('رفتن به اولین شماره کارنشده', 'Go to first pending number')}
-                   >
-                     <ChevronsDown size={13} />
-                     <span>{tr('لیست خام', 'Pending List')}</span>
-                   </button>
-                 )}
-
                  {/* Upload */}
                  <button
                    onClick={() => fileInputRef.current?.click()}
@@ -1012,14 +1017,37 @@ export const CallListWorkspace = () => {
                         <td colSpan={5} className="py-24 text-center"></td>
                       </motion.tr>
                     ) : (
-                      displayedList.map((c, index) => (
+                      rowGroups.map(group => (
+                        <React.Fragment key={group.key}>
+                          {group.items.length > 0 && (
+                            <tr
+                              onClick={() => toggleSection(group.key as keyof typeof expandedSections)}
+                              className="bg-slate-50/80 dark:bg-[#1a2332]/80 cursor-pointer hover:bg-slate-100 dark:hover:bg-[#202b3c] transition-colors border-y border-slate-200 dark:border-[#2b3745]"
+                            >
+                              <td colSpan={5} className="py-2.5 px-4 text-right">
+                                <div className="flex items-center gap-3">
+                                  <span className="font-extrabold text-[13px] text-slate-800 dark:text-[#c0c8d2]">{group.title}</span>
+                                  <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${group.badgeColor}`}>{group.items.length} شماره</span>
+                                  <div className="flex-1" />
+                                  <span className="text-slate-400 dark:text-slate-500">
+                                    {expandedSections[group.key as keyof typeof expandedSections] ? <Icons.ChevronUp size={16} /> : <Icons.ChevronDown size={16} />}
+                                  </span>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                          <AnimatePresence>
+                            {expandedSections[group.key as keyof typeof expandedSections] && group.items.map((c) => {
+                              const index = displayedList.findIndex(item => item.id === c.id);
+                              return (
                         <motion.tr
+                          layout
                           key={c.id}
                           id={`call-row-${index}`}
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          transition={{ duration: 0.2 }}
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                          transition={{ duration: 0.3, type: "spring", bounce: 0.2 }}
                           onMouseDown={(e) => handleRowMouseDown(e, c.id, index)}
                           onMouseEnter={() => handleRowMouseEnter(c.id)}
                           className={`relative focus-within:z-50 hover:z-40 transition-all duration-200 group rounded-xl shadow-2xs hover:shadow-md ${
@@ -1162,6 +1190,10 @@ export const CallListWorkspace = () => {
                              </div>
                           </td>
                         </motion.tr>
+                              );
+                            })}
+                          </AnimatePresence>
+                        </React.Fragment>
                       ))
                     )}
                     </AnimatePresence>
