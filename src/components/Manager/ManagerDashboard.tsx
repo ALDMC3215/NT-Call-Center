@@ -952,14 +952,10 @@ export const ManagerDashboard: React.FC = () => {
                           <span className="text-xs font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700" dir="ltr">{row.dateStr}</span>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-1 gap-2">
                           <div className="bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 p-2.5 rounded-xl flex flex-col items-center">
                             <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400">شماره کارشده</span>
                             <span className="font-black text-base text-emerald-800 dark:text-emerald-300 mt-0.5">{row.workedCount}</span>
-                          </div>
-                          <div className="bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900 p-2.5 rounded-xl flex flex-col items-center">
-                            <span className="text-[10px] font-bold text-indigo-700 dark:text-indigo-400">مجموع تلاش‌ها</span>
-                            <span className="font-black text-base text-indigo-800 dark:text-indigo-300 mt-0.5">{row.attemptsCount}</span>
                           </div>
                         </div>
 
