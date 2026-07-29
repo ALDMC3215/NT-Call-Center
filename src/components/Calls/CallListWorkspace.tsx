@@ -221,7 +221,8 @@ export const CallListWorkspace = () => {
     hardDeleteCall,
     setCurrentView,
     getMyDailyStats,
-    addToBlacklist
+    addToBlacklist,
+    recordAttempt
   } = useAppContext();
 
   const { tr, valueLabel, direction } = useLocale();
@@ -369,11 +370,13 @@ export const CallListWorkspace = () => {
         message: tr('آیا مطمئن هستید که این فرد ثبت نام کرده است؟', 'Are you sure this person has registered?'),
         onConfirm: () => {
           updateCall({ ...call, callStatus: newStatus });
+          recordAttempt(call.id, { ...call, callStatus: newStatus });
           toast.success(tr('وضعیت اعمال شد.', 'Status applied.'));
         }
       });
     } else {
       updateCall({ ...call, callStatus: newStatus });
+      recordAttempt(call.id, { ...call, callStatus: newStatus });
     }
   };
 
