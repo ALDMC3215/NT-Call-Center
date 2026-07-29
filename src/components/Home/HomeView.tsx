@@ -12,12 +12,45 @@ import { UserProfileDropdown } from './UserProfileDropdown';
 
 const newsItems = [
   {
-    id: 6,
-    title: 'بهبود آمار روزانه، لیست سیاه و امکانات کارشناسی',
+    id: 9,
+    title: 'دسته‌بندی و مرتب‌سازی هوشمند جدول!',
+    category: 'بهبود رابط کاربری',
+    date: 'همین الان',
+    description: 'برای اینکه جدول کاری شما خلوت‌تر بشه، لیست کارشناسان حالا به سه دسته «پیگیری‌ها»، «کارشده‌ها» و «خام» تقسیم شده. از این به بعد می‌تونید هر بخش رو به راحتی باز یا بسته (Collapse/Expand) کنید. در ضمن، شماره‌هایی که به صورت دستی اضافه بشن، مستقیم میرن اول لیست خام تا سریع بتونید روشون کار کنید.',
+    icon: Icons.LayoutList,
+    color: 'text-sky-600 dark:text-sky-400',
+    bg: 'bg-sky-50 dark:bg-sky-500/10',
+    colSpan: 'md:col-span-2'
+  },
+  {
+    id: 8,
+    title: 'انیمیشن‌های نرم و پویا!',
+    category: 'رابط کاربری',
+    date: 'همین الان',
+    description: 'کار با پنل خیلی لذت‌بخش‌تر شده! از این به بعد وقتی نتیجه یه تماس رو تغییر می‌دین یا شماره‌ای رو حذف می‌کنین، اون ردیف خشک و ناگهانی غیب نمیشه؛ بلکه با یه انیمیشن نرم و باحال (Framer Motion) جابه‌جا میشه و میره تو جایگاه جدیدش. حتما امتحانش کنید!',
+    icon: Icons.Sparkles,
+    color: 'text-fuchsia-600 dark:text-fuchsia-400',
+    bg: 'bg-fuchsia-50 dark:bg-fuchsia-500/10',
+    colSpan: 'md:col-span-1'
+  },
+  {
+    id: 7,
+    title: 'هوشمندسازی دقیق‌تر آمار روزانه',
     category: 'به‌روزرسانی سیستم',
     date: 'امروز',
-    description: 'در این بروزرسانی، مشکل کاهش آمار روزانه برطرف شد و آمار فقط به صورت افزایشی ذخیره می‌شود. علاوه بر این امکان انتقال سریع عدم‌تمایل‌ها به لیست سیاه با یک کلیک، تاییدیه ثبت‌نام، نمایش زمان دقیق آپدیت جلوی هر شماره و مرتب‌سازی خودکار و بهینه‌تر لیست اضافه شده است.',
-    icon: Icons.Sparkles,
+    description: 'مکانیزم ثبت آمار کارکردهای روزانه شما خیلی دقیق‌تر شده. تغییرات متوالی روی یک شماره فقط در صورتی به عنوان کارکرد جدید حساب میشه که اون شماره از قبل خام بوده باشه، تا جلوی هرگونه اشتباه در محاسبه آمار روزانه‌تون گرفته بشه.',
+    icon: Icons.Activity,
+    color: 'text-emerald-600 dark:text-emerald-400',
+    bg: 'bg-emerald-50 dark:bg-emerald-500/10',
+    colSpan: 'md:col-span-3'
+  },
+  {
+    id: 6,
+    title: 'بهبود لیست سیاه و امکانات کارشناسی',
+    category: 'به‌روزرسانی قبلی',
+    date: 'امروز',
+    description: 'در بروزرسانی‌های قبلی، امکان انتقال سریع عدم‌تمایل‌ها به لیست سیاه با یک کلیک، تاییدیه ثبت‌نام و نمایش زمان دقیق آپدیت جلوی هر شماره اضافه شده بود که امیدواریم به کارتون سرعت بیشتری بخشیده باشه.',
+    icon: Icons.ShieldCheck,
     color: 'text-violet-600 dark:text-violet-400',
     bg: 'bg-violet-50 dark:bg-violet-500/10',
     colSpan: 'md:col-span-3'
@@ -256,7 +289,7 @@ export const HomeView = () => {
 
         {/* News Feed Section */}
         <div className="w-full mt-12 md:mt-20 pt-12 md:pt-16 border-t border-stone-200/60 dark:border-[#2b3745]/60 flex flex-col items-center">
-           <div className="w-full max-w-[1000px] mx-auto">
+           <div className="w-full mx-auto">
              <div className="flex flex-col mb-8 sm:mb-10 w-full text-right">
                <h3 className="text-xl sm:text-2xl font-extrabold text-stone-800 dark:text-[#f3f5f7] flex items-center gap-2.5 mb-2">
                  <Icons.Newspaper size={28} strokeWidth={2.2} className="text-indigo-500" />
