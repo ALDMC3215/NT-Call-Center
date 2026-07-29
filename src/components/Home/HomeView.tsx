@@ -34,17 +34,6 @@ const newsItems = [
     colSpan: 'md:col-span-2'
   },
   {
-    id: 1,
-    title: 'انتقال فایل اکسل به پنل کارشناسان',
-    category: 'به‌روزرسانی سیستم',
-    date: 'امروز',
-    description: 'برای اینکه کارتون راحت‌تر بشه، دکمه آپلود فایل اکسل رو از تو بخش تنظیمات برداشتیم و آوردیمش دقیقا بالای همون جدولی که تو پنل کارشناسان باهاش کار می‌کنید تا همیشه دم دستتون باشه.',
-    icon: Icons.FileSpreadsheet,
-    color: 'text-blue-600 dark:text-blue-400',
-    bg: 'bg-blue-50 dark:bg-blue-500/10',
-    colSpan: 'md:col-span-2'
-  },
-  {
     id: 4,
     title: 'پروفایل کاربری تو مشت شماست!',
     category: 'بهبود رابط کاربری',
@@ -54,6 +43,17 @@ const newsItems = [
     color: 'text-emerald-600 dark:text-emerald-400',
     bg: 'bg-emerald-50 dark:bg-emerald-500/10',
     colSpan: 'md:col-span-1'
+  },
+  {
+    id: 1,
+    title: 'انتقال فایل اکسل به پنل کارشناسان',
+    category: 'به‌روزرسانی سیستم',
+    date: 'امروز',
+    description: 'برای اینکه کارتون راحت‌تر بشه، دکمه آپلود فایل اکسل رو از تو بخش تنظیمات برداشتیم و آوردیمش دقیقا بالای همون جدولی که تو پنل کارشناسان باهاش کار می‌کنید تا همیشه دم دستتون باشه.',
+    icon: Icons.FileSpreadsheet,
+    color: 'text-blue-600 dark:text-blue-400',
+    bg: 'bg-blue-50 dark:bg-blue-500/10',
+    colSpan: 'md:col-span-2'
   },
   {
     id: 2,
@@ -75,7 +75,7 @@ const newsItems = [
     icon: Icons.Settings,
     color: 'text-slate-600 dark:text-slate-400',
     bg: 'bg-slate-100 dark:bg-slate-500/10',
-    colSpan: 'md:col-span-2'
+    colSpan: 'md:col-span-3'
   }
 ];
 
@@ -283,7 +283,7 @@ export const HomeView = () => {
                            {item.date}
                          </span>
                       </div>
-                      <h4 className="text-[18px] md:text-[20px] font-extrabold text-stone-800 dark:text-[#f3f5f7] mb-3 leading-snug group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                      <h4 className="text-[18px] md:text-[20px] font-bold text-stone-800 dark:text-[#f3f5f7] mb-3 leading-snug group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                         {item.title}
                       </h4>
                       <p className="text-[14px] md:text-[15px] text-stone-500 dark:text-[#b7c2cf] font-medium leading-relaxed">
