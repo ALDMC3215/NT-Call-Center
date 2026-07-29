@@ -726,7 +726,7 @@ export const CallListWorkspace = () => {
                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px] font-bold transition-colors whitespace-nowrap shrink-0 ${activeTab === 'courses' ? 'bg-slate-800 dark:bg-[#f3f5f7] text-white dark:text-[#0f1419] border-slate-800 dark:border-[#f3f5f7]' : 'bg-white dark:bg-transparent text-slate-600 dark:text-[#8e9aaa] border-slate-200 dark:border-[#2b3745] hover:bg-slate-50 dark:hover:bg-[#1c2530]'}`}
                  >
                    <BookOpen size={14} />
-                   <span>{tr('قیمت دوره‌ها', 'Courses')}</span>
+                   <span>{tr('دوره‌ها', 'Courses')}</span>
                  </button>
                  <button
                    onClick={() => setActiveTab('learning_paths')}
