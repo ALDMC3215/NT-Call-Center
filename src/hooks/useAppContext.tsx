@@ -376,8 +376,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           const key = `novintech_daily_worked_${profile.sessionId}_${todayStr}`;
           const saved = localStorage.getItem(key);
           const current = saved ? parseInt(saved, 10) : 0;
-          localStorage.setItem(key, (current + 1).toString());
+          const newCount = current + 1;
+          localStorage.setItem(key, newCount.toString());
           window.dispatchEvent(new Event('daily_worked_updated'));
+          upsertDailyCallStat(todayStr, newCount);
         }
       }
       return prev.map(c => c.id === callToUpdate.id ? callToUpdate : c);
@@ -508,8 +510,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         const key = `novintech_daily_worked_${profile.sessionId}_${todayStr}`;
         const saved = localStorage.getItem(key);
         const current = saved ? parseInt(saved, 10) : 0;
-        localStorage.setItem(key, (current + 1).toString());
+        const newCount = current + 1;
+        localStorage.setItem(key, newCount.toString());
         window.dispatchEvent(new Event('daily_worked_updated'));
+        upsertDailyCallStat(todayStr, newCount);
       }
     }
 
@@ -687,8 +691,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         const key = `novintech_daily_worked_${profile.sessionId}_${todayStr}`;
         const saved = localStorage.getItem(key);
         const current = saved ? parseInt(saved, 10) : 0;
-        localStorage.setItem(key, (current + 1).toString());
+        const newCount = current + 1;
+        localStorage.setItem(key, newCount.toString());
         window.dispatchEvent(new Event('daily_worked_updated'));
+        upsertDailyCallStat(todayStr, newCount);
       }
     }
 
@@ -740,8 +746,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         const key = `novintech_daily_worked_${profile.sessionId}_${todayStr}`;
         const saved = localStorage.getItem(key);
         const current = saved ? parseInt(saved, 10) : 0;
-        localStorage.setItem(key, (current + 1).toString());
+        const newCount = current + 1;
+        localStorage.setItem(key, newCount.toString());
         window.dispatchEvent(new Event('daily_worked_updated'));
+        upsertDailyCallStat(todayStr, newCount);
       }
     }
 
