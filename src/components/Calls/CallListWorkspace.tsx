@@ -7,7 +7,7 @@ import { CallResultActionModal } from './CallResultActionModal';
 import { ContactTaskEditorModal } from './ContactTaskEditorModal';
 import { CALL_STATUSES } from '../../constants';
 import * as Icons from 'lucide-react';
-import { Search, X, Plus, Trash2, Filter, Home, BookOpen, Route, MessageSquareQuote, FileText, CalendarClock, ShieldBan } from 'lucide-react';
+import { Search, X, Plus, Trash2, Filter, Home, BookOpen, Route, MessageSquareQuote, FileText, CalendarClock, ShieldBan, ChevronsDown } from 'lucide-react';
 import { customToast as toast } from '../UI/toast';
 import * as xlsx from 'xlsx';
 import { motion, AnimatePresence } from 'motion/react';
@@ -223,15 +223,15 @@ export const CallListWorkspace = () => {
     getMyDailyStats,
     addToBlacklist
   } = useAppContext();
-  
+
   const { tr, valueLabel, direction } = useLocale();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string | null>(null);
-  
+
   const [tasks, setTasks] = useState<ContactTask[]>([]);
   const [actionModalCall, setActionModalCall] = useState<CallRecord | null>(null);
   const [editModalTask, setEditModalTask] = useState<ContactTask | null>(null);
-  
+
   const [notesModalCall, setNotesModalCall] = useState<CallRecord | null>(null);
   const [isManualAddOpen, setIsManualAddOpen] = useState(false);
   const [confirmModalConfig, setConfirmModalConfig] = useState<{isOpen: boolean; title: string; message: string; onConfirm: () => void}>({ isOpen: false, title: '', message: '', onConfirm: () => {} });
@@ -392,7 +392,7 @@ export const CallListWorkspace = () => {
     if (['INPUT', 'BUTTON', 'SELECT', 'TEXTAREA'].includes(target.tagName) || target.closest('button')) {
       return;
     }
-    
+
     if (e.shiftKey && lastSelectedId) {
       // Range selection
       const lastIndex = displayedList.findIndex(c => c.id === lastSelectedId);
@@ -477,13 +477,13 @@ export const CallListWorkspace = () => {
         Array.from(selectedIds).forEach(id => {
           const call = calls.find(c => c.id === id);
           if (call) {
-            updateCall({ 
-              ...call, 
-              fullName: '', 
-              callStatus: '', 
-              course: '', 
-              notes: '', 
-              isFollowUp: false 
+            updateCall({
+              ...call,
+              fullName: '',
+              callStatus: '',
+              course: '',
+              notes: '',
+              isFollowUp: false
             });
           }
         });
@@ -561,13 +561,36 @@ export const CallListWorkspace = () => {
       if (a.isFollowUp && !b.isFollowUp) return -1;
       if (!a.isFollowUp && b.isFollowUp) return 1;
 
-      // 2. UpdatedAt / CreatedAt descending
-      const aTime = a.updatedAt || a.createdAt;
-      const bTime = b.updatedAt || b.createdAt;
-      const timeDiff = String(bTime).localeCompare(String(aTime));
-      if (timeDiff !== 0) return timeDiff;
+      // If both are follow-ups, sort by Date (descending)
+      if (a.isFollowUp && b.isFollowUp) {
+        const aTime = a.updatedAt || a.createdAt;
+        const bTime = b.updatedAt || b.createdAt;
+        const timeDiff = String(bTime).localeCompare(String(aTime));
+        if (timeDiff !== 0) return timeDiff;
+        return String(a.id).localeCompare(String(b.id));
+      }
 
-      // 3. Original Excel order (queueOrder ASC)
+      // 2. Worked numbers (has callStatus) come before Raw numbers
+      const aWorked = !!a.callStatus;
+      const bWorked = !!b.callStatus;
+
+      if (aWorked && !bWorked) return -1;
+      if (!aWorked && bWorked) return 1;
+
+      // If both are worked, sort by Date (descending)
+      if (aWorked && bWorked) {
+        const aTime = a.updatedAt || a.createdAt;
+        const bTime = b.updatedAt || b.createdAt;
+        const timeDiff = String(bTime).localeCompare(String(aTime));
+        if (timeDiff !== 0) return timeDiff;
+        return String(a.id).localeCompare(String(b.id));
+      }
+
+      // 3. Raw numbers (no callStatus, not follow-up) sort by Phone Number (ascending)
+      const phoneDiff = String(a.phone || '').localeCompare(String(b.phone || ''));
+      if (phoneDiff !== 0) return phoneDiff;
+
+      // Fallback
       const qDiff = (a.queueOrder ?? 0) - (b.queueOrder ?? 0);
       if (qDiff !== 0) return qDiff;
       return String(a.id).localeCompare(String(b.id));
@@ -582,7 +605,7 @@ export const CallListWorkspace = () => {
     });
     stats['پیگیری'] = 0;
     stats['ثبت نشده'] = 0;
-    
+
     calls.filter(c => !c.isBlacklisted).forEach(c => {
        if (c.callStatus && CALL_STATUSES.includes(c.callStatus)) {
            stats[c.callStatus]++;
@@ -600,7 +623,7 @@ export const CallListWorkspace = () => {
   const { todayDate, todayCalls } = useMemo(() => {
     const d = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tehran" }));
     const isoDate = d.toISOString().split('T')[0];
-    
+
     // Convert to jalali format string
     const dateFormatted = new Intl.DateTimeFormat('fa-IR', {
       year: 'numeric',
@@ -641,14 +664,14 @@ export const CallListWorkspace = () => {
           {callsError}
         </div>
       )}
-      
+
       {/* Batch Action Toolbar */}
       <AnimatePresence>
         {selectedIds.size > 0 && (
-          <motion.div 
-            initial={{ opacity: 0, y: 50 }} 
-            animate={{ opacity: 1, y: 0 }} 
-            exit={{ opacity: 0, y: 50 }} 
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
             className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] bg-slate-800 text-white rounded-xl shadow-2xl border border-slate-700 px-4 py-2.5 flex items-center gap-4 flex-nowrap overflow-x-auto hide-scrollbar max-w-[95vw]"
           >
             <button
@@ -660,7 +683,7 @@ export const CallListWorkspace = () => {
             </button>
 
             <div className="w-px h-6 bg-slate-600 shrink-0"></div>
-            
+
             <button
               onClick={handleBatchFollowUp}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 transition-colors text-[12px] font-bold whitespace-nowrap shrink-0"
@@ -669,7 +692,7 @@ export const CallListWorkspace = () => {
               <Icons.CalendarClock size={16} />
               <span>پیگیری</span>
             </button>
-            
+
             <button
               onClick={handleBatchCancelFollowUp}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 transition-colors text-slate-300 text-[12px] font-bold whitespace-nowrap shrink-0"
@@ -696,7 +719,7 @@ export const CallListWorkspace = () => {
               <MessageSquareQuote size={16} />
               <span>یادداشت مشترک</span>
             </button>
-            
+
             <div className="w-px h-6 bg-slate-600 shrink-0"></div>
 
             <button
@@ -706,7 +729,7 @@ export const CallListWorkspace = () => {
               <Icons.RefreshCcw size={16} />
               <span>ریست خام</span>
             </button>
-            
+
             <button
               onClick={handleBatchDelete}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 transition-colors text-[12px] font-bold whitespace-nowrap shrink-0"
@@ -727,7 +750,7 @@ export const CallListWorkspace = () => {
       <div className="flex-1 w-full min-h-0 flex items-stretch" >
         <div className="flex-1 flex flex-col overflow-hidden relative">
           <div className="relative h-full bg-white dark:bg-[#0f1419] flex flex-col overflow-hidden ">
-          
+
             {/* Navigation & Search (Row 1) */}
             <div className="flex flex-nowrap overflow-x-auto hide-scrollbar items-center justify-between gap-3 p-2.5 bg-white dark:bg-[#171e27] border-b border-slate-200 dark:border-[#2b3745] shrink-0">
                {/* Right Side: Navigation Tabs */}
@@ -809,7 +832,7 @@ export const CallListWorkspace = () => {
                      </button>
                    )}
                  </div>
-                 
+
                  <button
                    onClick={() => setCurrentView('home')}
                    className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-[#1b2531] border border-slate-200 dark:border-[#334355] hover:bg-slate-50 dark:hover:bg-[#243140] transition-colors whitespace-nowrap shrink-0"
@@ -823,7 +846,7 @@ export const CallListWorkspace = () => {
 
             {/* Actions & Stats (Row 2) */}
             <div className="flex flex-nowrap overflow-x-auto hide-scrollbar items-center justify-between gap-3 p-2.5 bg-slate-50 dark:bg-[#171e27] border-b border-slate-200 dark:border-[#2b3745] shrink-0">
-               
+
                {/* Right Side: Stats Badges */}
                <div className="flex items-center gap-2 shrink-0">
                  {Object.entries(statusStats).map(([status, count]) => {
@@ -853,9 +876,25 @@ export const CallListWorkspace = () => {
                    </button>
                  )}
                </div>
-               
+
                {/* Left Side: Actions */}
                <div className="flex items-center gap-2 shrink-0">
+                 {/* Scroll Past Follow-ups */}
+                 {displayedList.some(c => c.isFollowUp) && displayedList.some(c => !c.isFollowUp) && (
+                   <button
+                     onClick={() => {
+                       const firstIndex = displayedList.findIndex(c => !c.isFollowUp);
+                       if (firstIndex !== -1) {
+                         document.getElementById(`call-row-${firstIndex}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                       }
+                     }}
+                     className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-indigo-50 dark:bg-[#1a233a] border border-indigo-200 dark:border-[#2e3c5a] hover:bg-indigo-100 dark:hover:bg-[#25324d] transition-colors text-[11px] font-bold text-indigo-700 dark:text-[#a5b4fc] whitespace-nowrap shrink-0"
+                     title={tr('رفتن به اولین شماره کارنشده', 'Go to first pending number')}
+                   >
+                     <ChevronsDown size={13} />
+                     <span>{tr('لیست خام', 'Pending List')}</span>
+                   </button>
+                 )}
 
                  {/* Upload */}
                  <button
@@ -872,7 +911,7 @@ export const CallListWorkspace = () => {
                    onClick={() => setIsManualAddOpen(true)}
                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-emerald-50 dark:bg-[#163326] border border-emerald-200 dark:border-[#2f674b] hover:bg-emerald-100 dark:hover:bg-[#1e4a36] transition-colors text-[11px] font-bold text-emerald-700 dark:text-[#8de0b5] whitespace-nowrap shrink-0"
                  >
-                   <Plus size={13} strokeWidth={2.5} /> 
+                   <Plus size={13} strokeWidth={2.5} />
                    <span>{tr('افزودن', 'Add')}</span>
                  </button>
 
@@ -892,10 +931,10 @@ export const CallListWorkspace = () => {
                    }}
                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-slate-100 dark:bg-[#202b38] border border-slate-200 dark:border-[#344457] hover:bg-slate-200 dark:hover:bg-[#2c3b4d] transition-colors text-[11px] font-bold text-slate-700 dark:text-[#b7c2cf] whitespace-nowrap shrink-0"
                  >
-                   <ShieldBan size={13} /> 
+                   <ShieldBan size={13} />
                    <span>{tr('انتقال عدم تمایل', 'Move Not Interested')}</span>
                  </button>
-                 
+
                  {/* Delete All */}
                  <button
                    onClick={() => {
@@ -911,7 +950,7 @@ export const CallListWorkspace = () => {
                    }}
                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-rose-50 dark:bg-[#3a1d25] border border-rose-200 dark:border-[#71303e] hover:bg-rose-100 dark:hover:bg-[#48222c] transition-colors text-[11px] font-bold text-rose-700 dark:text-[#ff9aa9] whitespace-nowrap shrink-0"
                  >
-                   <Trash2 size={13} /> 
+                   <Trash2 size={13} />
                    <span>{tr('حذف', 'Delete')}</span>
                  </button>
                </div>
@@ -919,7 +958,7 @@ export const CallListWorkspace = () => {
 
             {/* Content Area */}
             <div className="flex-1 overflow-x-auto overflow-y-auto custom-select-scroll relative z-10">
-              
+
               {activeTab === 'courses' ? (
                 <div className="w-full h-full p-4"><CoursesView embedded={true} /></div>
               ) : activeTab === 'schedule' ? (
@@ -947,8 +986,8 @@ export const CallListWorkspace = () => {
                   <thead className="sticky top-0 z-20 backdrop-blur-md">
                     <tr className="[&>th]:bg-slate-100/90 dark:[&>th]:bg-[#1c2530] [&>th]:py-2.5 [&>th]:px-2 [&>th]:border-y [&>th]:border-slate-200/80 dark:[&>th]:border-[#2b3745] [&>th:first-child]:rounded-r-xl [&>th:first-child]:border-r [&>th:last-child]:rounded-l-xl [&>th:last-child]:border-l text-[12px] font-extrabold text-slate-800 dark:text-[#c0c8d2] tracking-wide">
                       <th className="text-center">
-                         <input 
-                           type="checkbox" 
+                         <input
+                           type="checkbox"
                            checked={selectedIds.size > 0 && selectedIds.size === displayedList.length}
                            onChange={(e) => {
                              if (e.target.checked) {
@@ -976,6 +1015,7 @@ export const CallListWorkspace = () => {
                       displayedList.map((c, index) => (
                         <motion.tr
                           key={c.id}
+                          id={`call-row-${index}`}
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
@@ -994,7 +1034,7 @@ export const CallListWorkspace = () => {
                         >
                           {/* Selection Checkbox */}
                           <td className="py-2.5 px-2 text-center rounded-r-xl border-y border-r border-inherit" onClick={(e) => e.stopPropagation()}>
-                             <input 
+                             <input
                                type="checkbox"
                                checked={selectedIds.has(c.id)}
                                onChange={() => toggleSelection(c.id)}
@@ -1049,22 +1089,22 @@ export const CallListWorkspace = () => {
                                   onClick={() => handleFieldChange(c, 'isFollowUp', !c.isFollowUp)}
                                   title={c.isFollowUp ? tr('لغو پیگیری', 'Cancel Follow-up') : tr('پیگیری شود', 'Needs Follow-up')}
                                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all text-[12px] font-bold border ${
-                                    c.isFollowUp 
-                                      ? 'bg-orange-500 text-white border-orange-600 hover:bg-orange-600' 
+                                    c.isFollowUp
+                                      ? 'bg-orange-500 text-white border-orange-600 hover:bg-orange-600'
                                       : 'bg-orange-50 dark:bg-[#3b2917] text-orange-600 dark:text-[#ffc477] border-orange-200 dark:border-[#76522a] hover:bg-orange-100 dark:hover:bg-[#48341f]'
                                   }`}
                                 >
                                   <CalendarClock size={16} />
                                   <span>{c.isFollowUp ? tr('لغو پیگیری', 'Cancel Follow-up') : tr('پیگیری شود', 'Needs Follow-up')}</span>
                                 </button>
-                                
+
                                 {/* Notes Button */}
                                 <button
                                   onClick={() => setNotesModalCall(c)}
                                   title={tr('افزودن یادداشت', 'Notes')}
                                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all  border text-[12px] font-bold
-                                    ${c.notes 
-                                      ? 'bg-amber-50 dark:bg-[#3b2917] text-amber-600 dark:text-[#ffc477] border-amber-200 dark:border-[#76522a]' 
+                                    ${c.notes
+                                      ? 'bg-amber-50 dark:bg-[#3b2917] text-amber-600 dark:text-[#ffc477] border-amber-200 dark:border-[#76522a]'
                                       : 'bg-white dark:bg-[#1b2531] text-slate-500 dark:text-[#e8edf3] border-slate-200 dark:border-[#334355] hover:bg-slate-50 dark:hover:bg-[#243140]'}`}
                                 >
                                   <MessageSquareQuote size={16} />
@@ -1112,11 +1152,11 @@ export const CallListWorkspace = () => {
                                 >
                                   <Trash2 size={16} />
                                 </button>
-                                
+
                                 {/* Time Display */}
-                                {c.updatedAt && c.callStatus && (
-                                  <div className="flex flex-col items-center justify-center min-w-[40px] text-[11px] font-bold text-slate-400 dark:text-[#66717f] mr-1" title="زمان ثبت نتیجه">
-                                    {new Date(c.updatedAt).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })}
+                                {(c.updatedAt || c.createdAt) && (
+                                  <div className="flex flex-col items-center justify-center min-w-[40px] text-[11px] font-bold text-slate-400 dark:text-[#66717f] mr-1" title="زمان آخرین تغییر">
+                                    {new Date(c.updatedAt || c.createdAt).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })}
                                   </div>
                                 )}
                              </div>
@@ -1142,7 +1182,7 @@ export const CallListWorkspace = () => {
           </div>
         </div>
       </div>
-      
+
       <CallResultActionModal
         isOpen={!!actionModalCall}
         onClose={() => setActionModalCall(null)}

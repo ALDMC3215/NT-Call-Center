@@ -96,7 +96,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [callsRefreshCounter, setCallsRefreshCounter] = useState(0);
   const [blacklist, setBlacklistState] = useState<BlacklistEntry[]>(() => storage.getBlacklist());
   const [importedData, setImportedData] = useState<{ profile: Profile; calls: CallRecord[] } | null>(null);
-  
+
   useEffect(() => {
     if (!profile) {
       setCallsState([]);
@@ -364,7 +364,24 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       updatedAt: new Date().toISOString()
     };
 
-    setCallsState(prev => prev.map(c => c.id === callToUpdate.id ? callToUpdate : c));
+    setCallsState(prev => {
+      const oldCall = prev.find(c => c.id === callToUpdate.id);
+
+      // If the number previously had no call result, and it wasn't modified today yet
+      if (oldCall && !oldCall.callStatus) {
+        const todayStr = toJalali();
+        const oldUpdatedAtJalali = oldCall.updatedAt ? toJalali(oldCall.updatedAt) : null;
+
+        if (oldUpdatedAtJalali !== todayStr) {
+          const key = `novintech_daily_worked_${profile.sessionId}_${todayStr}`;
+          const saved = localStorage.getItem(key);
+          const current = saved ? parseInt(saved, 10) : 0;
+          localStorage.setItem(key, (current + 1).toString());
+          window.dispatchEvent(new Event('daily_worked_updated'));
+        }
+      }
+      return prev.map(c => c.id === callToUpdate.id ? callToUpdate : c);
+    });
     updateFollowUpInStorage(profile, callToUpdate.id, !!callToUpdate.isFollowUp);
 
     try {
@@ -410,10 +427,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   // Global Blacklist Cross-check
   useEffect(() => {
     if (!profile || calls.length === 0 || blacklist.length === 0) return;
-    
+
     // Find calls that are in the blacklist but not yet marked
     const newlyBlacklisted = calls.filter(c => !c.isBlacklisted && blacklist.some(b => b.phone === c.phone));
-    
+
     if (newlyBlacklisted.length > 0) {
       setCallsState(prev => prev.map(c => blacklist.some(b => b.phone === c.phone) ? { ...c, isBlacklisted: true } : c));
       console.log(`Global check: Marked ${newlyBlacklisted.length} numbers as blacklisted.`);
@@ -483,13 +500,17 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const s = values.callStatus;
 
     const oldCall = calls.find(c => c.id === id);
-    if (oldCall && !oldCall.callStatus && values.callStatus) {
+    if (oldCall && !oldCall.callStatus) {
       const todayStr = toJalali();
-      const key = `novintech_daily_worked_${profile.sessionId}_${todayStr}`;
-      const saved = localStorage.getItem(key);
-      const current = saved ? parseInt(saved, 10) : 0;
-      localStorage.setItem(key, (current + 1).toString());
-      window.dispatchEvent(new Event('daily_worked_updated'));
+      const oldUpdatedAtJalali = oldCall.updatedAt ? toJalali(oldCall.updatedAt) : null;
+
+      if (oldUpdatedAtJalali !== todayStr) {
+        const key = `novintech_daily_worked_${profile.sessionId}_${todayStr}`;
+        const saved = localStorage.getItem(key);
+        const current = saved ? parseInt(saved, 10) : 0;
+        localStorage.setItem(key, (current + 1).toString());
+        window.dispatchEvent(new Event('daily_worked_updated'));
+      }
     }
 
     let needsFollowUp = false;
@@ -656,7 +677,21 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const recordCallAttemptWithTask = useCallback(async (input: RecordCallAttemptWithTaskInput): Promise<RecordCallAttemptWithTaskResult> => {
     if (!profile) throw new Error("Not authenticated");
     reportMeaningfulActivity(profile.sessionId);
-    
+
+    const oldCall = calls.find(c => c.id === input.contactId);
+    if (oldCall && !oldCall.callStatus) {
+      const todayStr = toJalali();
+      const oldUpdatedAtJalali = oldCall.updatedAt ? toJalali(oldCall.updatedAt) : null;
+
+      if (oldUpdatedAtJalali !== todayStr) {
+        const key = `novintech_daily_worked_${profile.sessionId}_${todayStr}`;
+        const saved = localStorage.getItem(key);
+        const current = saved ? parseInt(saved, 10) : 0;
+        localStorage.setItem(key, (current + 1).toString());
+        window.dispatchEvent(new Event('daily_worked_updated'));
+      }
+    }
+
     const jalaliTime = nowJalali();
 
     const { data, error } = await supabase.rpc('record_call_attempt_with_task', {
@@ -695,6 +730,20 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const logManualCallAttempt = useCallback(async (contactId: string, options?: { sourceTaskId?: string | null; manualReason?: string | null }) => {
     if (!profile) throw new Error("Not authenticated");
     reportMeaningfulActivity(profile.sessionId);
+
+    const oldCall = calls.find(c => c.id === contactId);
+    if (oldCall && !oldCall.callStatus) {
+      const todayStr = toJalali();
+      const oldUpdatedAtJalali = oldCall.updatedAt ? toJalali(oldCall.updatedAt) : null;
+
+      if (oldUpdatedAtJalali !== todayStr) {
+        const key = `novintech_daily_worked_${profile.sessionId}_${todayStr}`;
+        const saved = localStorage.getItem(key);
+        const current = saved ? parseInt(saved, 10) : 0;
+        localStorage.setItem(key, (current + 1).toString());
+        window.dispatchEvent(new Event('daily_worked_updated'));
+      }
+    }
 
     const jalaliTime = nowJalali();
     const { data, error } = await supabase.rpc('log_manual_call_attempt', {
