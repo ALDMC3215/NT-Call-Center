@@ -17,25 +17,15 @@ export function useCallListStats(calls: CallRecord[]) {
   }, [getMyDailyStats]);
 
   const fetchTodayCount = useCallback(async () => {
-    if (!profile?.id) return;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // start of today
-
     try {
-      const { data, error } = await supabase
-        .from('call_attempts')
-        .select('contact_id')
-        .eq('expert_id', profile.id)
-        .gte('created_at', today.toISOString());
-
-      if (!error && data) {
-        const uniqueContacts = new Set(data.map(d => d.contact_id));
-        setTodayCount(uniqueContacts.size);
+      const { data, error } = await supabase.rpc('get_my_today_call_count');
+      if (!error && data !== null) {
+        setTodayCount(data);
       }
     } catch (err) {
       console.error('Error fetching today count:', err);
     }
-  }, [profile?.id]);
+  }, []);
 
   useEffect(() => {
     fetchTodayCount();
