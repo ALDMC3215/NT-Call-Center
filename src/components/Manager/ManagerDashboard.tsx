@@ -118,7 +118,16 @@ export const ManagerDashboard: React.FC = () => {
   const fetchStats = useCallback(async () => {
     if (profiles.length === 0) return;
     setStatsLoading(true);
-    const { data, error } = await supabase.from('call_attempts').select('id, expert_id, contact_id, created_at');
+    // Fetch the last 30 days of attempts, ordered newest first, with a high limit to avoid default 1000 row truncation
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const { data, error } = await supabase
+      .from('call_attempts')
+      .select('id, expert_id, contact_id, created_at')
+      .gte('created_at', thirtyDaysAgo.toISOString())
+      .order('created_at', { ascending: false })
+      .limit(20000);
     if (error) setStatsError(true);
     else if (data) {
       setStatsError(false);
