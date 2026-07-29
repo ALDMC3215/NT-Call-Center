@@ -12,6 +12,17 @@ import { UserProfileDropdown } from './UserProfileDropdown';
 
 const newsItems = [
   {
+    id: 6,
+    title: 'بهبود آمار روزانه، لیست سیاه و امکانات کارشناسی',
+    category: 'به‌روزرسانی سیستم',
+    date: 'امروز',
+    description: 'در این بروزرسانی، مشکل کاهش آمار روزانه برطرف شد و آمار فقط به صورت افزایشی ذخیره می‌شود. علاوه بر این امکان انتقال سریع عدم‌تمایل‌ها به لیست سیاه با یک کلیک، تاییدیه ثبت‌نام، نمایش زمان دقیق آپدیت جلوی هر شماره و مرتب‌سازی خودکار و بهینه‌تر لیست اضافه شده است.',
+    icon: Icons.Sparkles,
+    color: 'text-violet-600 dark:text-violet-400',
+    bg: 'bg-violet-50 dark:bg-violet-500/10',
+    colSpan: 'md:col-span-3'
+  },
+  {
     id: 5,
     title: 'تحول در مدیریت تماس‌ها؛ کارها خیلی ساده‌تر شده!',
     category: 'راهنمای سیستم',
@@ -20,7 +31,7 @@ const newsItems = [
     icon: Icons.Workflow,
     color: 'text-indigo-600 dark:text-indigo-400',
     bg: 'bg-indigo-50 dark:bg-indigo-500/10',
-    colSpan: 'md:col-span-3'
+    colSpan: 'md:col-span-2'
   },
   {
     id: 1,
