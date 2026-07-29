@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useLocale } from '../../hooks/useLocale';
-import { CalendarDays, X, Search, Info } from 'lucide-react';
+import { CalendarDays, X, Search, Info, TriangleAlert } from 'lucide-react';
 import { useAppContext } from '../../hooks/useAppContext';
 import { COURSES_DATA, FlatCourse } from './ScheduleView';
 
@@ -171,6 +171,15 @@ export const ScheduleGridView = ({ isModal, onClose, embedded }: { isModal?: boo
         )}
       </div>
       <div className="flex-1 overflow-y-auto px-4 py-6 sm:px-8 sm:py-8 lg:px-12 hide-scrollbar">
+        <div className="mb-6 bg-red-50 border-2 border-red-200 rounded-xl p-4 flex flex-col md:flex-row items-center gap-4 shadow-sm text-center md:text-right">
+          <div className="w-10 h-10 shrink-0 bg-red-100 rounded-full flex items-center justify-center text-red-600">
+            <TriangleAlert size={22} strokeWidth={2.5} />
+          </div>
+          <div>
+            <h3 className="text-red-700 font-extrabold text-[15px] mb-1">توجه مهم: اطلاعات این جدول آپدیت نیست!</h3>
+            <p className="text-red-600/90 text-[13px] font-bold leading-relaxed">این جدول در حال به‌روزرسانی است و داده‌های آن فعلاً معتبر نمی‌باشند. لطفاً تا اطلاع ثانوی از این اطلاعات برای ثبت‌نام یا راهنمایی دانشجویان استفاده نکنید.</p>
+          </div>
+        </div>
         {content}
       </div>
     </div>
