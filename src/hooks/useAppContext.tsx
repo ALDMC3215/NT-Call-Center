@@ -368,19 +368,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       const oldCall = prev.find(c => c.id === callToUpdate.id);
 
       // If the number previously had no call result, and it wasn't modified today yet
-      if (oldCall && !oldCall.callStatus) {
-        const todayStr = toJalali();
-        const oldUpdatedAtJalali = oldCall.updatedAt ? toJalali(oldCall.updatedAt) : null;
-
-        if (oldUpdatedAtJalali !== todayStr) {
-          const key = `novintech_daily_worked_${profile.sessionId}_${todayStr}`;
-          const saved = localStorage.getItem(key);
-          const current = saved ? parseInt(saved, 10) : 0;
-          const newCount = current + 1;
-          localStorage.setItem(key, newCount.toString());
-          window.dispatchEvent(new Event('daily_worked_updated'));
-          upsertDailyCallStat(todayStr, newCount);
-        }
+      if (oldCall && !oldCall.callStatus && updatedCall.callStatus) {
+        window.dispatchEvent(new Event('daily_worked_updated'));
       }
       return prev.map(c => c.id === callToUpdate.id ? callToUpdate : c);
     });
@@ -502,19 +491,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const s = values.callStatus;
 
     const oldCall = calls.find(c => c.id === id);
-    if (oldCall && !oldCall.callStatus) {
-      const todayStr = toJalali();
-      const oldUpdatedAtJalali = oldCall.updatedAt ? toJalali(oldCall.updatedAt) : null;
-
-      if (oldUpdatedAtJalali !== todayStr) {
-        const key = `novintech_daily_worked_${profile.sessionId}_${todayStr}`;
-        const saved = localStorage.getItem(key);
-        const current = saved ? parseInt(saved, 10) : 0;
-        const newCount = current + 1;
-        localStorage.setItem(key, newCount.toString());
-        window.dispatchEvent(new Event('daily_worked_updated'));
-        upsertDailyCallStat(todayStr, newCount);
-      }
+    if (oldCall && !oldCall.callStatus && values.callStatus) {
+      window.dispatchEvent(new Event('daily_worked_updated'));
     }
 
     let needsFollowUp = false;
@@ -683,19 +661,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     reportMeaningfulActivity(profile.sessionId);
 
     const oldCall = calls.find(c => c.id === input.contactId);
-    if (oldCall && !oldCall.callStatus) {
-      const todayStr = toJalali();
-      const oldUpdatedAtJalali = oldCall.updatedAt ? toJalali(oldCall.updatedAt) : null;
-
-      if (oldUpdatedAtJalali !== todayStr) {
-        const key = `novintech_daily_worked_${profile.sessionId}_${todayStr}`;
-        const saved = localStorage.getItem(key);
-        const current = saved ? parseInt(saved, 10) : 0;
-        const newCount = current + 1;
-        localStorage.setItem(key, newCount.toString());
-        window.dispatchEvent(new Event('daily_worked_updated'));
-        upsertDailyCallStat(todayStr, newCount);
-      }
+    if (oldCall && !oldCall.callStatus && input.callStatus) {
+      window.dispatchEvent(new Event('daily_worked_updated'));
     }
 
     const jalaliTime = nowJalali();
@@ -739,18 +706,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
     const oldCall = calls.find(c => c.id === contactId);
     if (oldCall && !oldCall.callStatus) {
-      const todayStr = toJalali();
-      const oldUpdatedAtJalali = oldCall.updatedAt ? toJalali(oldCall.updatedAt) : null;
-
-      if (oldUpdatedAtJalali !== todayStr) {
-        const key = `novintech_daily_worked_${profile.sessionId}_${todayStr}`;
-        const saved = localStorage.getItem(key);
-        const current = saved ? parseInt(saved, 10) : 0;
-        const newCount = current + 1;
-        localStorage.setItem(key, newCount.toString());
-        window.dispatchEvent(new Event('daily_worked_updated'));
-        upsertDailyCallStat(todayStr, newCount);
-      }
+      window.dispatchEvent(new Event('daily_worked_updated'));
     }
 
     const jalaliTime = nowJalali();

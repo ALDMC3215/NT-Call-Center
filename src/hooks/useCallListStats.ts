@@ -1,9 +1,10 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { CallRecord } from '../types';
 import { toJalali } from '../utils/jalali';
 import { CALL_STATUSES } from '../constants';
 import { useAppContext } from './useAppContext';
 import { useLocale } from './useLocale';
+import { supabase } from '../lib/supabase';
 
 export function useCallListStats(calls: CallRecord[]) {
   const { getMyDailyStats, profile } = useAppContext();
@@ -15,28 +16,34 @@ export function useCallListStats(calls: CallRecord[]) {
     getMyDailyStats().then(setHistoryStats).catch(console.error);
   }, [getMyDailyStats]);
 
-  useEffect(() => {
-    if (!profile) return;
-    const todayStr = toJalali();
-    const key = `novintech_daily_worked_${profile.sessionId}_${todayStr}`;
-    
-    const updateCount = () => {
-      const saved = localStorage.getItem(key);
-      if (saved) {
-        setTodayCount(parseInt(saved, 10));
-      } else {
-        const count = calls.filter(c => c.callStatus && c.updatedAt && toJalali(c.updatedAt) === todayStr).length;
-        setTodayCount(count);
-        localStorage.setItem(key, count.toString());
+  const fetchTodayCount = useCallback(async () => {
+    if (!profile?.id) return;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // start of today
+
+    try {
+      const { data, error } = await supabase
+        .from('call_attempts')
+        .select('contact_id')
+        .eq('expert_id', profile.id)
+        .gte('created_at', today.toISOString());
+
+      if (!error && data) {
+        const uniqueContacts = new Set(data.map(d => d.contact_id));
+        setTodayCount(uniqueContacts.size);
       }
-    };
-    
-    updateCount();
-    
-    const handleEvent = () => updateCount();
+    } catch (err) {
+      console.error('Error fetching today count:', err);
+    }
+  }, [profile?.id]);
+
+  useEffect(() => {
+    fetchTodayCount();
+
+    const handleEvent = () => fetchTodayCount();
     window.addEventListener('daily_worked_updated', handleEvent);
     return () => window.removeEventListener('daily_worked_updated', handleEvent);
-  }, [profile, calls.length === 0]); // only run initially or when calls loaded
+  }, [fetchTodayCount]);
 
   const stats = useMemo(() => {
     const total = calls.length;
@@ -60,7 +67,7 @@ export function useCallListStats(calls: CallRecord[]) {
       } else {
         statusCounts[c.callStatus] = (statusCounts[c.callStatus] || 0) + 1;
         if (c.callStatus === 'ثبت نام کرد') registeredCount++;
-        
+
         if (['مردد', 'ثبت نام کرد', 'علاقه مند', 'مشاوره حضوری'].includes(c.callStatus)) {
           answered++;
         } else {
