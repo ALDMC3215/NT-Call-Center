@@ -118,47 +118,35 @@ export const ManagerDashboard: React.FC = () => {
   const fetchStats = useCallback(async () => {
     if (profiles.length === 0) return;
     setStatsLoading(true);
-    // Fetch the last 30 days of attempts, ordered newest first, with a high limit to avoid default 1000 row truncation
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     const { data, error } = await supabase
-      .from('call_attempts')
-      .select('id, expert_id, contact_id, created_at')
-      .gte('created_at', thirtyDaysAgo.toISOString())
-      .order('created_at', { ascending: false })
-      .limit(20000);
+      .from('expert_daily_stats')
+      .select('expert_id, jalali_date, call_count')
+      .gte('jalali_date', '1405/04/22');
+
     if (error) setStatsError(true);
     else if (data) {
       setStatsError(false);
-      const grouped = new Map<string, { expertId: string, dateStr: string, contactIds: Set<string>, attemptIds: string[], attemptsCount: number, minTime: Date, maxTime: Date }>();
-      for (const row of data) {
-        const rowDate = new Date(row.created_at);
-        const dayStr = toJalali(rowDate);
-        const key = `${row.expert_id}_${dayStr}`;
-        let group = grouped.get(key);
-        if (!group) {
-          group = { expertId: row.expert_id, dateStr: dayStr, contactIds: new Set(), attemptIds: [], attemptsCount: 0, minTime: rowDate, maxTime: rowDate };
-          grouped.set(key, group);
-        }
-        group.contactIds.add(row.contact_id);
-        group.attemptIds.push(row.id);
-        group.attemptsCount++;
-        if (rowDate < group.minTime) group.minTime = rowDate;
-        if (rowDate > group.maxTime) group.maxTime = rowDate;
-      }
-      const statsArr = Array.from(grouped.values()).map(g => {
-        const profile = profiles.find(p => p.id === g.expertId);
+
+      const statsArr = data.filter(row => {
+        return /^\d{4}\/\d{2}\/\d{2}$/.test(row.jalali_date);
+      }).map(row => {
+        const profile = profiles.find(p => p.id === row.expert_id);
         return {
-          ...g,
+          expertId: row.expert_id,
+          dateStr: row.jalali_date,
           expertName: profile ? profile.full_name : 'کارشناس نامشخص',
-          workedCount: g.contactIds.size,
-          minTimeStr: g.minTime.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' }),
-          maxTimeStr: g.maxTime.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' }),
-          sortTime: g.maxTime.getTime()
+          workedCount: row.call_count,
+          attemptsCount: row.call_count,
+          minTimeStr: '---',
+          maxTimeStr: '---'
         };
       });
-      statsArr.sort((a, b) => b.sortTime - a.sortTime);
+
+      statsArr.sort((a, b) => {
+        return b.dateStr.localeCompare(a.dateStr);
+      });
+
       setDailyStats(statsArr);
     }
     setStatsLoading(false);
@@ -170,7 +158,8 @@ export const ManagerDashboard: React.FC = () => {
 
     const { data: callsData, error: callsError } = await supabase.from('call_attempts')
       .select('*')
-      .in('id', stat.attemptIds)
+      .eq('expert_id', stat.expertId)
+      .like('jalali_date_time', `${stat.dateStr}%`)
       .order('created_at', { ascending: false });
 
     if (!callsError && callsData) {
