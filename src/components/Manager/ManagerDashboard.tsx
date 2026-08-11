@@ -30,9 +30,9 @@ const EXPERT_DUTY_LABELS: Record<string, string> = {
 };
 
 const DutyBadge = ({ group }: { group?: string | null }) => {
-  if (!group) return <span className="text-[10px] font-bold px-2 py-0.5 rounded-md border bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 mx-1">بدون گروه</span>;
-  if (group === 'early_week') return <span className="text-[10px] font-bold px-2 py-0.5 rounded-md border bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800/60 mx-1">اول هفته</span>;
-  if (group === 'late_week') return <span className="text-[10px] font-bold px-2 py-0.5 rounded-md border bg-purple-50 text-purple-600 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800/60 mx-1">آخر هفته</span>;
+  if (!group) return <span className="text-[10px] font-bold px-2 py-0.5 rounded-md border bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 mx-1 whitespace-nowrap">بدون گروه</span>;
+  if (group === 'early_week') return <span className="text-[10px] font-bold px-2 py-0.5 rounded-md border bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800/60 mx-1 whitespace-nowrap">اول هفته</span>;
+  if (group === 'late_week') return <span className="text-[10px] font-bold px-2 py-0.5 rounded-md border bg-purple-50 text-purple-600 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800/60 mx-1 whitespace-nowrap">آخر هفته</span>;
   return null;
 };
 
