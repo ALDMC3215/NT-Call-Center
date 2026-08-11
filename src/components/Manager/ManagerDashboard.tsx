@@ -2,7 +2,7 @@
  * ManagerDashboard — RTL 2D Flat Design Launchpad & Management Center for active admins
  */
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import NTLogo from '../../NT Logo.svg';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppContext } from '../../hooks/useAppContext';
@@ -12,7 +12,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   Shield, Users, Clock, CheckCircle2, Ban, LogOut,
   RefreshCw, AlertCircle, Activity, Inbox, Download, FileText, X, MessageSquare, Send, Lock, Trash2, Award, User,
-  ArrowRight, Sparkles, Plus, Grid, ChevronLeft, Search
+  ArrowRight, ArrowLeft, Sparkles, Plus, Grid, ChevronLeft, Search
 } from 'lucide-react';
 import { customToast as toast } from '../UI/toast';
 import * as XLSX from 'xlsx';
@@ -22,6 +22,18 @@ import { formatPhoneNumber } from '../../utils/format';
 const DUTY_LABELS: Record<string, string> = {
   early_week: 'مدیر اول هفته',
   late_week:  'مدیر آخر هفته',
+};
+
+const EXPERT_DUTY_LABELS: Record<string, string> = {
+  early_week: 'اول هفته',
+  late_week: 'آخر هفته'
+};
+
+const DutyBadge = ({ group }: { group?: string | null }) => {
+  if (!group) return <span className="text-[10px] font-bold px-2 py-0.5 rounded-md border bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 mx-1">بدون گروه</span>;
+  if (group === 'early_week') return <span className="text-[10px] font-bold px-2 py-0.5 rounded-md border bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800/60 mx-1">اول هفته</span>;
+  if (group === 'late_week') return <span className="text-[10px] font-bold px-2 py-0.5 rounded-md border bg-purple-50 text-purple-600 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800/60 mx-1">آخر هفته</span>;
+  return null;
 };
 
 const StatusBadge = ({ status }: { status: string }) => {
@@ -34,7 +46,7 @@ const StatusBadge = ({ status }: { status: string }) => {
   return <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-md border ${cls}`}>{label}</span>;
 };
 
-export type AdminSubView = null | 'users' | 'presence' | 'stats' | 'followups' | 'messages' | 'security';
+export type AdminSubView = null | 'users' | 'presence' | 'stats' | 'followups' | 'security';
 
 export const ManagerDashboard: React.FC = () => {
   const { supabaseProfile, supabaseUser, signOut, approveAgent, disableAgent } = useAuth();
@@ -57,7 +69,7 @@ export const ManagerDashboard: React.FC = () => {
 
   const [activeExperts, setActiveExperts] = useState<{id: string, full_name: string}[]>([]);
   const [isReviewing, setIsReviewing] = useState(false);
-  const unreadMessages: any[] = [];
+
 
   // Security
   const [currentPassword, setCurrentPassword] = useState('');
@@ -74,12 +86,18 @@ export const ManagerDashboard: React.FC = () => {
   const [dailyStats, setDailyStats] = useState<any[]>([]);
   const [statsLoading, setStatsLoading] = useState(true);
   const [statsError, setStatsError] = useState(false);
-  const [viewingDailyStats, setViewingDailyStats] = useState<any>(null);
-  const [dailyStatsDetails, setDailyStatsDetails] = useState<any[]>([]);
-  const [loadingDailyStatsDetails, setLoadingDailyStatsDetails] = useState(false);
-  const [dailyScore, setDailyScore] = useState<number | ''>('');
-  const [isScoring, setIsScoring] = useState(false);
-  const [isDeletingDaily, setIsDeletingDaily] = useState(false);
+  const [rangeFromDate, setRangeFromDate] = useState<string>('');
+  const [rangeToDate, setRangeToDate] = useState<string>('');
+  const [rangeSummary, setRangeSummary] = useState<any>(null);
+  const [rangeError, setRangeError] = useState<string>('');
+  const [rangeDutyFilter, setRangeDutyFilter] = useState<'all' | 'early_week' | 'late_week'>('all');
+  const [rangeSort, setRangeSort] = useState<'calls_desc' | 'calls_asc' | 'name'>('calls_desc');
+
+  const [statsSearchQuery, setStatsSearchQuery] = useState<string>('');
+  const [statsSortOrder, setStatsSortOrder] = useState<'newest' | 'oldest'>('newest');
+  const [dailyDutyFilter, setDailyDutyFilter] = useState<'all' | 'early_week' | 'late_week'>('all');
+
+  const profileMap = useMemo(() => new Map(profiles.map(p => [p.id, p])), [profiles]);
 
   // ---------------------------------------------------------------------------
   // Data Fetching
@@ -152,33 +170,151 @@ export const ManagerDashboard: React.FC = () => {
     setStatsLoading(false);
   }, [profiles]);
 
-  const loadDailyStatsDetails = useCallback(async (stat: any) => {
-    setLoadingDailyStatsDetails(true);
-    setDailyScore('');
+  const handleCalculateRange = useCallback(() => {
+    setRangeError('');
+    setRangeSummary(null);
 
-    const { data: callsData, error: callsError } = await supabase.from('call_attempts')
-      .select('*')
-      .eq('expert_id', stat.expertId)
-      .like('jalali_date_time', `${stat.dateStr}%`)
-      .order('created_at', { ascending: false });
-
-    if (!callsError && callsData) {
-      setDailyStatsDetails(callsData);
-    } else {
-      setDailyStatsDetails([]);
-      toast.error('خطا در دریافت جزئیات.');
+    if (!rangeFromDate || !rangeToDate) {
+      setRangeError('لطفاً ابتدا بازه تاریخ را کامل انتخاب کنید.');
+      return;
     }
 
-    const { data: scoreData, error: scoreError } = await supabase.rpc('get_expert_daily_score', {
-      p_expert_id: stat.expertId,
-      p_jalali_date: stat.dateStr
+    if (!/^\d{4}\/\d{2}\/\d{2}$/.test(rangeFromDate) || !/^\d{4}\/\d{2}\/\d{2}$/.test(rangeToDate)) {
+      setRangeError('فرمت تاریخ باید YYYY/MM/DD باشد.');
+      return;
+    }
+
+    if (rangeFromDate > rangeToDate) {
+      setRangeError('تاریخ شروع نمی‌تواند بعد از تاریخ پایان باشد.');
+      return;
+    }
+
+    let totalCalls = 0;
+    let earlyWeekCalls = 0;
+    let lateWeekCalls = 0;
+    const activeDaysSet = new Set<string>();
+    const expertMap = new Map<string, { expertName: string, count: number, duty_group?: string }>();
+
+    const filtered = dailyStats.filter(row => {
+      if (row.dateStr < rangeFromDate || row.dateStr > rangeToDate) return false;
+      if (rangeDutyFilter !== 'all') {
+        const p = profileMap.get(row.expertId);
+        const group = p ? p.duty_group : null;
+        if (group !== rangeDutyFilter) return false;
+      }
+      return true;
     });
 
-    if (!scoreError && scoreData && scoreData.length > 0) {
-      setDailyScore(scoreData[0].score);
+    if (filtered.length === 0) {
+      setRangeError('در این بازه با فیلتر انتخاب شده هیچ تماسی ثبت نشده است.');
+      return;
     }
 
-    setLoadingDailyStatsDetails(false);
+    filtered.forEach(row => {
+      totalCalls += row.workedCount;
+      activeDaysSet.add(row.dateStr);
+
+      const p = profileMap.get(row.expertId);
+      const duty_group = p ? p.duty_group : null;
+      if (duty_group === 'early_week') earlyWeekCalls += row.workedCount;
+      if (duty_group === 'late_week') lateWeekCalls += row.workedCount;
+
+      const existing = expertMap.get(row.expertId);
+      if (existing) {
+        existing.count += row.workedCount;
+      } else {
+        expertMap.set(row.expertId, { expertName: row.expertName, count: row.workedCount, duty_group });
+      }
+    });
+
+    const finalExperts = Array.from(expertMap.values()).sort((a, b) => b.count - a.count);
+    const activeExpertsCount = finalExperts.length;
+    const avgCalls = activeExpertsCount > 0 ? Math.round(totalCalls / activeExpertsCount) : 0;
+
+    setRangeSummary({
+      totalCalls,
+      activeDays: activeDaysSet.size,
+      activeExperts: activeExpertsCount,
+      avgCalls,
+      expertsList: finalExperts,
+      earlyWeekCalls,
+      lateWeekCalls,
+      filterLabel: rangeDutyFilter === 'all' ? 'همه کارشناسان' : EXPERT_DUTY_LABELS[rangeDutyFilter]
+    });
+  }, [rangeFromDate, rangeToDate, dailyStats, rangeDutyFilter, profiles]);
+
+  const handleExportRangeTxt = useCallback(() => {
+    if (!rangeSummary) return;
+
+    const lines = [
+      'گزارش تماس کارشناسان نوینتک',
+      '--------------------------------',
+      '',
+      'بازه گزارش:',
+      `${rangeFromDate} تا ${rangeToDate}`,
+      '',
+      'گروه:',
+      rangeDutyFilter === 'all' ? 'همه کارشناسان' : EXPERT_DUTY_LABELS[rangeDutyFilter] || 'نامشخص',
+      '',
+      'جمع کل تماس‌ها:',
+      rangeSummary.totalCalls.toLocaleString('en-US'),
+      '',
+      'تعداد کارشناسان فعال:',
+      rangeSummary.activeExperts.toLocaleString('en-US'),
+      '',
+      'تعداد روزهای فعال:',
+      rangeSummary.activeDays.toLocaleString('en-US'),
+      '',
+      'میانگین تماس هر کارشناس:',
+      rangeSummary.avgCalls.toLocaleString('en-US'),
+      '',
+      '--------------------------------',
+      'آمار کارشناسان',
+      '--------------------------------',
+      ''
+    ];
+
+    let sortedExperts = [...rangeSummary.expertsList];
+    if (rangeSort === 'calls_asc') sortedExperts.sort((a, b) => a.count - b.count);
+    else if (rangeSort === 'name') sortedExperts.sort((a, b) => a.expertName.localeCompare(b.expertName));
+    else sortedExperts.sort((a, b) => b.count - a.count);
+
+    sortedExperts.forEach((exp, idx) => {
+      lines.push(`${idx + 1}. ${exp.expertName}`);
+      lines.push(`تعداد تماس: ${exp.count}`);
+      lines.push(`گروه: ${exp.duty_group === 'early_week' ? 'اول هفته' : exp.duty_group === 'late_week' ? 'آخر هفته' : 'بدون گروه'}`);
+      lines.push('');
+    });
+
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `call-report-${rangeDutyFilter}-${rangeFromDate.replace(/\//g, '-')}-to-${rangeToDate.replace(/\//g, '-')}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [rangeSummary, rangeDutyFilter, rangeFromDate, rangeToDate, rangeSort]);
+
+  const setQuickPreset = useCallback((preset: '1month' | '7days' | 'startOfMonth') => {
+    const todayStr = toJalali(new Date());
+    setRangeToDate(todayStr);
+
+    if (preset === '7days') {
+      const d = new Date();
+      d.setDate(d.getDate() - 7);
+      setRangeFromDate(toJalali(d));
+    } else if (preset === '1month') {
+      let [y, m, d] = todayStr.split('/').map(Number);
+      m -= 1;
+      if (m === 0) { m = 12; y -= 1; }
+      if (m >= 7 && m <= 11 && d > 30) d = 30;
+      if (m === 12 && d > 29) d = 29;
+      const mm = m.toString().padStart(2, '0');
+      const dd = d.toString().padStart(2, '0');
+      setRangeFromDate(`${y}/${mm}/${dd}`);
+    } else if (preset === 'startOfMonth') {
+      setRangeFromDate(todayStr.substring(0, 8) + '01');
+    }
   }, []);
 
   useEffect(() => {
@@ -201,10 +337,6 @@ export const ManagerDashboard: React.FC = () => {
       setViewingShare(null);
       return true;
     }
-    if (viewingDailyStats) {
-      setViewingDailyStats(null);
-      return true;
-    }
     if (activeSubView !== null) {
       setActiveSubView(null);
       return true;
@@ -214,7 +346,7 @@ export const ManagerDashboard: React.FC = () => {
       return true;
     }
     return false;
-  }, [viewingShare, viewingDailyStats, activeSubView, isReviewing, currentView, setCurrentView]);
+  }, [viewingShare, activeSubView, isReviewing, currentView, setCurrentView]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -309,69 +441,6 @@ export const ManagerDashboard: React.FC = () => {
     }
   };
 
-  const handleSaveDailyScore = async () => {
-    if (!viewingDailyStats) return;
-    if (dailyScore === '' || Number(dailyScore) < 0 || Number(dailyScore) > 100) return toast.error('امتیاز باید بین ۰ تا ۱۰۰ باشد.');
-
-    setIsScoring(true);
-    const { error } = await supabase.rpc('set_expert_daily_score', {
-      p_expert_id: viewingDailyStats.expertId,
-      p_jalali_date: viewingDailyStats.dateStr,
-      p_score: Number(dailyScore)
-    });
-    setIsScoring(false);
-
-    if (error) toast.error('خطا در ثبت امتیاز.');
-    else toast.success('امتیاز ثبت شد.');
-  };
-
-  const handleDeleteDailyStats = async () => {
-    if (!viewingDailyStats || !viewingDailyStats.attemptIds) return;
-    if (!confirm(`آیا از حذف تمام گزارش کارهای ${viewingDailyStats.expertName} در تاریخ ${viewingDailyStats.dateStr} مطمئن هستید؟ این عمل غیرقابل بازگشت است!`)) return;
-
-    setIsDeletingDaily(true);
-    const { data, error } = await supabase.rpc('delete_call_attempts_by_ids', {
-      p_ids: viewingDailyStats.attemptIds
-    });
-
-    setIsDeletingDaily(false);
-
-    if (error) {
-      console.error('Error deleting records:', error);
-      toast.error('خطا در حذف داده‌ها.');
-    } else {
-      toast.success(`${data || 0} رکورد با موفقیت حذف شد.`);
-      setViewingDailyStats(null);
-      fetchStats();
-    }
-  };
-
-  const exportDailyStatsToExcel = () => {
-    if (!viewingDailyStats || dailyStatsDetails.length === 0) return toast.error('داده‌ای برای خروجی وجود ندارد.');
-    const worksheetData = dailyStatsDetails.map(item => ({
-      'نام و نام خانوادگی': item.full_name || '—',
-      'زمان تماس': item.jalali_date_time ? item.jalali_date_time.split(' ')[1] : '—',
-      'وضعیت تماس': item.call_status || '—',
-      'وضعیت ثبت‌نام': item.registered || '—',
-      'دوره‌ها': item.courses ? item.courses.join('، ') : '—',
-      'مشاوره حضوری': item.advisory === 'بله' ? 'دارد' : 'ندارد',
-      'تاریخ مشاوره': item.advisory_date || '—',
-      'ساعت مشاوره': item.advisory_time || '—',
-      'یادداشت‌ها': item.notes || '—',
-    }));
-
-    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
-    worksheet['!cols'] = [
-      { wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 25 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 40 }
-    ];
-    worksheet['!dir'] = 'rtl';
-
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'گزارش روزانه');
-
-    const fileName = `گزارش_${viewingDailyStats.expertName.replace(/\s+/g, '_')}_${viewingDailyStats.dateStr.replace(/\//g, '-')}.xlsx`;
-    XLSX.writeFile(workbook, fileName);
-  };
 
   const exportAllStatsToExcel = async () => {
     const targetDate = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tehran" })).toISOString().split('T')[0];
@@ -408,6 +477,71 @@ export const ManagerDashboard: React.FC = () => {
     XLSX.writeFile(workbook, fileName);
   };
 
+  const handleExportDailyTxt = useCallback(() => {
+    if (dailyStats.length === 0) return;
+
+    const filtered = dailyStats.filter(s => {
+      if (statsSearchQuery && !s.expertName?.toLowerCase().includes(statsSearchQuery.toLowerCase())) return false;
+      if (dailyDutyFilter !== 'all') {
+        const p = profileMap.get(s.expertId);
+        const group = p ? p.duty_group : null;
+        if (group !== dailyDutyFilter) return false;
+      }
+      return true;
+    });
+
+    if (filtered.length === 0) return toast.error('هیچ آماری برای خروجی یافت نشد.');
+
+    const groups: Record<string, any[]> = {};
+    filtered.forEach(s => {
+      if (!groups[s.dateStr]) groups[s.dateStr] = [];
+      groups[s.dateStr].push(s);
+    });
+
+    let dates = Object.keys(groups);
+    dates.sort((a, b) => {
+      if (statsSortOrder === 'newest') return a < b ? 1 : -1;
+      return a > b ? 1 : -1;
+    });
+
+    const lines = [
+      'گزارش کارکرد و آمار روزانه نوینتک',
+      '--------------------------------',
+      '',
+      `فیلتر جستجو: ${statsSearchQuery || 'ندارد'}`,
+      `فیلتر گروه: ${dailyDutyFilter === 'all' ? 'همه کارشناسان' : EXPERT_DUTY_LABELS[dailyDutyFilter] || 'بدون گروه'}`,
+      '',
+      '--------------------------------',
+    ];
+
+    dates.forEach(date => {
+      const dayStats = groups[date];
+      const totalDayCalls = dayStats.reduce((sum, item) => sum + item.workedCount, 0);
+      dayStats.sort((a, b) => b.workedCount - a.workedCount);
+
+      lines.push(`تاریخ: ${date}`);
+      lines.push(`کارشناسان فعال: ${dayStats.length} | کل تماس‌ها: ${totalDayCalls}`);
+      lines.push('');
+
+      dayStats.forEach((exp, idx) => {
+        const p = profileMap.get(exp.expertId);
+        const dg = p ? p.duty_group : null;
+        const gName = dg === 'early_week' ? 'اول هفته' : dg === 'late_week' ? 'آخر هفته' : 'بدون گروه';
+        lines.push(`${idx + 1}. ${exp.expertName} - ${exp.workedCount} تماس - [${gName}] (${exp.minTimeStr} تا ${exp.maxTimeStr})`);
+      });
+      lines.push('');
+      lines.push('--------------------------------');
+    });
+
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `daily-report-${new Date().getTime()}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [dailyStats, statsSearchQuery, dailyDutyFilter, statsSortOrder, profileMap]);
+
   // ---------------------------------------------------------------------------
   // Derived lists
   // ---------------------------------------------------------------------------
@@ -416,6 +550,14 @@ export const ManagerDashboard: React.FC = () => {
   const managers      = profiles.filter(p => p.role === 'admin'  && p.account_status === 'active');
   const unreviewedShares = receivedShares.filter(s => !s.reviewed_at);
   const onlineCount = presenceList.filter(p => p.status === 'online').length;
+
+  const sortedRangeExperts = useMemo(() => {
+    if (!rangeSummary) return [];
+    const list = [...rangeSummary.expertsList];
+    if (rangeSort === 'calls_asc') return list.sort((a, b) => a.count - b.count);
+    if (rangeSort === 'name') return list.sort((a, b) => a.expertName.localeCompare(b.expertName));
+    return list.sort((a, b) => b.count - a.count);
+  }, [rangeSummary, rangeSort]);
 
   const formatTime = (iso: string | null) => iso ? new Date(iso).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' }) : '-';
 
@@ -426,7 +568,7 @@ export const ManagerDashboard: React.FC = () => {
     {
       id: 'users' as AdminSubView,
       title: 'مدیریت کاربران',
-      subtitle: 'درخواست‌ها، کارشناسان و مدیران',
+      subtitle: 'کارشناسان، مدیران و درخواست‌ها',
       icon: Users,
       badge: pendingAgents.length > 0 ? pendingAgents.length : null,
       badgeColor: 'bg-amber-500',
@@ -437,7 +579,7 @@ export const ManagerDashboard: React.FC = () => {
     {
       id: 'presence' as AdminSubView,
       title: 'وضعیت آنلاین',
-      subtitle: 'رصد فعالیت زنده کارشناسان',
+      subtitle: 'مشاهده فعالیت زنده کارشناسان',
       icon: Activity,
       badge: onlineCount > 0 ? onlineCount : null,
       badgeColor: 'bg-emerald-500',
@@ -448,7 +590,7 @@ export const ManagerDashboard: React.FC = () => {
     {
       id: 'stats' as AdminSubView,
       title: 'گزارش کارکرد',
-      subtitle: 'شماره‌های روزانه، نمره‌دهی و اکسل',
+      subtitle: 'آمار تماس‌ها و عملکرد کارشناسان',
       icon: FileText,
       badge: dailyStats.length > 0 ? dailyStats.length : null,
       badgeColor: 'bg-indigo-500',
@@ -456,32 +598,11 @@ export const ManagerDashboard: React.FC = () => {
       borderColor: 'border-blue-200 dark:border-blue-900',
       bgColor: 'bg-blue-50/50 dark:bg-blue-950/30',
     },
-    {
-      id: 'followups' as AdminSubView,
-      title: 'لیست‌های پیگیری',
-      subtitle: 'ارسال‌های دریافتی از کارشناسان',
-      icon: Inbox,
-      badge: unreviewedShares.length > 0 ? unreviewedShares.length : null,
-      badgeColor: 'bg-rose-500',
-      iconColor: 'text-purple-600 dark:text-purple-400',
-      borderColor: 'border-purple-200 dark:border-purple-900',
-      bgColor: 'bg-purple-50/50 dark:bg-purple-950/30',
-    },
-    {
-      id: 'messages' as AdminSubView,
-      title: 'ارسال پیام',
-      subtitle: 'ارتباط مستقیم و دستورات مدیریتی',
-      icon: MessageSquare,
-      badge: unreadMessages.length > 0 ? unreadMessages.length : null,
-      badgeColor: 'bg-rose-500',
-      iconColor: 'text-amber-600 dark:text-amber-400',
-      borderColor: 'border-amber-200 dark:border-amber-900',
-      bgColor: 'bg-amber-50/50 dark:bg-amber-950/30',
-    },
+
     {
       id: 'security' as AdminSubView,
       title: 'امنیت و تنظیمات',
-      subtitle: 'تغییر رمز عبور و دسترسی‌ها',
+      subtitle: 'رمز عبور و تنظیمات دسترسی',
       icon: Lock,
       badge: null,
       badgeColor: 'bg-slate-500',
@@ -545,7 +666,7 @@ export const ManagerDashboard: React.FC = () => {
           <div className="flex items-center gap-3">
             {activeSubView && (
               <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 px-2.5 py-1 rounded-lg border border-indigo-200 dark:border-indigo-900">
-                {appModules.find(m => m.id === activeSubView)?.title}
+                {appModules.find(m => m.id === activeSubView)?.title || (activeSubView === 'followups' ? 'لیست‌های پیگیری' : '')}
               </span>
             )}
             {activeSubView && <span className="text-slate-300 dark:text-slate-700 font-normal">/</span>}
@@ -566,7 +687,7 @@ export const ManagerDashboard: React.FC = () => {
         <AnimatePresence mode="wait">
 
           {/* ═════════════════════════════════════════════════════════ */}
-          {/* 1. LAUNCHPAD HUB (2D FLAT DASHBOARD VIEW)                  */}
+          {/* 1. DASHBOARD HUB                                          */}
           {/* ═════════════════════════════════════════════════════════ */}
           {activeSubView === null && (
             <motion.div
@@ -575,71 +696,105 @@ export const ManagerDashboard: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.15, ease: 'easeOut' }}
-              className="flex flex-col gap-8 w-full py-4"
+              className="flex flex-col gap-6 w-full py-2"
             >
-              {/* Command Center Title & KPI Bar */}
-              <div className="flex flex-col items-center text-center justify-center gap-2 mb-2">
-                <span className="inline-flex items-center gap-1.5 px-3.5 py-1 bg-indigo-50 border border-indigo-200 dark:bg-indigo-950/50 dark:border-indigo-900 rounded-full text-xs font-bold text-indigo-600 dark:text-indigo-400 tracking-wide uppercase">
-                  <Shield size={13} /> Command Center
-                </span>
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
-                  خوش آمدید، <span className="text-indigo-600 dark:text-indigo-400">{supabaseProfile?.full_name}</span>
+              {/* Dashboard Header */}
+              <div className="flex flex-col gap-1 mb-2 mt-2">
+                <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                  صبح بخیر، <span className="text-indigo-600 dark:text-indigo-400">{supabaseProfile?.full_name}</span> 👋
                 </h1>
-                <p className="text-slate-500 text-xs sm:text-sm max-w-lg font-medium">
-                  مرکز کنترل و مدیریت سیستم نوین‌تک. از طریق آیکون‌های زیر وارد بخش مورد نظر شوید.
+                <p className="text-slate-500 text-xs font-bold">
+                  نمای کلی وضعیت و دسترسی سریع به بخش‌های مدیریتی
                 </p>
               </div>
 
-              {/* 2D Flat KPI Strip */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 max-w-5xl mx-auto w-full">
-                {[
-                  { label: 'مدیران فعال', count: managers.length, color: 'indigo', icon: <Shield size={16} /> },
-                  { label: 'کارشناسان فعال', count: activeAgents.length, color: 'emerald', icon: <Users size={16} /> },
-                  { label: 'درخواست جدید', count: pendingAgents.length, color: 'amber', icon: <Clock size={16} /> },
-                  { label: 'پیگیری دریافتی', count: receivedShares.length, color: 'purple', icon: <Inbox size={16} /> },
-                ].map((s) => (
-                  <div key={s.label} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-3.5 flex items-center justify-between transition-colors hover:border-slate-300 dark:hover:border-slate-600">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-9 h-9 rounded-xl bg-${s.color}-50 text-${s.color}-600 dark:bg-${s.color}-950/40 dark:text-${s.color}-400 flex items-center justify-center shrink-0 border border-${s.color}-100 dark:border-${s.color}-900`}>
-                        {s.icon}
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">{s.label}</span>
-                        <span className="text-lg font-black text-slate-900 dark:text-white leading-none mt-0.5">{s.count}</span>
-                      </div>
-                    </div>
+              {/* KPI Cards */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full">
+                <button
+                  onClick={() => { setUserTab('managers'); setActiveSubView('users'); }}
+                  className="bg-indigo-50/50 dark:bg-indigo-950/20 rounded-[20px] border border-indigo-100 dark:border-indigo-900/50 p-5 flex flex-col items-start gap-4 transition-all hover:border-indigo-300 dark:hover:border-indigo-700 hover:-translate-y-1 hover:shadow-sm text-right w-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-indigo-100/80 text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                    <Shield size={20} />
                   </div>
-                ))}
+                  <div className="flex flex-col">
+                    <span className="text-3xl font-black text-indigo-700 dark:text-indigo-300 leading-none mb-1.5">{managers.length}</span>
+                    <span className="text-xs font-bold text-indigo-600/80 dark:text-indigo-400/80">مدیران فعال</span>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => { setUserTab('agents'); setActiveSubView('users'); }}
+                  className="bg-emerald-50/50 dark:bg-emerald-950/20 rounded-[20px] border border-emerald-100 dark:border-emerald-900/50 p-5 flex flex-col items-start gap-4 transition-all hover:border-emerald-300 dark:hover:border-emerald-700 hover:-translate-y-1 hover:shadow-sm text-right w-full focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-emerald-100/80 text-emerald-600 dark:bg-emerald-900/50 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                    <Users size={20} />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-3xl font-black text-emerald-700 dark:text-emerald-300 leading-none mb-1.5">{activeAgents.length}</span>
+                    <span className="text-xs font-bold text-emerald-600/80 dark:text-emerald-400/80">کارشناسان فعال</span>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => { setUserTab('pending'); setActiveSubView('users'); }}
+                  className="bg-amber-50/50 dark:bg-amber-950/20 rounded-[20px] border border-amber-100 dark:border-amber-900/50 p-5 flex flex-col items-start gap-4 transition-all hover:border-amber-300 dark:hover:border-amber-700 hover:-translate-y-1 hover:shadow-sm text-right w-full focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-amber-100/80 text-amber-600 dark:bg-amber-900/50 dark:text-amber-400 flex items-center justify-center shrink-0">
+                    <Clock size={20} />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-3xl font-black text-amber-700 dark:text-amber-300 leading-none mb-1.5">{pendingAgents.length}</span>
+                    <span className="text-xs font-bold text-amber-600/80 dark:text-amber-400/80">درخواست جدید</span>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setActiveSubView('followups')}
+                  className="bg-violet-50/50 dark:bg-violet-950/20 rounded-[20px] border border-violet-100 dark:border-violet-900/50 p-5 flex flex-col items-start gap-4 transition-all hover:border-violet-300 dark:hover:border-violet-700 hover:-translate-y-1 hover:shadow-sm text-right w-full focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-violet-100/80 text-violet-600 dark:bg-violet-900/50 dark:text-violet-400 flex items-center justify-center shrink-0">
+                    <Inbox size={20} />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-3xl font-black text-violet-700 dark:text-violet-300 leading-none mb-1.5">{receivedShares.length}</span>
+                    <span className="text-xs font-bold text-violet-600/80 dark:text-violet-400/80">پیگیری دریافتی</span>
+                  </div>
+                </button>
               </div>
 
-              {/* macOS Style Modular 2D Flat App Grid */}
-              <div className="w-full mt-4">
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-6 sm:gap-8 max-w-5xl mx-auto">
+              {/* Action Cards Grid */}
+              <div className="w-full mt-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 w-full">
                   {appModules.map((app) => {
                     const AppIcon = app.icon;
                     return (
                       <button
                         key={app.id}
                         onClick={() => setActiveSubView(app.id)}
-                        className="group flex flex-col items-center gap-3 outline-none text-right transition-all duration-150"
+                        className="group flex items-start gap-4 p-5 rounded-[20px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700 hover:-translate-y-0.5 hover:shadow-sm transition-all duration-200 text-right w-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
                       >
-                        <div className={`relative w-[84px] h-[84px] sm:w-[100px] sm:h-[100px] rounded-[1.6rem] sm:rounded-[2rem] bg-white dark:bg-slate-800 border ${app.borderColor} group-hover:border-indigo-500 dark:group-hover:border-indigo-500 group-hover:bg-slate-50 dark:group-hover:bg-slate-800/90 flex items-center justify-center transition-all duration-150 overflow-hidden`}>
-                          <AppIcon size={40} strokeWidth={1.6} className={`${app.iconColor} transition-transform duration-150 group-hover:scale-105`} />
+                        <div className="relative w-12 h-12 rounded-xl border border-slate-100 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-800/80 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-900/30 flex items-center justify-center shrink-0 transition-colors">
+                          <AppIcon size={22} strokeWidth={2} className="text-slate-600 dark:text-slate-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors" />
 
                           {app.badge !== null && app.badge > 0 && (
-                            <div className={`absolute -top-1 -right-1 ${app.badgeColor} text-white text-[11px] font-black px-2 min-w-[22px] h-[22px] flex items-center justify-center rounded-full border-2 border-white dark:border-slate-900`}>
+                            <div className="absolute -top-1.5 -right-1.5 bg-rose-500 text-white text-[10px] font-black min-w-[20px] h-[20px] flex items-center justify-center rounded-full border-2 border-white dark:border-slate-800 shadow-sm">
                               {app.badge}
                             </div>
                           )}
                         </div>
 
-                        <div className="flex flex-col items-center text-center">
-                          <span className="text-sm font-extrabold text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors leading-snug">
+                        <div className="flex flex-col flex-1 min-w-0 pt-0.5">
+                          <span className="text-[15px] font-bold text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                             {app.title}
                           </span>
-                          <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 line-clamp-1 mt-0.5">
+                          <span className="text-[12px] font-medium text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
                             {app.subtitle}
                           </span>
+                        </div>
+
+                        <div className="shrink-0 pt-1 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200">
+                           <ArrowLeft size={16} className="text-indigo-400 dark:text-indigo-500" />
                         </div>
                       </button>
                     );
@@ -647,20 +802,11 @@ export const ManagerDashboard: React.FC = () => {
                 </div>
               </div>
 
-              {/* 2D Flat Expansion Card */}
-              <div className="w-full max-w-5xl mx-auto mt-6 bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-900/50 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-3 text-center sm:text-right">
-                  <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0">
-                    <Sparkles size={20} />
-                  </div>
-                  <div>
-                    <h3 className="font-extrabold text-sm text-indigo-950 dark:text-indigo-200">گسترش‌پذیری آسان پنل مدیریت</h3>
-                    <p className="text-xs text-indigo-700 dark:text-indigo-400 mt-0.5">بخش‌های جدید مدیریتی در آینده به راحتی به این شبکه اضافه خواهند شد.</p>
-                  </div>
-                </div>
-                <span className="text-xs font-extrabold text-indigo-600 dark:text-indigo-400 bg-white dark:bg-indigo-900 px-3 py-1.5 rounded-xl border border-indigo-200 dark:border-indigo-800">
-                  نسخه ۲.۰ پنل مدیریت (2D Flat)
-                </span>
+              {/* Bottom Info Strip */}
+              <div className="w-full mt-4 flex items-center justify-center gap-2 text-[11px] font-bold text-slate-400 dark:text-slate-500">
+                <Sparkles size={12} className="text-indigo-400 dark:text-indigo-500" />
+                <span>پنل مدیریت قابل توسعه است. بخش‌های جدید در آینده بدون تغییر ساختار اصلی اضافه خواهند شد.</span>
+                <span className="bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded-md text-[9px] mr-1">v2.0</span>
               </div>
 
             </motion.div>
@@ -907,60 +1053,315 @@ export const ManagerDashboard: React.FC = () => {
               transition={{ duration: 0.15 }}
               className="flex flex-col gap-6 w-full"
             >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700">
+              {/* ═════════════════════════════════════════════════════════ */}
+              {/* RANGE SUMMARY UI                                          */}
+              {/* ═════════════════════════════════════════════════════════ */}
+              <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900 flex items-center justify-center shrink-0">
+                    <Search size={20} />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-black text-slate-900 dark:text-white">گزارش بازه‌ای تماس‌ها</h2>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">محاسبه مجموع تماس کارشناسان در یک بازه زمانی خاص</p>
+                  </div>
+                </div>
+
+                <div className="flex flex-col md:flex-row items-end gap-4 mb-4">
+                  <div className="flex gap-4 w-full md:w-auto">
+                    <div className="flex-1 md:w-32">
+                      <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5">از تاریخ</label>
+                      <input type="text" value={rangeFromDate} onChange={e => setRangeFromDate(e.target.value)} placeholder="1405/01/01" className="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-900 dark:text-white outline-none focus:border-indigo-500" dir="ltr" />
+                    </div>
+                    <div className="flex-1 md:w-32">
+                      <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5">تا تاریخ</label>
+                      <input type="text" value={rangeToDate} onChange={e => setRangeToDate(e.target.value)} placeholder="1405/12/29" className="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-900 dark:text-white outline-none focus:border-indigo-500" dir="ltr" />
+                    </div>
+                  </div>
+
+                  <div className="w-full md:w-64">
+                    <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5">گروه کارشناسان</label>
+                    <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-xl w-full h-10 items-center">
+                      {(['all', 'early_week', 'late_week'] as const).map(g => (
+                        <button
+                          key={g}
+                          onClick={() => setRangeDutyFilter(g)}
+                          className={`flex-1 h-8 text-[11px] font-bold rounded-lg transition-all ${
+                            rangeDutyFilter === g
+                              ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-slate-200 dark:border-slate-700'
+                              : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                          }`}
+                        >
+                          {g === 'all' ? 'همه' : EXPERT_DUTY_LABELS[g]}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="mt-2 md:mt-0 flex-1 flex justify-end gap-2">
+                    <button onClick={handleCalculateRange} className="w-full md:w-auto h-10 px-6 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-bold flex items-center justify-center transition-colors shadow-sm shadow-indigo-600/20">
+                      محاسبه جمع تماس‌ها
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2 mb-4 w-full">
+                  <button onClick={() => setQuickPreset('7days')} className="px-3 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 text-[11px] font-bold transition-colors">۷ روز اخیر</button>
+                  <button onClick={() => setQuickPreset('1month')} className="px-3 h-8 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/50 dark:hover:bg-indigo-900 border border-indigo-100 dark:border-indigo-800 text-indigo-600 dark:text-indigo-300 text-[11px] font-bold transition-colors">یک ماه اخیر</button>
+                  <button onClick={() => setQuickPreset('startOfMonth')} className="px-3 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 text-[11px] font-bold transition-colors">از ابتدای ماه</button>
+                </div>
+
+                {rangeError && (
+                  <div className="mt-3 bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400 border border-rose-200 dark:border-rose-900/50 p-3 rounded-xl text-xs font-bold flex items-center gap-2">
+                    <AlertCircle size={14} />
+                    {rangeError}
+                  </div>
+                )}
+
+                {rangeSummary && (
+                  <div className="mt-6 border-t border-slate-200 dark:border-slate-700 pt-6">
+                    <h3 className="text-sm font-black text-slate-800 dark:text-slate-200 mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <span className="w-1.5 h-4 bg-indigo-500 rounded-full inline-block"></span>
+                        گزارش تماس‌ها از <span dir="ltr" className="text-indigo-600 dark:text-indigo-400">{rangeFromDate}</span> تا <span dir="ltr" className="text-indigo-600 dark:text-indigo-400">{rangeToDate}</span>
+                        {rangeDutyFilter !== 'all' && (
+                          <span className="mr-3 text-xs bg-indigo-50 text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-400 px-2 py-0.5 rounded-md border border-indigo-100 dark:border-indigo-800/60">گروه: {rangeSummary.filterLabel}</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button onClick={handleExportRangeTxt} className="flex items-center gap-1.5 h-8 px-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-bold transition-colors border border-slate-200 dark:border-slate-700">
+                          <Download size={14} />
+                          خروجی TXT
+                        </button>
+                      </div>
+                    </h3>
+
+                    {rangeDutyFilter === 'all' && (
+                      <div className="flex gap-4 mb-6">
+                        <button onClick={() => setRangeDutyFilter('early_week')} className="flex-1 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/40 border border-blue-200 dark:border-blue-800 rounded-xl p-3 flex justify-between items-center transition-colors text-right cursor-pointer group">
+                          <span className="text-xs font-bold text-blue-700 dark:text-blue-400">اول هفته</span>
+                          <span className="text-lg font-black text-blue-700 dark:text-blue-300 group-hover:scale-110 transition-transform">{rangeSummary.earlyWeekCalls.toLocaleString()} تماس</span>
+                        </button>
+                        <button onClick={() => setRangeDutyFilter('late_week')} className="flex-1 bg-purple-50 hover:bg-purple-100 dark:bg-purple-900/20 dark:hover:bg-purple-900/40 border border-purple-200 dark:border-purple-800 rounded-xl p-3 flex justify-between items-center transition-colors text-right cursor-pointer group">
+                          <span className="text-xs font-bold text-purple-700 dark:text-purple-400">آخر هفته</span>
+                          <span className="text-lg font-black text-purple-700 dark:text-purple-300 group-hover:scale-110 transition-transform">{rangeSummary.lateWeekCalls.toLocaleString()} تماس</span>
+                        </button>
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                      <div className="bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl p-4 flex flex-col items-center justify-center text-center">
+                        <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1">کل تماس‌ها</span>
+                        <span className="text-2xl font-black text-indigo-600 dark:text-indigo-400">{rangeSummary.totalCalls.toLocaleString()}</span>
+                      </div>
+                      <div className="bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl p-4 flex flex-col items-center justify-center text-center">
+                        <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1">کارشناسان فعال</span>
+                        <span className="text-2xl font-black text-slate-700 dark:text-slate-300">{rangeSummary.activeExperts}</span>
+                      </div>
+                      <div className="bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl p-4 flex flex-col items-center justify-center text-center">
+                        <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1">روزهای فعال</span>
+                        <span className="text-2xl font-black text-slate-700 dark:text-slate-300">{rangeSummary.activeDays}</span>
+                      </div>
+                      <div className="bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl p-4 flex flex-col items-center justify-center text-center">
+                        <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1">میانگین هر شخص</span>
+                        <span className="text-2xl font-black text-slate-700 dark:text-slate-300">{rangeSummary.avgCalls.toLocaleString()}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-3 mt-8">
+                      <h4 className="text-sm font-black text-slate-800 dark:text-slate-200">آمار کارشناسان</h4>
+                      <div className="flex items-center gap-2">
+                        <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400">مرتب‌سازی:</label>
+                        <select
+                          value={rangeSort}
+                          onChange={(e) => setRangeSort(e.target.value as any)}
+                          className="h-8 px-2 pr-6 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold text-slate-700 dark:text-slate-300 outline-none focus:border-indigo-500 appearance-none cursor-pointer"
+                        >
+                          <option value="calls_desc">بیشترین تماس</option>
+                          <option value="calls_asc">کمترین تماس</option>
+                          <option value="name">نام کارشناس</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
+                      <table className="w-full text-right text-xs">
+                        <thead className="bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold border-b border-slate-200 dark:border-slate-700">
+                          <tr>
+                            <th className="p-3 w-12 text-center">#</th>
+                            <th className="p-3">کارشناس</th>
+                            <th className="p-3 text-center w-24">گروه کاری</th>
+                            <th className="p-3 text-left">تعداد تماس</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
+                          {sortedRangeExperts.map((exp: any, idx: number) => (
+                            <tr key={exp.expertName} className="hover:bg-white dark:hover:bg-slate-800 transition-colors">
+                              <td className="p-3 text-center text-slate-400 dark:text-slate-500 font-bold">{idx + 1}</td>
+                              <td className="p-3 font-extrabold text-slate-700 dark:text-slate-300">{exp.expertName}</td>
+                              <td className="p-3 text-center"><DutyBadge group={exp.duty_group} /></td>
+                              <td className="p-3 text-left font-black text-indigo-600 dark:text-indigo-400">{exp.count.toLocaleString()}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* ═════════════════════════════════════════════════════════ */}
+              {/* DAILY REPORTS UI                                          */}
+              {/* ═════════════════════════════════════════════════════════ */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 mt-2">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400 border border-blue-100 dark:border-blue-900 flex items-center justify-center shrink-0">
                     <FileText size={24} />
                   </div>
                   <div>
-                    <h2 className="text-lg font-black text-slate-900 dark:text-white">گزارش کارکرد و آمار روزانه</h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">مشاهده جزئیات تماس‌های روزانه، ثبت امتیاز مدیریت و خروجی اکسل</p>
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-lg font-black text-slate-900 dark:text-white">گزارش کارکرد و آمار روزانه</h2>
+                      <span className="text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-900 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700 hidden sm:inline-block">بروزرسانی خودکار هر ۶۰ ثانیه</span>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                      {dailyStats.length > 0 ? (
+                        <>
+                          <span className="font-bold text-slate-700 dark:text-slate-300">{new Set(dailyStats.map(s => s.dateStr)).size}</span> روز فعالیت • <span className="font-bold text-slate-700 dark:text-slate-300">{dailyStats.length}</span> گزارش کارشناسی
+                        </>
+                      ) : (
+                        'مشاهده خلاصه کارکرد کارشناسان در تاریخ‌های مختلف'
+                      )}
+                    </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-slate-400 font-bold hidden sm:inline-block">بروزرسانی خودکار هر ۶۰ ثانیه</span>
-                  <button onClick={exportAllStatsToExcel} className="flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 px-4 py-2 rounded-xl text-xs font-bold transition-colors">
-                    <Download size={14}/> خروجی کل آمار (اکسل)
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <button onClick={exportAllStatsToExcel} className="w-full sm:w-auto flex items-center justify-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 px-4 py-2 rounded-xl text-xs font-bold transition-colors">
+                    <Download size={14}/> خروجی اکسل
+                  </button>
+                  <button onClick={handleExportDailyTxt} className="w-full sm:w-auto flex items-center justify-center gap-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition-colors">
+                    <Download size={14}/> خروجی TXT
                   </button>
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 min-h-[400px]">
+              {/* Toolbar */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="relative flex-1">
+                  <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    value={statsSearchQuery}
+                    onChange={(e) => setStatsSearchQuery(e.target.value)}
+                    placeholder="جستجوی نام کارشناس..."
+                    className="w-full h-11 pr-9 pl-10 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-900 dark:text-white outline-none focus:border-indigo-500 transition-colors"
+                  />
+                  {statsSearchQuery && (
+                    <button onClick={() => setStatsSearchQuery('')} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+                <div className="w-full sm:w-48 relative">
+                  <select
+                    value={dailyDutyFilter}
+                    onChange={(e) => setDailyDutyFilter(e.target.value as any)}
+                    className="w-full h-11 px-3 pl-8 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 outline-none focus:border-indigo-500 appearance-none transition-colors cursor-pointer"
+                  >
+                    <option value="all">همه گروه‌ها</option>
+                    <option value="early_week">اول هفته</option>
+                    <option value="late_week">آخر هفته</option>
+                  </select>
+                </div>
+                <div className="w-full sm:w-48 relative">
+                  <select
+                    value={statsSortOrder}
+                    onChange={(e) => setStatsSortOrder(e.target.value as any)}
+                    className="w-full h-11 px-3 pl-8 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 outline-none focus:border-indigo-500 appearance-none transition-colors cursor-pointer"
+                  >
+                    <option value="newest">جدیدترین تاریخ</option>
+                    <option value="oldest">قدیمی‌ترین تاریخ</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Data View */}
+              <div className="min-h-[400px]">
                 {statsLoading && dailyStats.length === 0 ? (
-                  <div className="py-16 flex justify-center"><RefreshCw size={24} className="animate-spin text-slate-400" /></div>
+                  <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 py-16 flex justify-center"><RefreshCw size={24} className="animate-spin text-slate-400" /></div>
                 ) : statsError && dailyStats.length === 0 ? (
-                  <p className="text-xs text-rose-500 text-center font-bold py-16">خطا در دریافت آمارهای روزانه</p>
+                  <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 py-16 flex justify-center text-xs text-rose-500 font-bold">خطا در دریافت آمارهای روزانه</div>
                 ) : dailyStats.length === 0 ? (
-                  <p className="text-xs text-slate-400 text-center py-16 font-bold">هیچ فعالیت یا تماسی برای امروز ثبت نشده است.</p>
+                  <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 py-16 flex justify-center text-xs text-slate-400 font-bold">هیچ فعالیت یا تماسی ثبت نشده است.</div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {dailyStats.map((row) => (
-                      <div key={`${row.expertId}_${row.dateStr}`} className="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 hover:border-indigo-300 flex flex-col gap-3 transition-colors">
-                        <div className="flex items-center justify-between">
-                          <span className="font-extrabold text-sm text-slate-900 dark:text-white truncate">{row.expertName}</span>
-                          <span className="text-xs font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700" dir="ltr">{row.dateStr}</span>
-                        </div>
+                  <div className="flex flex-col gap-6">
+                    {(() => {
+                      const filtered = dailyStats.filter(s => {
+                        if (statsSearchQuery && !s.expertName?.toLowerCase().includes(statsSearchQuery.toLowerCase())) return false;
+                        if (dailyDutyFilter !== 'all') {
+                          const p = profileMap.get(s.expertId);
+                          const group = p ? p.duty_group : null;
+                          if (group !== dailyDutyFilter) return false;
+                        }
+                        return true;
+                      });
 
-                        <div className="grid grid-cols-1 gap-2">
-                          <div className="bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 p-2.5 rounded-xl flex flex-col items-center">
-                            <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400">شماره کارشده</span>
-                            <span className="font-black text-base text-emerald-800 dark:text-emerald-300 mt-0.5">{row.workedCount}</span>
-                          </div>
-                        </div>
+                      if (filtered.length === 0) {
+                        return <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 py-16 flex justify-center text-xs text-slate-400 font-bold">گزارشی با این نام یافت نشد.</div>
+                      }
 
-                        <div className="flex justify-between items-center pt-1 border-t border-slate-200/60 dark:border-slate-700">
-                          <div className="flex text-xs font-bold text-slate-400" dir="ltr">
-                            <span>{row.minTimeStr}</span> - <span>{row.maxTimeStr}</span>
+                      const groups: Record<string, any[]> = {};
+                      filtered.forEach(s => {
+                        if (!groups[s.dateStr]) groups[s.dateStr] = [];
+                        groups[s.dateStr].push(s);
+                      });
+
+                      let dates = Object.keys(groups);
+                      dates.sort((a, b) => {
+                        if (statsSortOrder === 'newest') return a < b ? 1 : -1;
+                        return a > b ? 1 : -1;
+                      });
+
+                      return dates.map(date => {
+                        const dayStats = groups[date];
+                        const totalDayCalls = dayStats.reduce((sum, item) => sum + item.workedCount, 0);
+                        dayStats.sort((a, b) => b.workedCount - a.workedCount);
+
+                        return (
+                          <div key={date} className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
+                            {/* Date Header */}
+                            <div className="bg-slate-50/70 dark:bg-slate-900/70 px-4 py-3.5 border-b border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                              <div className="flex items-center gap-2">
+                                <span className="font-extrabold text-[15px] text-slate-900 dark:text-white" dir="ltr">{date}</span>
+                              </div>
+                              <div className="flex flex-wrap items-center gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                                <span className="bg-white dark:bg-slate-800 px-2 py-1 rounded-md border border-slate-200 dark:border-slate-700">{dayStats.length} کارشناس فعال</span>
+                                <span className="bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 px-2 py-1 rounded-md border border-indigo-100 dark:border-indigo-800/60">{totalDayCalls.toLocaleString()} تماس کل</span>
+                              </div>
+                            </div>
+
+                            {/* Experts Rows */}
+                            <div className="flex flex-col divide-y divide-slate-100 dark:divide-slate-700/50">
+                              {dayStats.map((exp, idx) => (
+                                <div key={exp.expertId} className="flex items-center justify-between px-4 py-3 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors group">
+                                  <div className="flex items-center gap-3">
+                                    <span className="w-5 text-center text-[11px] font-bold text-slate-400 dark:text-slate-500">{idx + 1}</span>
+                                    <span className="font-bold text-sm text-slate-800 dark:text-slate-200">{exp.expertName}</span>
+                                    <DutyBadge group={profileMap.get(exp.expertId)?.duty_group} />
+                                  </div>
+                                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-left">
+                                    <span className="text-[10px] text-slate-400 font-bold group-hover:text-slate-500 transition-colors hidden sm:block" dir="ltr">{exp.minTimeStr} - {exp.maxTimeStr}</span>
+                                    <div className="flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 px-2.5 py-1 rounded-md border border-emerald-100 dark:border-emerald-900/60 min-w-[70px] justify-center">
+                                      <span className="font-black text-[15px] leading-none">{exp.workedCount}</span>
+                                      <span className="text-[10px] font-bold leading-none">تماس</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
                           </div>
-                          <button
-                            onClick={() => { setViewingDailyStats(row); loadDailyStatsDetails(row); }}
-                            className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-3.5 py-1.5 rounded-lg transition-colors border border-indigo-700"
-                          >
-                            مشاهده جزئیات
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                        );
+                      });
+                    })()}
                   </div>
                 )}
               </div>
@@ -1208,96 +1609,7 @@ export const ManagerDashboard: React.FC = () => {
       )}
 
       {/* 2. Viewing Daily Stats Detailed Modal */}
-      {viewingDailyStats && (
-        <div className="fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-none flex items-center justify-center p-4" onClick={() => setViewingDailyStats(null)}>
-          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-300 dark:border-slate-700 w-full max-w-5xl flex flex-col overflow-hidden max-h-[90vh]" dir="rtl" onClick={e => e.stopPropagation()}>
-            <div className="p-5 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-900 shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center"><Activity size={20} /></div>
-                <div>
-                  <h3 className="font-extrabold text-slate-900 dark:text-white text-base">جزئیات کارکرد روزانه - {viewingDailyStats.expertName}</h3>
-                  <span className="text-xs font-bold text-slate-400" dir="ltr">{viewingDailyStats.dateStr}</span>
-                </div>
-              </div>
-              <button onClick={() => setViewingDailyStats(null)} className="w-9 h-9 flex justify-center items-center rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-slate-600 transition-colors"><X size={16}/></button>
-            </div>
 
-            <div className="px-5 py-3 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 flex flex-wrap gap-4 items-center justify-between shrink-0">
-              <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-900 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
-                <span className="text-xs font-bold text-slate-500 px-2">امتیاز مدیر:</span>
-                <input
-                  type="number"
-                  min="0" max="100"
-                  value={dailyScore}
-                  onChange={(e) => setDailyScore(e.target.value ? Number(e.target.value) : '')}
-                  className="w-16 h-8 text-center text-xs font-bold border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                  placeholder="0-100"
-                />
-                <button
-                  onClick={handleSaveDailyScore}
-                  disabled={isScoring || dailyScore === ''}
-                  className="h-8 px-3 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-300 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-colors border border-indigo-700"
-                >
-                  {isScoring ? <RefreshCw size={12} className="animate-spin" /> : <Award size={12} />} ثبت امتیاز
-                </button>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button onClick={exportDailyStatsToExcel} disabled={loadingDailyStatsDetails || dailyStatsDetails.length === 0} className="flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 px-4 py-2 rounded-xl text-xs font-bold transition-colors">
-                  <Download size={14}/> خروجی اکسل
-                </button>
-                <button onClick={handleDeleteDailyStats} disabled={isDeletingDaily} className="flex items-center gap-1.5 bg-rose-50 text-rose-700 border border-rose-200 px-4 py-2 rounded-xl text-xs font-bold transition-colors">
-                  {isDeletingDaily ? <RefreshCw size={14} className="animate-spin" /> : <Trash2 size={14}/>} حذف داده‌ها
-                </button>
-              </div>
-            </div>
-
-            <div className="p-5 overflow-y-auto flex-1">
-              <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-x-auto">
-                <table className="w-full text-right text-xs">
-                  <thead className="bg-slate-50 dark:bg-slate-900 text-slate-500 font-extrabold border-b border-slate-200 dark:border-slate-700 whitespace-nowrap">
-                    <tr>
-                      <th className="p-3">زمان تماس</th>
-                      <th className="p-3">نام</th>
-                      <th className="p-3">وضعیت تماس</th>
-                      <th className="p-3">وضعیت ثبت‌نام</th>
-                      <th className="p-3">دوره‌ها</th>
-                      <th className="p-3">مشاوره حضوری</th>
-                      <th className="p-3">تاریخ و ساعت مشاوره</th>
-                      <th className="p-3">یادداشت‌ها</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-700 font-medium text-slate-700 dark:text-slate-300">
-                    {loadingDailyStatsDetails ? (
-                      <tr><td colSpan={8} className="text-center p-8"><RefreshCw size={24} className="animate-spin mx-auto text-slate-400" /></td></tr>
-                    ) : dailyStatsDetails.length === 0 ? (
-                      <tr><td colSpan={8} className="text-center p-8 text-xs font-bold text-slate-400">داده‌ای یافت نشد</td></tr>
-                    ) : dailyStatsDetails.map((item: any, idx: number) => {
-                      const advisoryStr = item.advisory_date && item.advisory_time ? `${item.advisory_date} - ${item.advisory_time}` : item.advisory_date || item.advisory_time || '—';
-                      return (
-                        <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                          <td className="p-3 whitespace-nowrap text-[10px] font-bold text-slate-500" dir="ltr">{item.jalali_date_time ? item.jalali_date_time.split(' ')[1] : '—'}</td>
-                          <td className="p-3 font-extrabold whitespace-nowrap text-slate-900 dark:text-white">{item.full_name || '—'}</td>
-                          <td className="p-3 whitespace-nowrap"><span className="bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-md text-[10px] font-bold border border-slate-200 dark:border-slate-600">{item.call_status || '—'}</span></td>
-                          <td className="p-3 whitespace-nowrap"><span className="bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-md text-[10px] font-bold border border-slate-200 dark:border-slate-600">{item.registered || '—'}</span></td>
-                          <td className="p-3 min-w-[140px]">{item.courses && item.courses.length > 0 ? <div className="flex flex-wrap gap-1">{item.courses.map((c:string, i:number) => <span key={i} className="bg-indigo-50 text-indigo-700 border border-indigo-200 px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap">{c}</span>)}</div> : '—'}</td>
-                          <td className="p-3 whitespace-nowrap">{item.advisory === 'بله' ? <CheckCircle2 size={16} className="text-emerald-500"/> : '—'}</td>
-                          <td className="p-3 whitespace-nowrap" dir="ltr">{advisoryStr}</td>
-                          <td className="p-3 min-w-[180px] leading-relaxed text-xs">{item.notes || '—'}</td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div className="p-4 border-t border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-900 shrink-0">
-              <span className="text-xs font-extrabold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700">تعداد کل رکوردها: {dailyStatsDetails.length}</span>
-            </div>
-          </div>
-        </div>
-      )}
 
     </div>
   );
