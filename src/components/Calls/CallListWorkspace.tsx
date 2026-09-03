@@ -218,7 +218,7 @@ export const CallListWorkspace = () => {
     getMyContactTasks,
     updateContactTaskDetails,
     recordCallAttemptWithTask,
-    hardDeleteCall,
+    deleteCall,
     setCurrentView,
     getMyDailyStats,
     addToBlacklist,
@@ -450,13 +450,32 @@ export const CallListWorkspace = () => {
       isOpen: true,
       title: tr('حذف گروهی شماره‌ها', 'Batch delete numbers'),
       message: tr(`آیا مطمئن هستید که می‌خواهید ${selectedIds.size} شماره انتخاب شده را حذف کنید؟`, `Are you sure you want to delete ${selectedIds.size} numbers?`),
-      onConfirm: () => {
-        Array.from(selectedIds).forEach(id => {
-          const call = calls.find(c => c.id === id);
-          if (call) hardDeleteCall(id, call.phone);
+      onConfirm: async () => {
+        const ids: string[] = Array.from(selectedIds);
+        const promises = ids.map(id => deleteCall(id));
+        const results = await Promise.all(promises);
+        
+        const failedIds = new Set<string>();
+        let successCount = 0;
+        
+        results.forEach((success, index) => {
+          if (success) {
+            successCount++;
+          } else {
+            failedIds.add(ids[index]);
+          }
         });
-        toast.success(tr(`${selectedIds.size} شماره حذف شد.`, `${selectedIds.size} numbers deleted.`));
-        setSelectedIds(new Set());
+        
+        if (failedIds.size === 0) {
+          toast.success(tr(`${selectedIds.size} شماره با موفقیت حذف شد.`, `${selectedIds.size} numbers successfully deleted.`));
+          setSelectedIds(new Set());
+        } else {
+          toast.error(tr(`تعداد ${failedIds.size} شماره حذف نشد. لطفا دوباره تلاش کنید.`, `${failedIds.size} numbers failed to delete. Please try again.`));
+          if (successCount > 0) {
+            toast.success(tr(`${successCount} شماره با موفقیت حذف شد.`, `${successCount} numbers successfully deleted.`));
+          }
+          setSelectedIds(failedIds);
+        }
       }
     });
   };
@@ -950,9 +969,18 @@ export const CallListWorkspace = () => {
                        isOpen: true,
                        title: tr('حذف تمامی شماره‌ها', 'Delete all numbers'),
                        message: tr('آیا مطمئن هستید که می‌خواهید همه شماره‌های این لیست را حذف کنید؟', 'Are you sure you want to delete all?'),
-                       onConfirm: () => {
-                         calls.filter(c => displayedList.some(f => f.id === c.id)).forEach(c => hardDeleteCall(c.id, c.phone));
-                         toast.success(tr('لیست پاک شد.', 'List cleared.'));
+                       onConfirm: async () => {
+                         const toDelete = calls.filter(c => displayedList.some(f => f.id === c.id));
+                         const promises = toDelete.map(c => deleteCall(c.id));
+                         const results = await Promise.all(promises);
+                         
+                         const failedCount = results.filter(success => !success).length;
+                         
+                         if (failedCount === 0) {
+                           toast.success(tr('لیست با موفقیت پاک شد.', 'List successfully cleared.'));
+                         } else {
+                           toast.error(tr(`خطا در پاک کردن ${failedCount} شماره. لطفا دوباره تلاش کنید.`, `Error clearing ${failedCount} numbers. Please try again.`));
+                         }
                        }
                      });
                    }}
@@ -1170,8 +1198,12 @@ export const CallListWorkspace = () => {
                                       message: tr('آیا مطمئن هستید که می‌خواهید این شماره را حذف کنید؟', 'Are you sure you want to delete this number?'),
                                       onConfirm: async () => {
                                         try {
-                                          await hardDeleteCall(c.id, c.phone);
-                                          toast.success(tr('شماره حذف شد.', 'Number deleted.'));
+                                          const success = await deleteCall(c.id);
+                                          if (success) {
+                                            toast.success(tr('شماره حذف شد.', 'Number deleted.'));
+                                          } else {
+                                            toast.error(tr('خطا در حذف شماره', 'Error deleting number.'));
+                                          }
                                         } catch (err) {
                                           toast.error(tr('خطا در حذف شماره', 'Error deleting number.'));
                                         }
