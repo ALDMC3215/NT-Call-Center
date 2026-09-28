@@ -19,10 +19,8 @@ const AuthScreen         = React.lazy(() => import('./components/Auth/AuthScreen
 const PendingScreen      = React.lazy(() => import('./components/Auth/PendingScreen').then(m => ({ default: m.PendingScreen })));
 const ManagerDashboard   = React.lazy(() => import('./components/Manager/ManagerDashboard').then(m => ({ default: m.ManagerDashboard })));
 const HomeView           = React.lazy(() => import('./components/Home/HomeView').then(m => ({ default: m.HomeView })));
-const NegotiationView    = React.lazy(() => import('./components/Education/NegotiationView').then(m => ({ default: m.NegotiationView })));
 const ScheduleView       = React.lazy(() => import('./components/Education/ScheduleView').then(m => ({ default: m.ScheduleView })));
 const CoursesView        = React.lazy(() => import('./components/Courses/CoursesView').then(m => ({ default: m.CoursesView })));
-const IntroTextView      = React.lazy(() => import('./components/Education/IntroTextView').then(m => ({ default: m.IntroTextView })));
 
 import { LoadingSpinner } from './components/Shared/LoadingSpinner';
 import { AnimatePresence, motion } from 'motion/react';
@@ -307,10 +305,8 @@ export default function App() {
                               {currentView === 'settings'  && <SettingsView />}
                               {currentView === 'blacklist' && <BlacklistView />}
                               {currentView === 'about'     && <AboutView />}
-                              {currentView === 'negotiation' && <NegotiationView />}
                               {currentView === 'schedule'    && <ScheduleView />}
                               {currentView === 'courses'     && <CoursesView />}
-                              {currentView === 'intro'       && <IntroTextView />}
                             </React.Suspense>
                           </motion.div>
                         </AnimatePresence>

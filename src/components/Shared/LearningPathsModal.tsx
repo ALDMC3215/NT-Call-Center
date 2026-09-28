@@ -40,25 +40,25 @@ export const LearningPathsModal = ({ isOpen, onClose, embedded }: Props) => {
         ref={modalRef}
         className="bg-white dark:bg-[#0f1419] w-full h-full flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
       >
-        {/* Header */}
-        <div className="flex-none bg-white dark:bg-[#171e27] border-b border-slate-200 dark:border-[#2b3745] px-6 py-4 flex items-center justify-between sticky top-0 z-20 shadow-sm shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-[#2c1d38] flex items-center justify-center text-purple-600 dark:text-[#c4a1ff] shrink-0">
-              <Route size={22} strokeWidth={2.5} />
+        {/* Compact Section Toolbar */}
+        <div className="flex-none bg-white/90 dark:bg-[#151c24]/90 backdrop-blur-md border-b border-slate-200/80 dark:border-[#24303e] px-4 sm:px-6 py-2.5 flex items-center justify-between sticky top-0 z-20 shrink-0 min-h-[58px] sm:min-h-[64px]">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200/80 dark:border-purple-900/50 flex items-center justify-center text-purple-600 dark:text-[#c4a1ff] shrink-0 shadow-2xs">
+              <Route size={16} />
             </div>
-            <div>
-              <h2 className="text-lg font-black text-slate-800 dark:text-[#f3f5f7] leading-tight">مسیرهای یادگیری</h2>
-              <p className="text-xs font-medium text-slate-500 dark:text-[#8e9aaa] mt-0.5">مسیر پیشنهادی از شروع تا مهارت تخصصی</p>
+            <div className="flex items-center gap-2">
+              <h2 className="text-[14.5px] sm:text-[15px] font-bold text-slate-900 dark:text-[#f3f5f7]">مسیرهای یادگیری</h2>
+              <span className="text-[11px] font-medium text-slate-500 dark:text-[#8e9aaa] hidden md:inline">(مسیر پیشنهادی از شروع تا مهارت تخصصی)</span>
             </div>
           </div>
           {!embedded && (
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-full bg-slate-100 dark:bg-[#202b38] flex items-center justify-center text-slate-500 dark:text-[#8e9aaa] hover:bg-slate-200 dark:hover:bg-[#2c3b4d] hover:text-slate-900 dark:hover:text-[#f3f5f7] transition-colors shrink-0"
-            title="بستن"
-          >
-            <X size={18} strokeWidth={2.5} />
-          </button>
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-[#202b38] flex items-center justify-center text-slate-500 dark:text-[#8e9aaa] hover:bg-slate-200 dark:hover:bg-[#2c3b4d] hover:text-slate-900 dark:hover:text-[#f3f5f7] transition-colors shrink-0"
+              title="بستن"
+            >
+              <X size={16} />
+            </button>
           )}
         </div>
 

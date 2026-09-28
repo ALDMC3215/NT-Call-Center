@@ -27,8 +27,8 @@ const reportMeaningfulActivity = (userId: string) => {
   })();
 };
 
-export type ViewType = 'home' | 'dashboard' | 'profile' | 'settings' | 'stats' | 'admin' | 'blacklist' | 'reports' | 'experts' | 'managers' | 'about' | 'negotiation' | 'schedule' | 'courses' | 'intro';
-export type PopupViewType = 'negotiation' | 'schedule' | 'learning_paths' | 'stats' | 'courses' | 'intro' | null;
+export type ViewType = 'home' | 'dashboard' | 'profile' | 'settings' | 'stats' | 'admin' | 'blacklist' | 'reports' | 'experts' | 'managers' | 'about' | 'schedule' | 'courses';
+export type PopupViewType = 'schedule' | 'learning_paths' | 'stats' | 'courses' | null;
 export type LayoutMode = 'default' | 'header-only' | 'cards-only';
 
 interface AppContextType {
@@ -42,8 +42,8 @@ interface AppContextType {
   setCurrentView: (view: ViewType) => void;
   popupView: PopupViewType;
   setPopupView: (view: PopupViewType) => void;
-  activeCallTab: 'cards' | 'queue' | 'today' | 'followup' | 'call_again' | 'registered' | 'call_stats' | 'stats' | 'blacklist' | 'courses' | 'learning_paths' | 'schedule' | 'intro';
-  setActiveCallTab: (tab: 'cards' | 'queue' | 'today' | 'followup' | 'call_again' | 'registered' | 'call_stats' | 'stats' | 'blacklist' | 'courses' | 'learning_paths' | 'schedule' | 'intro') => void;
+  activeCallTab: 'cards' | 'queue' | 'today' | 'followup' | 'call_again' | 'registered' | 'call_stats' | 'stats' | 'blacklist' | 'courses' | 'learning_paths' | 'schedule';
+  setActiveCallTab: (tab: 'cards' | 'queue' | 'today' | 'followup' | 'call_again' | 'registered' | 'call_stats' | 'stats' | 'blacklist' | 'courses' | 'learning_paths' | 'schedule') => void;
   setProfile: (p: Profile) => void;
   logout: () => void;
   addCall: (call: Omit<CallRecord, 'id' | 'createdAt'>) => void;
@@ -230,18 +230,18 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       const view = urlParams.get('view');
-      if (view && ['home', 'dashboard', 'profile', 'settings', 'stats', 'admin', 'blacklist', 'reports', 'experts', 'managers', 'about', 'negotiation', 'schedule'].includes(view)) {
+      if (view && ['home', 'dashboard', 'profile', 'settings', 'stats', 'admin', 'blacklist', 'reports', 'experts', 'managers', 'about', 'schedule', 'courses'].includes(view)) {
         return view as ViewType;
       }
     }
     return 'home';
   });
   const [popupView, setPopupView] = useState<PopupViewType>(null);
-  const [activeCallTab, setActiveCallTab] = useState<'cards' | 'queue' | 'today' | 'followup' | 'call_again' | 'registered' | 'call_stats' | 'stats' | 'blacklist' | 'courses' | 'learning_paths' | 'schedule' | 'intro'>(() => {
+  const [activeCallTab, setActiveCallTab] = useState<'cards' | 'queue' | 'today' | 'followup' | 'call_again' | 'registered' | 'call_stats' | 'stats' | 'blacklist' | 'courses' | 'learning_paths' | 'schedule'>(() => {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       const tab = urlParams.get('tab');
-      if (tab && ['cards', 'queue', 'today', 'followup', 'call_again', 'registered', 'call_stats', 'stats', 'blacklist', 'courses'].includes(tab)) {
+      if (tab && ['cards', 'queue', 'today', 'followup', 'call_again', 'registered', 'call_stats', 'stats', 'blacklist', 'courses', 'learning_paths', 'schedule'].includes(tab)) {
         return tab as any;
       }
     }

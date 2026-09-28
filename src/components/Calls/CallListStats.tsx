@@ -16,6 +16,7 @@ import {
 } from 'chart.js';
 import { Doughnut, Bar, Line } from 'react-chartjs-2';
 import { useCallListStats } from '../../hooks/useCallListStats';
+import { CountUp } from '../ReactBits/CountUp';
 
 ChartJS.register(
   ArcElement,
@@ -215,7 +216,7 @@ export const CallListStats: React.FC<CallListStatsProps> = ({ calls, onExport })
               <TrendingUp size={16} strokeWidth={2} />
               <span className="text-xs font-bold">{tr('کار شده امروز', 'Worked Today')}</span>
             </div>
-            <span className="text-2xl font-bold text-indigo-700 dark:text-[#c7d2fe]">{todayCount}</span>
+            <CountUp to={todayCount} duration={1} className="text-2xl font-bold text-indigo-700 dark:text-[#c7d2fe]" />
           </div>
 
           <div className="bg-white dark:bg-[#1c2530] p-4 border border-slate-200 dark:border-[#2b3745] flex flex-col gap-2 rounded-xl">
@@ -223,7 +224,7 @@ export const CallListStats: React.FC<CallListStatsProps> = ({ calls, onExport })
               <PhoneCall size={16} strokeWidth={2} />
               <span className="text-xs font-medium">{tr('کل شماره‌ها', 'Total Numbers')}</span>
             </div>
-            <span className="text-2xl font-semibold text-slate-800 dark:text-[#f3f5f7]">{stats.total}</span>
+            <CountUp to={stats.total} duration={1} className="text-2xl font-semibold text-slate-800 dark:text-[#f3f5f7]" />
           </div>
 
           <div className="bg-white dark:bg-[#1c2530] p-4 border border-slate-200 dark:border-[#2b3745] flex flex-col gap-2 rounded-xl">
@@ -231,7 +232,7 @@ export const CallListStats: React.FC<CallListStatsProps> = ({ calls, onExport })
               <Phone size={16} strokeWidth={2} />
               <span className="text-xs font-medium">{tr('موفق / پاسخ‌داده', 'Answered')}</span>
             </div>
-            <span className="text-2xl font-semibold text-teal-600 dark:text-[#7ce3ce]">{stats.answered}</span>
+            <CountUp to={stats.answered} duration={1} className="text-2xl font-semibold text-teal-600 dark:text-[#7ce3ce]" />
           </div>
 
           <div className="bg-white dark:bg-[#1c2530] p-4 border border-slate-200 dark:border-[#2b3745] flex flex-col gap-2 rounded-xl">
@@ -239,7 +240,7 @@ export const CallListStats: React.FC<CallListStatsProps> = ({ calls, onExport })
               <PhoneOff size={16} strokeWidth={2} />
               <span className="text-xs font-medium">{tr('ناموفق / بی‌پاسخ', 'Unanswered')}</span>
             </div>
-            <span className="text-2xl font-semibold text-rose-500 dark:text-[#ff9aa9]">{stats.unanswered}</span>
+            <CountUp to={stats.unanswered} duration={1} className="text-2xl font-semibold text-rose-500 dark:text-[#ff9aa9]" />
           </div>
 
           <div className="bg-white dark:bg-[#1c2530] p-4 border border-slate-200 dark:border-[#2b3745] flex flex-col gap-2 rounded-xl">
@@ -247,7 +248,7 @@ export const CallListStats: React.FC<CallListStatsProps> = ({ calls, onExport })
               <CalendarClock size={16} strokeWidth={2} />
               <span className="text-xs font-medium">{tr('در انتظار پیگیری', 'Follow-ups')}</span>
             </div>
-            <span className="text-2xl font-semibold text-orange-500 dark:text-[#ffc477]">{stats.followUps}</span>
+            <CountUp to={stats.followUps} duration={1} className="text-2xl font-semibold text-orange-500 dark:text-[#ffc477]" />
           </div>
         </motion.div>
 

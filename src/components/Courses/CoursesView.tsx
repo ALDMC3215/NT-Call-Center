@@ -8,6 +8,7 @@ import { CourseDetailsModal } from './CourseDetailsModal';
 import { fetchCourseDataDynamic } from '../../utils/scraper';
 import { customToast as toast } from '../UI/toast';
 import { useAppContext } from '../../hooks/useAppContext';
+import { SpotlightCard } from '../ReactBits/SpotlightCard';
 
 const getIcon = (iconName: string) => {
   const Icon = (Icons as any)[iconName];
@@ -227,134 +228,132 @@ export const CoursesView = ({ externalSearchQuery = '', isModal, onClose, embedd
 
   return (
     <div className={`w-full h-full flex flex-col ${isModal ? 'bg-slate-50 dark:bg-[#0f1419]' : 'bg-transparent'} relative z-10`} dir={direction}>
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 md:p-6 lg:p-8 bg-white dark:bg-[#171e27] border-b border-slate-200 dark:border-[#2b3745] shrink-0 relative z-20 shadow-sm">
-        <div className="flex flex-col gap-1 order-1 md:order-none">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-brand-50 dark:bg-[#162744] flex items-center justify-center text-brand-600 dark:text-[#81a5ff] shadow-sm border border-brand-100 dark:border-[#223d6a]">
-              <Icons.BookOpen size={20} strokeWidth={2.5} />
-            </div>
-            <h1 className="text-xl md:text-2xl font-extrabold text-slate-800 dark:text-[#f3f5f7] tracking-tight">
-              {tr('دوره‌های آموزشی', 'Courses Prices')}
-            </h1>
+      {/* Compact SectionToolbar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 px-4 sm:px-6 py-2.5 bg-white/90 dark:bg-[#151c24]/90 backdrop-blur-md border-b border-slate-200/80 dark:border-[#24303e] shrink-0 min-h-[58px] sm:min-h-[64px]">
+        {/* Right side in RTL: Title & short description */}
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-brand-50 dark:bg-brand-950/40 border border-brand-200/80 dark:border-brand-800/40 flex items-center justify-center text-brand-600 dark:text-brand-400 shrink-0 shadow-2xs">
+            <Icons.BookOpen size={16} />
           </div>
-          <p className="text-sm font-medium text-slate-500 dark:text-[#8e9aaa] mr-14">
-            {tr('مشاهده لیست و قیمت به‌روز دوره‌های آموزشی', 'View updated list and prices of courses')}
-          </p>
+          <div className="flex items-center gap-2">
+            <h2 className="text-[14.5px] sm:text-[15px] font-bold text-slate-800 dark:text-[#f3f5f7]">
+              {tr('دوره‌های آموزشی', 'Courses')}
+            </h2>
+            <span className="inline-flex items-center px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-[#1e2734] text-slate-600 dark:text-[#9eb0c3] text-[11px] font-bold border border-slate-200/70 dark:border-[#2b3848] tabular-nums">
+              {filteredCourses.length} {tr('دوره', 'courses')}
+            </span>
+          </div>
         </div>
 
-        <div className="flex-1 w-full max-w-md order-3 md:order-none relative group">
-            {(!externalSearchQuery) && (
-              <input 
+        {/* Left side in RTL: Course Search & Update Action */}
+        <div className="flex items-center gap-2">
+          {!externalSearchQuery && (
+            <div className="relative w-full sm:w-60 md:w-72">
+              <input
                 type="text"
-                placeholder={tr('جستجوی دوره، دسته‌بندی یا سکشن...', 'Search course, category or section...')}
+                placeholder={tr('جستجوی دوره یا سکشن...', 'Search course or section...')}
                 value={internalSearchQuery}
                 onChange={(e) => setInternalSearchQuery(e.target.value)}
-                className="w-full h-10 bg-slate-50 dark:bg-[#18222d] border border-slate-200 dark:border-[#344457] rounded-xl pr-10 pl-10 text-[13px] font-medium text-slate-900 dark:text-[#f3f5f7] placeholder:text-slate-500 dark:placeholder:text-[#7f8da0] outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/10 transition-all shadow-sm"
+                className="w-full h-[36px] bg-slate-50 dark:bg-[#18222d] border border-slate-200 dark:border-[#2e3e50] rounded-xl pr-8 pl-8 text-[12px] font-medium text-slate-800 dark:text-[#f3f5f7] placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:bg-white dark:focus:bg-[#1b2532] focus:ring-2 focus:ring-brand-500/20 transition-all shadow-2xs"
               />
-            )}
-            {(!externalSearchQuery) && (
-              <Icons.Search size={18} className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-slate-500/60 group-focus-within:text-brand-500 transition-colors" />
-            )}
-            
-            {internalSearchQuery && !externalSearchQuery && (
-              <button 
-                onClick={() => setInternalSearchQuery('')}
-                className="absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-all cursor-pointer"
-              >
-                <Icons.X size={14} strokeWidth={2.5} />
-              </button>
-            )}
-        </div>
+              <Icons.Search
+                size={14}
+                className="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none text-slate-400"
+              />
+              {internalSearchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setInternalSearchQuery('')}
+                  aria-label={tr('پاک کردن جستجو', 'Clear search')}
+                  className="absolute inset-y-0 left-0 pl-2.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                >
+                  <Icons.X size={14} />
+                </button>
+              )}
+            </div>
+          )}
 
-        {!embedded && (
-          <div className="order-2 md:order-none shrink-0">
-            {isModal ? (
-               <button
-                 onClick={onClose}
-                 className="w-8 h-8 rounded-full bg-slate-100 dark:bg-[#202b38] flex items-center justify-center text-slate-500 dark:text-[#8e9aaa] hover:bg-slate-200 dark:hover:bg-[#2c3b4d] hover:text-slate-900 dark:hover:text-[#f3f5f7] transition-colors"
-                 title="بستن"
-               >
-                 <Icons.X size={18} strokeWidth={2.5} />
-               </button>
-            ) : (
-               <button
-                 onClick={() => setCurrentView('home')}
-                 className="px-4 py-2 bg-slate-100 dark:bg-[#202b38] hover:bg-slate-200 dark:hover:bg-[#2c3b4d] text-slate-700 dark:text-[#e8edf3] text-sm font-bold rounded-lg transition-colors"
-               >
-                 بازگشت
-               </button>
-            )}
-          </div>
-        )}
+          {/* Update Course Data Button */}
+          <button
+            type="button"
+            onClick={handleUpdateAllCourses}
+            disabled={isUpdating}
+            className="h-[36px] px-3 rounded-xl bg-slate-50 dark:bg-[#18222e] border border-slate-200 dark:border-[#2e3e50] hover:bg-slate-100 dark:hover:bg-[#202c3b] text-slate-700 dark:text-[#c4d0df] hover:text-slate-900 dark:hover:text-white transition-colors flex items-center gap-1.5 text-[11.5px] font-semibold whitespace-nowrap shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+            title={tr('بروزرسانی داده‌های دوره‌ها', 'Update course data')}
+          >
+            <Icons.RefreshCw size={13} className={isUpdating ? 'animate-spin text-brand-500' : 'text-slate-400'} />
+            <span className="hidden sm:inline">
+              {isUpdating ? tr('در حال بروزرسانی...', 'Updating...') : tr('بروزرسانی', 'Update')}
+            </span>
+          </button>
+
+          {!embedded && !isModal && (
+            <button
+              onClick={() => setCurrentView('home')}
+              className="h-[36px] px-3 bg-slate-100 dark:bg-[#202b38] hover:bg-slate-200 dark:hover:bg-[#2c3b4d] text-slate-700 dark:text-[#e8edf3] text-[12px] font-bold rounded-xl transition-colors shrink-0"
+            >
+              {tr('بازگشت', 'Back')}
+            </button>
+          )}
+
+          {isModal && (
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-[#202b38] flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors shrink-0"
+              title={tr('بستن', 'Close')}
+            >
+              <Icons.X size={16} />
+            </button>
+          )}
+        </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto overflow-x-hidden hide-scrollbar relative z-10 p-4 md:p-6 lg:p-8">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden hide-scrollbar relative z-10 p-3 md:p-4">
         <AnimatePresence mode="wait">
           <motion.div
             key="all-courses"
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-            className="flex flex-col gap-4 w-full"
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.15 }}
+            className="flex flex-col gap-3 w-full"
           >
             {filteredCourses.length === 0 ? (
-              <div className="flex flex-col items-center justify-center w-full py-20 text-center">
-                <Icons.Layers size={48} className="text-slate-400 mb-4" strokeWidth={1.5} />
-                <p className="text-slate-500 font-medium">{tr('هیچ دوره‌ای با این عنوان یافت نشد.', 'No courses found.')}</p>
+              <div className="flex flex-col items-center justify-center w-full py-16 text-center">
+                <Icons.Layers size={40} className="text-slate-400 mb-3" strokeWidth={1.5} />
+                <p className="text-slate-500 font-medium text-[13px]">{tr('هیچ دوره‌ای با این عنوان یافت نشد.', 'No courses found.')}</p>
               </div>
             ) : (
-              <div className="flex flex-col w-full pb-8">
-                <div className="flex flex-col sm:flex-row items-center justify-between mb-4 px-4 gap-4">
-                  <div className="text-[12px] font-medium text-slate-500 flex items-center gap-2">
-                    <Icons.Info size={14} className="text-brand-500" />
-                    <span>{tr('اطلاعات دوره‌ها مستقیماً از سایت نوین تک به‌روزرسانی می‌شود.', 'Course data is synced directly from Novin Tech.')}</span>
-                  </div>
-                  <button 
-                    onClick={handleUpdateAllCourses}
-                    disabled={isUpdating}
-                    className="flex items-center gap-2 px-4 py-2 bg-brand-500/10 dark:bg-brand-500/20 text-brand-500 dark:text-[#81a5ff] hover:bg-brand-500/20 dark:hover:bg-brand-500/30 hover:text-brand-600 dark:hover:text-[#a0bcff] rounded-xl font-medium text-[12px] transition-colors border border-brand-500/20 dark:border-brand-500/30 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto justify-center"
-                  >
-                    <Icons.RefreshCw size={16} className={isUpdating ? "animate-spin" : ""} />
-                    <span>{isUpdating ? tr('در حال بروزرسانی...', 'Updating...') : tr('بروزرسانی اطلاعات دوره‌ها', 'Update Course Data')}</span>
-                  </button>
-                </div>
+              <div className="flex flex-col w-full pb-6">
 
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 w-full pb-8 items-stretch">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-3.5 w-full pb-8 items-stretch">
                   {filteredCourses.map((course, idx) => {
                     return (
-                      <div 
-                        key={idx} 
+                      <SpotlightCard
+                        key={idx}
                         onClick={() => setSelectedCourse(course)}
-                        className="flex flex-col h-full p-4 bg-white dark:bg-[#1c2530] border border-slate-200 dark:border-[#2b3745] rounded-2xl relative overflow-hidden group hover:border-brand-500/30 dark:hover:border-brand-500/40 hover:shadow-md transition-all duration-300 min-h-[72px] cursor-pointer"
+                        spotlightColor="rgba(99, 102, 241, 0.12)"
+                        className="cursor-pointer p-4 flex flex-col justify-between hover:border-brand-500/40 dark:hover:border-brand-500/50 hover:shadow-xs transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 min-h-[82px]"
                       >
-                        {/* Left ticket notched decor */}
-                        <div className="absolute top-[36px] -translate-y-1/2 -left-2.5 w-5 h-5 rounded-full bg-[#f8fafc] dark:bg-[#0f1419] border-r border-slate-200 dark:border-[#2b3745] z-20"></div>
-                        {/* Right ticket notched decor */}
-                        <div className="absolute top-[36px] -translate-y-1/2 -right-2.5 w-5 h-5 rounded-full bg-[#f8fafc] dark:bg-[#0f1419] border-l border-slate-200 dark:border-[#2b3745] z-20"></div>
-
-                        <div className="flex items-center justify-between w-full relative z-10">
-                          <div className="flex flex-col gap-1 pr-3 pl-3 flex-1 min-w-0">
-                            <h4 className="text-[13px] font-extrabold text-slate-800 dark:text-[#f3f5f7] transition-colors truncate tracking-tight" title={course.title}>
+                        <div className="flex items-start justify-between gap-3 w-full relative z-20">
+                          <div className="flex flex-col gap-1.5 flex-1 min-w-0 pr-1">
+                            <h4 className="text-[13px] font-bold text-slate-800 dark:text-[#f3f5f7] transition-colors line-clamp-2 leading-snug tracking-tight" title={course.title}>
                               {course.title}
                             </h4>
-                            <span className="text-[10px] font-medium text-slate-400 dark:text-[#8e9aaa] truncate">
+                            <span className="text-[11px] font-medium text-slate-400 dark:text-[#8e9aaa] truncate">
                               {course.subcategoryTitle}
                             </span>
                           </div>
 
-                          <div className="flex flex-col items-end shrink-0 pl-3 pr-3 border-r border-dashed border-slate-200 dark:border-[#344457]">
+                          <div className="flex flex-col items-end shrink-0 pl-1 pr-3 border-r border-slate-200/80 dark:border-[#2b3745] min-w-[85px]">
                             {course.originalPrice && course.originalPrice !== course.price && (
-                              <span className="text-[10px] font-medium text-slate-400 dark:text-[#8e9aaa] line-through tracking-tight">{course.originalPrice}</span>
+                              <span className="text-[10.5px] font-medium text-slate-400 dark:text-[#7f8da0] line-through tracking-tight tabular-nums">{course.originalPrice}</span>
                             )}
-                            <span className="text-[13px] font-extrabold text-brand-600 dark:text-[#81a5ff] tracking-tight">{course.price || tr('نامشخص', 'Unknown')}</span>
+                            <span className="text-[13px] font-extrabold text-brand-600 dark:text-[#81a5ff] tracking-tight tabular-nums whitespace-nowrap">{course.price || tr('نامشخص', 'Unknown')}</span>
                           </div>
                         </div>
-
-
-                      </div>
+                      </SpotlightCard>
                     );
                   })}
                 </div>
